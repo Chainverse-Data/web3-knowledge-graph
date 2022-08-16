@@ -24,3 +24,17 @@ def create_vote_relationships(url, conn):
 
     conn.query(vote_rel_query)
     print("vote relationships created")
+
+def create_strategy_relationships(url, conn):
+
+    strat_rel_query = f"""                       
+                        USING PERIODIC COMMIT 5000
+                        LOAD CSV WITH HEADERS FROM '{url}' as strats
+                        MATCH (t:Token {{address: strats.token}}), (s:Space {{id: strats.space}})
+                        MERGE (s)-[n:HAS_STRATEGY]->(t)
+                        return count(n)
+                    """
+
+    x = conn.query(strat_rel_query)
+    print(x)
+    print("strategy relationships created")

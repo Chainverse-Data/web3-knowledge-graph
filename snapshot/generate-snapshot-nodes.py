@@ -12,6 +12,7 @@ import sys
 sys.path.append(".")
 
 from snapshot.helpers.cypher_nodes import *
+from snapshot.helpers.cypher_relationships import *
 from helpers.s3 import *
 from helpers.graph import ChainverseGraph
 
@@ -28,64 +29,12 @@ if __name__ == "__main__":
     s3 = boto3.client("s3")
     BUCKET = "chainverse"
 
-    # ensure constraints on relevant nodes for faster indexing
+    now = datetime.now()
+
     create_unique_constraints(conn)
 
-    # create proposal nodes
-    content_object = s3.get_object(Bucket="chainverse", Key="snapshot/proposals/01-07-2022/proposals.json")
-    data = content_object["Body"].read().decode("utf-8")
-    json_data = json.loads(data)
-
-    proposal_list = []
-    for entry in json_data:
-        current_dict = {}
-        current_dict["id"] = entry["id"]
-        current_dict["ipfs"] = entry["ipfs"]
-        current_dict["author"] = entry["author"]
-        current_dict["createdAt"] = entry["created"]
-        current_dict["network"] = entry["network"]
-        current_dict["type"] = entry["type"]
-        current_dict["space"] = entry["space"]["id"]
-
-        current_dict["title"] = entry["title"].replace('"', "").replace("'", "").replace("\\", "").strip()
-        current_dict["body"] = entry["body"].replace('"', "").replace("'", "").replace("\\", "").strip()
-
-        choices = json.dumps(entry["choices"])
-        choices = choices.replace('"', "").replace("'", "").strip()
-
-        current_dict["choices"] = choices
-        current_dict["start"] = entry["start"]
-        current_dict["end"] = entry["end"]
-        current_dict["snapshot"] = entry["snapshot"]
-        current_dict["state"] = entry["state"]
-        current_dict["link"] = entry["link"].strip()
-
-        proposal_list.append(current_dict)
-
-    proposal_df = pd.DataFrame(proposal_list)
-    print("Proposal Nodes: ", len(proposal_df))
-
-    proposal_df["createdAt"].fillna(-1, inplace=True)
-    proposal_df["type"].fillna(-1, inplace=True)
-    proposal_df["title"].fillna("", inplace=True)
-    proposal_df["body"].fillna("", inplace=True)
-    proposal_df["choices"].fillna("", inplace=True)
-    proposal_df["start"].fillna(-1, inplace=True)
-    proposal_df["end"].fillna(-1, inplace=True)
-    proposal_df["state"].fillna("", inplace=True)
-    proposal_df["link"].fillna("", inplace=True)
-    proposal_df["snapshot"].fillna(-1, inplace=True)
-
-    # save raw csv
-    url = write_df_to_s3(proposal_df, BUCKET, "neo/snapshot/raw/proposal.csv", resource, s3)
-
-    proposal_df.drop(columns=["author", "space"], inplace=True)
-    url = write_df_to_s3(proposal_df, BUCKET, "neo/snapshot/nodes/proposal.csv", resource, s3)
-    create_proposal_nodes(url, conn)
-    set_object_private(BUCKET, "neo/snapshot/nodes/proposal.csv", resource)
-
     # create space nodes
-    content_object = s3.get_object(Bucket="chainverse", Key="snapshot/spaces/01-07-2022/spaces.json")
+    content_object = s3.get_object(Bucket="chainverse", Key=f"snapshot/spaces/{now.strftime('%m-%d-%Y')}/spaces.json")
     data = content_object["Body"].read().decode("utf-8")
     json_data = json.loads(data)
 
@@ -93,14 +42,10 @@ if __name__ == "__main__":
     strategy_list = []
     for entry in json_data:
         current_dict = {}
-        current_dict["id"] = entry["id"]
+        current_dict["snapshotId"] = entry["id"]
         current_dict["name"] = entry["name"]
         current_dict["about"] = entry.get("about", "").replace('"', "").replace("'", "").replace("\\", "").strip()
-        current_dict["network"] = entry.get("network", "")
-        current_dict["website"] = entry.get("website", "")
-        current_dict["twitter"] = entry.get("twitter", "")
-        current_dict["github"] = entry.get("github", "")
-        current_dict["avatar"] = entry.get("avatar", "")
+        current_dict["chainId"] = entry.get("network", "")
         current_dict["symbol"] = entry.get("symbol", "")
 
         try:
@@ -119,15 +64,12 @@ if __name__ == "__main__":
         space_list.append(current_dict)
 
     space_df = pd.DataFrame(space_list)
+    space_df.drop_duplicates(subset=["snapshotId"], inplace=True)
     print("Space nodes: ", len(space_df))
 
-    space_df["website"].fillna("", inplace=True)
-    space_df["twitter"].fillna("", inplace=True)
-    space_df["github"].fillna("", inplace=True)
-    space_df["avatar"].fillna("", inplace=True)
-
     url = write_df_to_s3(space_df, BUCKET, "neo/snapshot/nodes/space.csv", resource, s3)
-    create_space_nodes(url, conn)
+
+    # create_space_nodes(url, conn)
     set_object_private(BUCKET, "neo/snapshot/nodes/space.csv", resource)
 
     strategy_relationships = []
@@ -151,7 +93,7 @@ if __name__ == "__main__":
             address = params.get("address", "")
             if address == "" or not isinstance(address, str):
                 continue
-            token_dict["address"] = address
+            token_dict["address"] = address.lower()
             token_dict["symbol"] = params.get("symbol", "")
             token_dict["decimals"] = params.get("decimals", -1)
             current_dict["token"] = token_dict["address"]
@@ -160,16 +102,57 @@ if __name__ == "__main__":
         except:
             continue
 
-    print(token_list[0])
     token_df = pd.DataFrame(token_list)
     token_df.drop_duplicates(subset="address", inplace=True)
     print("Token nodes: ", len(token_df))
     url = write_df_to_s3(token_df, BUCKET, "neo/snapshot/nodes/token.csv", resource, s3)
-    create_token_nodes(url, conn)
+    # create_token_nodes(url, conn)
     set_object_private(BUCKET, "neo/snapshot/nodes/token.csv", resource)
 
     strategy_df = pd.DataFrame(strategy_relationships)
-    write_df_to_s3(strategy_df, BUCKET, "neo/snapshot/relationships/strategy.csv", resource, s3, "private")
+    url = write_df_to_s3(strategy_df, BUCKET, "neo/snapshot/relationships/strategy.csv", resource, s3)
+    # create_strategy_relationships(url, conn)
+    set_object_private(BUCKET, "neo/snapshot/relationships/strategy.csv", resource)
+
+    # create proposal nodes
+    content_object = s3.get_object(Bucket="chainverse", Key=f"snapshot/proposals/{now.strftime('%m-%d-%Y')}/proposals.json")
+    data = content_object["Body"].read().decode("utf-8")
+    json_data = json.loads(data)
+
+    proposal_list = []
+    for entry in json_data:
+        current_dict = {}
+        current_dict["snapshotId"] = entry["id"]
+        current_dict["ipfsCID"] = entry["ipfs"]
+        current_dict["author"] = entry["author"].lower()
+        current_dict["createdAt"] = entry["created"] or 0
+        current_dict["type"] = entry["type"] or -1
+        current_dict["spaceId"] = entry["space"]["id"]
+
+        current_dict["title"] = entry["title"].replace('"', "").replace("'", "").replace("\\", "").strip() or ''
+        current_dict["body"] = entry["body"].replace('"', "").replace("'", "").replace("\\", "").strip() or ''
+
+        choices = json.dumps(entry["choices"])
+        choices = choices.replace('"', "").replace("'", "").strip() or ''
+
+        current_dict["choices"] = choices
+        current_dict["startDt"] = entry["start"] or 0
+        current_dict["endDt"] = entry["end"] or 0
+        current_dict["state"] = entry["state"] or ''
+        current_dict["link"] = entry["link"].strip() or ''
+
+        proposal_list.append(current_dict)
+
+    proposal_df = pd.DataFrame(proposal_list)
+    proposal_df.drop_duplicates("snapshotId", inplace=True)
+    proposal_df.dropna(subset=["author"], inplace=True)
+    print("Proposal Nodes: ", len(proposal_df))
+
+    list_prop_chunks = split_dataframe(proposal_df, 5000)
+    for idx, prop_batch in enumerate(list_prop_chunks):
+        url = write_df_to_s3(prop_batch, BUCKET, f"neo/snapshot/nodes/proposal/prop-{idx * 5000}.csv", resource, s3)
+        create_proposal_nodes(url, conn)
+        set_object_private(BUCKET, f"neo/snapshot/nodes/proposal/prop-{idx * 5000}.csv", resource)
 
     # get vote nodes
     content_object = s3.get_object(Bucket="chainverse", Key="snapshot/votes/01-07-2022/votes.json")
@@ -180,14 +163,14 @@ if __name__ == "__main__":
     for entry in json_data:
         current_dict = {}
         current_dict["id"] = entry["id"]
-        current_dict["voter"] = entry["voter"]
-        current_dict["createdAt"] = entry["created"]
+        current_dict["voter"] = entry["voter"].lower()
+        current_dict["votedAt"] = entry["created"]
         current_dict["ipfs"] = entry["ipfs"]
 
         try:
-            current_dict["choice"] = entry["choice"]
-            current_dict["proposal"] = entry["proposal"]["id"]
-            current_dict["space"] = entry["space"]["id"]
+            current_dict["choice"] = json.dumps(entry['choice'])
+            current_dict["proposalId"] = entry["proposal"]["id"]
+            current_dict["spaceId"] = entry["space"]["id"]
         except:
             print("xxx")
             continue
@@ -207,4 +190,3 @@ if __name__ == "__main__":
         create_wallet_nodes(url, conn)
         set_object_private(BUCKET, f"neo/snapshot/nodes/votes/vote-{idx * SPLIT_SIZE}.csv", resource)
         print(idx * SPLIT_SIZE)
-
