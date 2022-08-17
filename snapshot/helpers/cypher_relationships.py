@@ -1,40 +1,51 @@
-def create_proposal_relationships(url, conn):
-    # fixed typo was {id: proposals.id when it should have been {id: proposals.proposals}
-    proposal_rel_query = f"""
-                        USING PERIODIC COMMIT 1000
-                        LOAD CSV WITH HEADERS FROM '{url}' AS proposals
-                        MATCH (p:Snapshot:Proposal {{id: proposals.proposal}}), (author:Wallet {{address: proposals.author}}), (space:Snapshot:Space {{id: proposals.space}})
-                        MERGE (author)-[:AUTHORED]->(p)
-                        MERGE (space)-[:HAS_PROPOSAL]->(p)
+def merge_proposal_space_relationships(url, conn):
+
+    proposal_space_rel_query = f"""
+                        LOAD CSV WITH HEADERS FROM '{url}' as proposals
+                        MATCH (p:Proposal {{snapshotId: proposals.snapshotId}}), (s:Space {{snapshotId: proposals.spaceId}})
+                        MERGE (s)-[d:HAS_PROPOSAL]->(p)
+                        return count(d)
                     """
 
-    conn.query(proposal_rel_query)
-    print("proposal relaionships created")
+    x = conn.query(proposal_space_rel_query)
+    print("proposal space relationships created", x)
 
 
-def create_vote_relationships(url, conn):
+def merge_proposal_author_relationships(url, conn):
+
+    proposal_author_rel_query = f"""
+                        LOAD CSV WITH HEADERS FROM '{url}' as proposals
+                        MATCH (p:Proposal {{snapshotId: proposals.snapshotId}}), (w:Wallet {{address: proposals.author}})
+                        MERGE (p)-[d:HAS_AUTHOR]->(w)
+                        return count(d)
+                    """
+
+    x = conn.query(proposal_author_rel_query)
+    print("proposal author relationships created", x)
+
+
+def merge_vote_relationships(url, conn):
 
     vote_rel_query = f"""
-                    USING PERIODIC COMMIT 10000
-                    LOAD CSV WITH HEADERS FROM '{url}' as votes
-                    MATCH (voter:Wallet {{address: votes.voter}}), (p:Proposal {{id: votes.proposal}})
-                    WITH voter, p, datetime(apoc.date.toISO8601(toInteger(votes.createdAt), 's')) AS cAt, votes
-                    MERGE (voter)-[:VOTED {{ipfs: votes.ipfs, createdAt: cAt, choice: votes.choice}}]->(p)
-                    """
+                            LOAD CSV WITH HEADERS FROM '{url}' AS votes
+                            MATCH (w:Wallet {{address: votes.voter}}), (p:Proposal {{snapshotId: votes.proposalId}}) 
+                            WITH w, p, datetime(apoc.date.toISO8601(toInteger(votes.votedAt), 's')) AS vDt, votes.choice as choice
+                            MERGE (w)-[:VOTED {{votedDt: vDt, choice: choice}}]->(p)
+                            return count(w)
+                        """
 
-    conn.query(vote_rel_query)
-    print("vote relationships created")
+    x = conn.query(vote_rel_query)
+    print("vote relationships created", x)
 
-def create_strategy_relationships(url, conn):
+
+def merge_strategy_relationships(url, conn):
 
     strat_rel_query = f"""                       
-                        USING PERIODIC COMMIT 5000
                         LOAD CSV WITH HEADERS FROM '{url}' as strats
-                        MATCH (t:Token {{address: strats.token}}), (s:Space {{id: strats.space}})
+                        MATCH (t:Token {{address: strats.token}}), (s:Space {{snapshotId: strats.space}})
                         MERGE (s)-[n:HAS_STRATEGY]->(t)
                         return count(n)
                     """
 
     x = conn.query(strat_rel_query)
-    print(x)
-    print("strategy relationships created")
+    print("strategy relationships created", x)
