@@ -57,8 +57,9 @@ if __name__ == "__main__":
         except:
             current_dict["onlyMembers"] = False
 
-        for strategy in entry["strategies"]:
-            strategy_list.append({"space": entry["id"], "strategy": strategy})
+        if "strategies" in entry and entry["strategies"]:
+            for strategy in entry["strategies"]:
+                strategy_list.append({"space": entry["id"], "strategy": strategy})
 
         space_list.append(current_dict)
 
