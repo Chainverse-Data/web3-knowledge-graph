@@ -1,0 +1,25 @@
+{
+  votes (
+    first: 1000
+    skip: 0
+    orderBy: "created",
+    orderDirection: desc,
+    where: {
+      proposal_in: $proposalIDs
+    }
+  ) {
+    id
+    ipfs
+    voter
+    created
+    choice
+    proposal {
+      id
+      choices
+    }
+    space {
+      id
+      name
+    }
+  }
+}

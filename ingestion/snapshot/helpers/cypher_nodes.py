@@ -29,6 +29,7 @@ def create_wallet_nodes(url, conn):
     wallet_node_query = f"""
                             LOAD CSV WITH HEADERS FROM '{url}' AS wallets
                             CREATE (w:Wallet {{address: wallets.address}})
+                            SET w.uuid = apoc.create.uuid()
                             return count(w)
                         """
 
@@ -41,6 +42,7 @@ def merge_wallet_nodes(url, conn):
     wallet_node_query = f"""
                             LOAD CSV WITH HEADERS FROM '{url}' AS wallets
                             MERGE (w:Wallet {{address: wallets.address}})
+                            ON CREATE set w.uuid = apoc.create.uuid()
                             return count(w)
                         """
 
@@ -53,7 +55,8 @@ def create_token_nodes(url, conn):
     token_node_query = f"""
                         LOAD CSV WITH HEADERS FROM '{url}' AS tokens
                         CREATE (t:Token {{address: tokens.address}})
-                        set t = tokens
+                        set t = tokens,
+                        t.uuid = apoc.create.uuid()
                         return count(t)
                     """
 
@@ -66,7 +69,9 @@ def merge_token_nodes(url, conn):
     token_node_query = f"""
                         LOAD CSV WITH HEADERS FROM '{url}' AS tokens
                         MERGE(t:Token {{address: tokens.address}})
-                        ON CREATE set t = tokens
+                        ON CREATE set t = tokens,
+                        t.uuid = apoc.create.uuid()
+                        return count(t)
                     """
 
     x = conn.query(token_node_query)

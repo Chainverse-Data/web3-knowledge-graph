@@ -1,0 +1,32 @@
+{
+  proposals(
+    first: 500,
+    skip: 0,
+    orderBy: "created",
+    orderDirection: desc
+  ) {
+    id
+    ipfs
+    author
+    created
+    space {
+      id
+      name
+    }
+    network
+    type
+    strategies {
+      name
+      params
+    }      
+    plugins
+    title
+    body
+    choices
+    start
+    end
+    snapshot
+    state
+    link
+  }
+}

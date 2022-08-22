@@ -1,19 +1,21 @@
 import boto3
-from datetime import datetime
+from datetime import datetime, timedelta
 import json
 import pandas as pd
 from dotenv import load_dotenv
 import os
 import sys
+from pathlib import Path
 
-sys.path.append(".")
+sys.path.append(str(Path(__file__).resolve().parent))
+sys.path.append(str(Path(__file__).resolve().parents[1]))
 from snapshot.helpers.cypher_nodes import *
 from snapshot.helpers.cypher_relationships import *
 from helpers.s3 import *
 from helpers.graph import ChainverseGraph
 
 SPLIT_SIZE = 10000
-now = datetime.now()
+now = datetime.now() - timedelta(days=0)  # adjust days as needed
 
 load_dotenv()
 uri = os.getenv("NEO_URI")
