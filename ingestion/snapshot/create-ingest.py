@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 import json
 import pandas as pd
 from dotenv import load_dotenv
+from web3 import Web3
 import os
 import sys
 from pathlib import Path
@@ -26,6 +27,9 @@ conn = ChainverseGraph(uri, username, password)
 resource = boto3.resource("s3")
 s3 = boto3.client("s3")
 BUCKET = "chainverse"
+
+provider = "https://eth-mainnet.alchemyapi.io/v2/" + str(os.environ.get("ALCHEMY_API_KEY"))
+w3 = Web3(Web3.HTTPProvider(provider))
 
 if __name__ == "__main__":
 
@@ -61,6 +65,16 @@ if __name__ == "__main__":
 
         for strategy in entry["strategies"]:
             strategy_list.append({"space": entry["id"], "strategy": strategy})
+
+        try:
+            x = w3.ens.address(name=current_dict["snapshotId"])
+            if x is not None:
+                ens_dict = {}
+                ens_dict["name"] = current_dict["snapshotId"]
+                ens_dict["address"] = x.lower()
+                ens_list.append(ens_dict)
+        except:
+            pass
 
         space_list.append(current_dict)
 

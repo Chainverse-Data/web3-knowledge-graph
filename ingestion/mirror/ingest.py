@@ -51,7 +51,7 @@ if __name__ == "__main__":
         current_dict["contributor"] = entry["contributer"].lower() or ""
         current_dict["datePublished"] = entry.get("timestamp", 0)
         current_dict["arweaveTx"] = entry["transaction"] or ""
-        current_dict["body"] = entry["body"] or ""
+        current_dict["text"] = entry["body"] or ""
 
         twitter_accounts = getTwitterAccounts(current_dict["body"])
         for account in twitter_accounts:

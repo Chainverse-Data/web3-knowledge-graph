@@ -23,6 +23,15 @@ def create_indexes(conn):
     wallet_query = """CREATE INDEX UniqueAddress IF NOT EXISTS FOR (n:Wallet) ON (n.address)"""
     conn.query(wallet_query)
 
+    ens_query = """CREATE INDEX UniqueENS IF NOT EXISTS FOR (n:Ens) ON (n.editionId)"""
+    conn.query(ens_query)
+
+    transaction_query = """CREATE INDEX UniqueTransaction IF NOT EXISTS FOR (n:Transaction) ON (n.txHash)"""
+    conn.query(transaction_query)
+
+    alias_query = """CREATE INDEX UniqueAlias IF NOT EXISTS FOR (n:Alias) ON (n.name)"""
+    conn.query(alias_query)
+
 
 def create_wallet_nodes(url, conn):
 
@@ -99,7 +108,6 @@ def create_space_nodes(url, conn):
 def merge_space_nodes(url, conn):
 
     space_node_query = f"""
-                            USING PERIODIC COMMIT 5000
                             LOAD CSV WITH HEADERS FROM '{url}' AS spaces
                             MERGE(s:EntitySnapshotSpace:Snapshot:Space:Entity {{snapshotId: spaces.snapshotId}})
                             ON CREATE set s.uuid = apoc.create.uuid(),
@@ -148,7 +156,6 @@ def create_proposal_nodes(url, conn):
 def merge_proposal_nodes(url, conn):
 
     proposal_node_query = f"""
-                                USING PERIODIC COMMIT 1000
                                 LOAD CSV WITH HEADERS FROM '{url}' AS proposals
                                 MERGE(p:Snapshot:Proposal:ProposalSnapshot {{snapshotId: proposals.snapshotId}})
                                 ON CREATE set p.uuid = apoc.create.uuid(),
@@ -181,7 +188,6 @@ def merge_proposal_nodes(url, conn):
 def merge_strategy_nodes(url, conn):
 
     strategy_node_query = f"""
-                        USING PERIODIC COMMIT 1000
                         LOAD CSV WITH HEADERS FROM '{url}' AS strategy
                         MERGE(s:Snapshot:Strategy {{id: strategy.id}})
                         ON CREATE set s = strategy
@@ -194,7 +200,6 @@ def merge_strategy_nodes(url, conn):
 def create_strategy_nodes(url, conn):
 
     strategy_node_query = f"""
-                        USING PERIODIC COMMIT 1000
                         LOAD CSV WITH HEADERS FROM '{url}' AS strategy
                         CREATE (s:Snapshot:Strategy {{id: strategy.id}})
                         set s = strategy
@@ -202,3 +207,33 @@ def create_strategy_nodes(url, conn):
 
     x = conn.query(strategy_node_query)
     print("strategy nodes created", x)
+
+
+def merge_ens_nodes(url, conn):
+
+    ens_node_query = f"""
+                        LOAD CSV WITH HEADERS FROM '{url}' AS ens
+                        MERGE (a:Alias {{name: ens.name}})
+                        ON CREATE set a.uuid = apoc.create.uuid(),
+                            a.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
+                            a.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
+                        ON MATCH set a.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
+
+                        MERGE (w:Wallet {{address: ens.owner}})
+                        ON CREATE set w.uuid = apoc.create.uuid()
+
+                        MERGE (e:Ens:Nft {{editionId: ens.tokenId}})
+                        ON CREATE set e.uuid = apoc.create.uuid(),
+                            e.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
+                            e.contractAddress = ens.contractAddress
+
+                        MERGE (t:Transaction:Event {{txHash: ens.txHash}})
+                        ON CREATE set t.uuid = apoc.create.uuid(),
+                            t.date = datetime(apoc.date.toISO8601(toInteger(ens.date), 's')),
+                            t.type = 'registrant'
+
+                        return count(e)
+                    """
+
+    x = conn.query(ens_node_query)
+    print("ens nodes merged", x)

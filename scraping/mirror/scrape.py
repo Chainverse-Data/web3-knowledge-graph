@@ -150,6 +150,7 @@ if __name__ == "__main__":
     for entry in fetched_data:
         s3Object = s3.Object(BUCKET, "mirror/data/{}.json".format(entry[1]))
         s3Object.put(Body=json.dumps(entry[0]))
+    print("Data uploaded to S3")
 
     all_txs = [entry[1] for entry in fetched_data]
 
@@ -166,6 +167,7 @@ if __name__ == "__main__":
     exportData(all_txs)
 
     # update end block for next run
-    with open("start_block.txt", "w") as f:
-        f.write(str(end_block))
+    if args.end == 0:
+        with open("start_block.txt", "w") as f:
+            f.write(str(end_block))
 
