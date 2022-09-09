@@ -5,46 +5,40 @@ from dotenv import load_dotenv
 from datetime import datetime
 import os
 import json
-from helpers.arweave import getArweaveTxs, requestData
-import multiprocessing
-import contextlib
-import joblib
 from tqdm import tqdm
 from joblib import Parallel, delayed
 from pathlib import Path
+import sys
+
+sys.path.append(str(Path(__file__).resolve().parents[2]))
+from scraping.mirror.helpers.arweave import getArweaveTxs
+from scraping.helpers.util import tqdm_joblib
+
+load_dotenv()
+s3 = boto3.resource("s3")
+client = boto3.client("s3")
+BUCKET = "chainverse"
 
 
-@contextlib.contextmanager
-def tqdm_joblib(tqdm_object):
-    """Context manager to patch joblib to report into tqdm progress bar given as argument"""
-
-    class TqdmBatchCompletionCallback(joblib.parallel.BatchCompletionCallBack):
-        def __call__(self, *args, **kwargs):
-            tqdm_object.update(n=self.batch_size)
-            return super().__call__(*args, **kwargs)
-
-    old_batch_callback = joblib.parallel.BatchCompletionCallBack
-    joblib.parallel.BatchCompletionCallBack = TqdmBatchCompletionCallback
-    try:
-        yield tqdm_object
-    finally:
-        joblib.parallel.BatchCompletionCallBack = old_batch_callback
-        tqdm_object.close()
-
-
-def exportData(all_txs):
+def exportData(all_txs, load=False):
     final = []
     failed = []
 
     now = datetime.now()
-    for tx in all_txs:
-        try:
-            s3Object = s3.Object(BUCKET, f"mirror/data/{tx}.json")
-            body = json.loads(json.loads(s3Object.get()["Body"].read().decode("utf-8")))
-            body["id"] = tx
+    if load:
+        for tx in all_txs:
+            try:
+                s3Object = s3.Object(BUCKET, f"mirror/data/{tx}.json")
+                body = json.loads(json.loads(s3Object.get()["Body"].read().decode("utf-8")))
+                body["id"] = tx
+                final.append(body)
+            except:
+                failed.append(tx.split("/")[-1].split(".")[0])
+    else:
+        for tx in all_txs:
+            body = json.loads(tx[0])
+            body["id"] = tx[1]
             final.append(body)
-        except:
-            failed.append(tx.split("/")[-1].split(".")[0])
 
     def generate_data(row):
         try:
@@ -77,6 +71,34 @@ def exportData(all_txs):
     return final
 
 
+def exportArticles(all_articles, load=False):
+    final = []
+    failed = []
+
+    now = datetime.now()
+    if load:
+        for article in all_articles:
+            try:
+                s3Object = s3.Object(BUCKET, f"mirror/articles/{article}.json")
+                body = json.loads(s3Object.get()["Body"].read().decode("utf-8"))
+                final.append(body)
+            except:
+                failed.append(tx.split("/")[-1].split(".")[0])
+
+    else:
+        for article in all_articles:
+            final.append(article)
+
+    final = [x for y in final for x in y]
+
+    s3Object = s3.Object(BUCKET, f"mirror/final/{now.strftime('%m-%d-%Y')}/articles.json")
+    s3Object.put(Body=json.dumps(final))
+
+    print("Exported {} articles".format(len(final)))
+
+    return final
+
+
 def reqData(i):
     r = requests.get(f"https://arweave.net/{i}", allow_redirects=True)
     try:
@@ -90,13 +112,8 @@ def reqData(i):
 
 def fetchData(item):
     x = reqData(item[1])
-    return (x, item[1])
-
-
-load_dotenv()
-s3 = boto3.resource("s3")
-client = boto3.client("s3")
-BUCKET = "chainverse"
+    if x != "":
+        return (x, item[1])
 
 
 if __name__ == "__main__":
@@ -126,7 +143,7 @@ if __name__ == "__main__":
 
     print(f"Getting data from {start_block} to {end_block}")
 
-    tickets = getArweaveTxs(start_block, end_block, 1000)
+    tickets = getArweaveTxs(start_block, end_block, 400)
 
     all_ids = set()
     cleanedTickets = []
@@ -152,6 +169,16 @@ if __name__ == "__main__":
         s3Object.put(Body=json.dumps(entry[0]))
     print("Data uploaded to S3")
 
+    # with tqdm_joblib(tqdm(desc="Fetching Articles", total=len(fetched_data))) as progress_bar:
+    #     fetched_articles = Parallel(n_jobs=-1)(delayed(parse_items)(entry) for entry in fetched_data)
+    # fetched_articles = [x for x in fetched_articles if len(x) > 0]
+    # print(f"{len([x for y in fetched_articles for x in y])} articles fetched")
+
+    # for entry in fetched_articles:
+    #     s3Object = s3.Object(BUCKET, "mirror/articles/{}.json".format(entry[0]["transaction"]))
+    #     s3Object.put(Body=json.dumps(entry[0]))
+    # print("Articles uploaded to S3")
+
     all_txs = [entry[1] for entry in fetched_data]
 
     if args.all:
@@ -164,7 +191,11 @@ if __name__ == "__main__":
                 tx = keyString.split("/")[-1].split(".")[0]
                 all_txs.append(tx)
 
-    exportData(all_txs)
+        exportData(all_txs, True)
+        # exportArticles(all_txs, True)
+    else:
+        exportData(fetched_data, False)
+        # exportArticles(fetched_articles, False)
 
     # update end block for next run
     if args.end == 0:

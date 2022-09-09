@@ -3,20 +3,27 @@ from datetime import datetime, timedelta
 import json
 import pandas as pd
 from dotenv import load_dotenv
-from web3 import Web3
 import os
 import sys
 from pathlib import Path
 
-sys.path.append(str(Path(__file__).resolve().parent))
-sys.path.append(str(Path(__file__).resolve().parents[1]))
-from snapshot.helpers.cypher_nodes import *
-from snapshot.helpers.cypher_relationships import *
-from helpers.s3 import *
-from helpers.graph import ChainverseGraph
+sys.path.append(str(Path(__file__).resolve().parents[2]))
+from ingestion.snapshot.helpers.cypher_nodes import *
+from ingestion.snapshot.helpers.cypher_relationships import *
+from ingestion.helpers.s3 import *
+from ingestion.helpers.graph import ChainverseGraph
+from ingestion.helpers.cypher import (
+    create_constraints,
+    create_indexes,
+    merge_ens_nodes,
+    merge_ens_relationships,
+    merge_wallet_nodes,
+    merge_twitter_nodes,
+    merge_token_nodes
+)
 
 SPLIT_SIZE = 20000
-now = datetime.now() - timedelta(days=0)  # adjust days as needed
+now = datetime.now() - timedelta(days=10)  # adjust days as needed
 
 load_dotenv()
 uri = os.getenv("NEO_URI")
@@ -28,13 +35,10 @@ resource = boto3.resource("s3")
 s3 = boto3.client("s3")
 BUCKET = "chainverse"
 
-provider = "https://eth-mainnet.alchemyapi.io/v2/" + str(os.environ.get("ALCHEMY_API_KEY"))
-w3 = Web3(Web3.HTTPProvider(provider))
-
 if __name__ == "__main__":
 
     # create constraints and indexes
-    create_unique_constraints(conn)
+    create_constraints(conn)
     create_indexes(conn)
 
     # create space nodes
@@ -45,13 +49,22 @@ if __name__ == "__main__":
     # clean space nodes
     space_list = []
     strategy_list = []
+    ens_list = []
+    member_list = []
+    admin_list = []
     for entry in json_data:
         current_dict = {}
         current_dict["snapshotId"] = entry["id"]
+        current_dict[
+            "profileUrl"
+        ] = f"https://cdn.stamp.fyi/space/{current_dict['snapshotId']}?s=160&cb=a1b40604488c19a1"
         current_dict["name"] = entry["name"]
         current_dict["about"] = entry.get("about", "").replace('"', "").replace("'", "").replace("\\", "").strip()
         current_dict["chainId"] = entry.get("network", "")
         current_dict["symbol"] = entry.get("symbol", "")
+        current_dict["handle"] = entry.get("twitter", "")
+        current_dict["handle"] = current_dict["handle"] if current_dict["handle"] else ""
+        current_dict["twitterProfileUrl"] = "https://twitter.com/" + current_dict["handle"]
 
         try:
             current_dict["minScore"] = entry["filters"]["minScore"]
@@ -63,18 +76,27 @@ if __name__ == "__main__":
         except:
             current_dict["onlyMembers"] = False
 
-        for strategy in entry["strategies"]:
-            strategy_list.append({"space": entry["id"], "strategy": strategy})
+        if "strategies" in entry and entry["strategies"]:
+            for strategy in entry["strategies"]:
+                strategy_list.append({"space": entry["id"], "strategy": strategy})
 
-        try:
-            x = w3.ens.address(name=current_dict["snapshotId"])
-            if x is not None:
-                ens_dict = {}
-                ens_dict["name"] = current_dict["snapshotId"]
-                ens_dict["address"] = x.lower()
-                ens_list.append(ens_dict)
-        except:
-            pass
+        for member in entry["members"]:
+            member_list.append({"space": entry["id"], "address": member.lower()})
+
+        for admin in entry["admins"]:
+            admin_list.append({"space": entry["id"], "address": admin.lower()})
+
+        if "ens" in entry:
+            ens = entry["ens"]
+            ens_list.append(
+                {
+                    "name": entry["id"],
+                    "owner": ens["owner"].lower(),
+                    "tokenId": ens["token_id"],
+                    "txHash": ens["trans"]["hash"],
+                    "contractAddress": ens["trans"]["rawContract"]["address"],
+                }
+            )
 
         space_list.append(current_dict)
 
@@ -87,8 +109,59 @@ if __name__ == "__main__":
         url = write_df_to_s3(
             space_batch, BUCKET, f"neo/snapshot/nodes/space/space-{idx * SPLIT_SIZE}.csv", resource, s3
         )
-        create_space_nodes(url, conn)
+        merge_space_nodes(url, conn)
         set_object_private(BUCKET, f"neo/snapshot/nodes/space/space-{idx * SPLIT_SIZE}.csv", resource)
+
+    # create ens nodes and relationships
+    ens_df = pd.DataFrame(ens_list)
+    ens_df.drop_duplicates(subset=["name"], inplace=True)
+    print("ENS nodes: ", len(ens_df))
+
+    list_ens_chunks = split_dataframe(ens_df, SPLIT_SIZE)
+    for idx, ens_batch in enumerate(list_ens_chunks):
+        url = write_df_to_s3(ens_batch, BUCKET, f"neo/snapshot/nodes/ens/ens-{idx * SPLIT_SIZE}.csv", resource, s3)
+        merge_ens_nodes(url, conn)
+        merge_ens_relationships(url, conn)
+        merge_space_alias_relationships(url, conn)
+        set_object_private(BUCKET, f"neo/snapshot/nodes/ens/ens-{idx * SPLIT_SIZE}.csv", resource)
+
+    # create member nodes
+    member_df = pd.DataFrame(member_list)
+    member_df.drop_duplicates(subset=["space", "address"], inplace=True)
+    print("Member nodes: ", len(member_df))
+    for idx, member_batch in enumerate(split_dataframe(member_df, SPLIT_SIZE)):
+        url = write_df_to_s3(
+            member_batch, BUCKET, f"neo/snapshot/nodes/member/member-{idx * SPLIT_SIZE}.csv", resource, s3
+        )
+        merge_wallet_nodes(url, conn)
+        merge_member_relationships(url, conn)
+        set_object_private(BUCKET, f"neo/snapshot/nodes/member/member-{idx * SPLIT_SIZE}.csv", resource)
+
+    # create admin nodes
+    admin_df = pd.DataFrame(admin_list)
+    admin_df.drop_duplicates(subset=["space", "address"], inplace=True)
+    print("Admin nodes: ", len(admin_df))
+    for idx, admin_batch in enumerate(split_dataframe(admin_df, SPLIT_SIZE)):
+        url = write_df_to_s3(
+            admin_batch, BUCKET, f"neo/snapshot/nodes/admin/admin-{idx * SPLIT_SIZE}.csv", resource, s3
+        )
+        merge_wallet_nodes(url, conn)
+        merge_admin_relationships(url, conn)
+        set_object_private(BUCKET, f"neo/snapshot/nodes/admin/admin-{idx * SPLIT_SIZE}.csv", resource)
+
+    # create twitter nodes
+    twitter_df = space_df[["snapshotId", "handle", "twitterProfileUrl"]].drop_duplicates(subset=["handle"])
+    twitter_df = twitter_df[twitter_df["handle"] != ""]
+    print("Twitter nodes: ", len(twitter_df))
+
+    list_twitter_chunks = split_dataframe(twitter_df, SPLIT_SIZE)
+    for idx, twitter_batch in enumerate(list_twitter_chunks):
+        url = write_df_to_s3(
+            twitter_batch, BUCKET, f"neo/snapshot/nodes/twitter/twitter-{idx * SPLIT_SIZE}.csv", resource, s3
+        )
+        merge_twitter_nodes(url, conn)
+        merge_twitter_relationships(url, conn)
+        set_object_private(BUCKET, f"neo/snapshot/nodes/twitter/twitter-{idx * SPLIT_SIZE}.csv", resource)
 
     # create token nodes and strategy relationships
     strategy_relationships = []
@@ -125,7 +198,7 @@ if __name__ == "__main__":
     token_df.drop_duplicates(subset="address", inplace=True)
     print("Token nodes: ", len(token_df))
     url = write_df_to_s3(token_df, BUCKET, "neo/snapshot/nodes/token.csv", resource, s3)
-    create_token_nodes(url, conn)
+    merge_token_nodes(url, conn)
     set_object_private(BUCKET, "neo/snapshot/nodes/token.csv", resource)
 
     strategy_df = pd.DataFrame(strategy_relationships)
@@ -175,7 +248,7 @@ if __name__ == "__main__":
         url = write_df_to_s3(
             prop_batch, BUCKET, f"neo/snapshot/nodes/proposal/prop-{idx * SPLIT_SIZE}.csv", resource, s3
         )
-        create_proposal_nodes(url, conn)
+        merge_proposal_nodes(url, conn)
         set_object_private(BUCKET, f"neo/snapshot/nodes/proposal/prop-{idx * SPLIT_SIZE}.csv", resource)
 
     # create proposal - space relationships
@@ -230,7 +303,7 @@ if __name__ == "__main__":
         url = write_df_to_s3(
             wallet_batch, BUCKET, f"neo/snapshot/nodes/wallet/wallet-{idx * SPLIT_SIZE}.csv", resource, s3
         )
-        create_wallet_nodes(url, conn)
+        merge_wallet_nodes(url, conn)
         set_object_private(BUCKET, f"neo/snapshot/nodes/wallet/wallet-{idx * SPLIT_SIZE}.csv", resource)
 
     # create proposal - author relationships
@@ -250,3 +323,4 @@ if __name__ == "__main__":
         )
         merge_vote_relationships(url, conn)
         set_object_private(BUCKET, f"neo/snapshot/relationships/votes/vote-{idx * SPLIT_SIZE}.csv", resource)
+

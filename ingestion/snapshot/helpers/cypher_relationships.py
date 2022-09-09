@@ -55,20 +55,13 @@ def merge_strategy_relationships(url, conn):
     print("strategy relationships created", x)
 
 
-def merge_ens_relationships(url, conn):
+def merge_space_alias_relationships(url, conn):
 
     ens_rel_query = f"""
                         LOAD CSV WITH HEADERS FROM '{url}' as ens
-                        MATCH (w:Wallet {{address: ens.owner}}), 
-                            (e:Ens {{editionId: ens.tokenId}}), 
-                            (s:Space {{snapshotId: ens.name}}),
-                            (a:Alias {{name: ens.name}}),
-                            (t:Transaction {{txHash: ens.txHash}})
+                        MATCH (s:Space {{snapshotId: ens.name}}),
+                            (a:Alias {{name: toLower(ens.name)}})
                         MERGE (s)-[n:HAS_ALIAS]->(a)
-                        MERGE (w)-[:HAS_ALIAS]->(a)
-                        MERGE (w)-[:RECEIVED]->(t)
-                        MERGE (e)-[:TRANSFERRED]->(t)
-                        MERGE (e)-[:HAS_NAME]->(a)
                         return count(n)
                     """
 
@@ -80,7 +73,7 @@ def merge_member_relationships(url, conn):
 
     member_rel_query = f"""
                         LOAD CSV WITH HEADERS FROM '{url}' as members
-                        MATCH (w:Wallet {{address: members.address}}), (s:Space {{snapshotId: members.space}})
+                        MATCH (w:Wallet {{address: toLower(members.address)}}), (s:Space {{snapshotId: members.space}})
                         MERGE (w)-[r:CONTRIBUTOR]->(s)
                         ON CREATE SET r.type = 'member',
                             r.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
@@ -97,7 +90,7 @@ def merge_admin_relationships(url, conn):
 
     admin_rel_query = f"""
                         LOAD CSV WITH HEADERS FROM '{url}' as admins
-                        MATCH (w:Wallet {{address: admins.address}}), (s:Space {{snapshotId: admins.space}})
+                        MATCH (w:Wallet {{address: toLower(admins.address)}}), (s:Space {{snapshotId: admins.space}})
                         MERGE (w)-[r:CONTRIBUTOR]->(s)
                         ON CREATE SET r.type = 'admin',
                             r.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
@@ -108,3 +101,15 @@ def merge_admin_relationships(url, conn):
 
     x = conn.query(admin_rel_query)
     print("admin relationships created", x)
+
+
+def merge_twitter_relationships(url, conn):
+
+    twitter_rel_query = f"""
+                        LOAD CSV WITH HEADERS FROM '{url}' as twitter
+                        MATCH (s:Space {{snapshotId: twitter.snapshotId}}), (t:Twitter {{handle: toLower(twitter.handle)}})
+                        MERGE (s)-[r:HAS_ACCOUNT]->(t)
+                        return count(r)"""
+
+    x = conn.query(twitter_rel_query)
+    print("twitter relationships created", x)
