@@ -1,22 +1,28 @@
-# neo-ingest
+# DiamondDAO scraping and ingesting pipelines
 
 This repo has scripts for scraping various data sources and ingesting this data into a neo4j graph database.
-The 3 primary sources are snapshot, mirror, and daohaus.
-The code is organized into two main python modules: **ingestion** and **scraping**.
+
+The code is organized into two main python modules: **ingestion** and **scraping**. There are scrict design guidelines to allow for easy maintenance and expandability.
 
 ## Design strategy
-The code stack follows a python module approach such that one can call the following: `python3 -m module_name.service_name.action -p parameter`. For example, to scrape GitCoin `python3 -m scraping.gitcoin.scrape --start_time=
+The code stack follows a python module approach such that one can call the following: `python3 -m module_name.service_name.action -p parameter`. For example, to scrape GitCoin `python3 -m scraping.gitcoin.scrape --start_time=`
 
 ## Install
 It is recommended to created a virtual python environment using Python 3.10. Then install all requirements with `pip3 install -r requierements.txt`.
 
 ## Requirements
 You will need to define the two following Environment variable for the module to be running:
+NEO_URI=[The URL of the NEO4J instance]
+NEO_USERNAME=[The user name of the DB]
+NEO_PASSWORD=[The password to the DB]
+ALCHEMY_API_KEY=[Your Alchemy API Key]
 AWS_ACCESS_KEY_ID=[Your AWS ID]
 AWS_SECRET_ACCESS_KEY=[Your AWS Key]
 
 # Docker image
-TBD: But this will be an image with an entrypoint such that one can call a `docker run IMAGE python3 -m module.service.action` 
+**Work In Progress**
+TBD: But this will be an image with an entrypoint such that one can call a `docker run IMAGE python3 -m module.service.action`.
+The goal is to be able to trigger docker image launches on cloud services by a pipeline manager to have automated runs and depencies.
 
 # The scraping module
 The scrapping module can be either imported or ran as a package using the `python -m` command. Every internal package implements a `scrape.py` file which will run the scrapping for the particular service. 
