@@ -12,7 +12,7 @@ import sys
 
 sys.path.append(str(Path(__file__).resolve().parents[2]))
 from scraping.mirror.helpers.arweave import getArweaveTxs
-from scraping.helpers.util import tqdm_joblib
+from scraping.helpers.utils import tqdm_joblib
 
 load_dotenv()
 s3 = boto3.resource("s3")

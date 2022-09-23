@@ -7,3 +7,4 @@ python-dotenv==0.20.0
 requests==2.26.0
 s3fs==2022.2.0
 tqdm==4.62.3
+web3==5.31.0

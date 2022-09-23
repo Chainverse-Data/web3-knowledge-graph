@@ -1,2 +1,3 @@
-from .scraper import *
-from .util import *
+__all__ = ["scraper", "utils"]
+from .scraper import Scraper
+from .utils import *

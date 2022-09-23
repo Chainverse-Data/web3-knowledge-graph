@@ -1,1 +1,1 @@
-from .scrape import GitCoinScrapper
+__all__ = ["GitCoinScrapper"]
