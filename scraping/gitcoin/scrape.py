@@ -5,12 +5,9 @@ import logging
 import tqdm
 import os
 
-# TO REMOVE !
-import random
-
 class GitCoinScraper(Scraper):
     def __init__(self):
-        super().__init__("gitcoin", allow_override=True)
+        super().__init__("gitcoin", allow_override=False)
         self.gitcoin_api_limit=40
         self.blocks_limit = 2000
         self.last_grant_offset = 0
@@ -44,8 +41,6 @@ class GitCoinScraper(Scraper):
                 pbar.update(self.gitcoin_api_limit)
                 pbar.total += self.gitcoin_api_limit
                 pbar.refresh()
-                if random.random() > 0.5: # TO_REMOVE
-                    break # TO_REMOVE
 
     def get_all_donnations(self):
         logging.info("Collecting all events from GitCoin BulckCheckout and extracting DonationSent events")
@@ -82,9 +77,6 @@ class GitCoinScraper(Scraper):
                 pbar.update(self.blocks_limit)
                 pbar.total += self.blocks_limit
                 pbar.refresh()
-                if len(self.data["donations"]) > 0: # TO_REMOVE
-                    if random.random() > 0.5: # TO_REMOVE
-                        break # TO_REMOVE
 
     def get_all_bounties(self):
         logging.info("Getting the list of all the bounties from GitCoin")
@@ -101,8 +93,6 @@ class GitCoinScraper(Scraper):
                 pbar.update(self.gitcoin_api_limit)
                 pbar.total += self.gitcoin_api_limit
                 pbar.refresh()
-                if random.random() > 0.5: # TO_REMOVE
-                    break # TO_REMOVE
 
     def run(self):
         self.get_all_donnations()
