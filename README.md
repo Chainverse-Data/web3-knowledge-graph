@@ -12,17 +12,13 @@ It is recommended to created a virtual python environment using **Python 3.10**.
 
 ## Requirements
 You will need to define the two following Environment variable for the module to be running:
-NEO_URI=[The URL of the NEO4J instance]
-NEO_USERNAME=[The user name of the DB]
-NEO_PASSWORD=[The password to the DB]
-NEO_DB=[Optional Value: If the DB is not set by the URI, or you want to target another DB]
-ETHERSCAN_API_KEY=[Your Etherscan API Key]
-ALCHEMY_API_KEY=[Your Alchemy API Key]
+```
 AWS_BUCKET_PREFIX=[A unique bucket name prefix]
 AWS_DEFAULT_REGION=[The targeted AWS Region]
 AWS_ACCESS_KEY_ID=[Your AWS ID]
 AWS_SECRET_ACCESS_KEY=[Your AWS Key]
 LOGLEVEL=[DEBUG|INFO|WARNING|ERROR] python logging library log level
+```
 
 # Docker image
 The module is packaged into a Docker image for cloud deployement, or local use. To build the image just launch `docker build . -t diamond-pipelines`.
@@ -50,6 +46,8 @@ The scrapping module can be either imported or ran as a package using the `pytho
 ## Environment variables
 You can set the following environement variables that will apply to all scraper modules.
 ```
+ETHERSCAN_API_KEY=[Your Etherscan API Key]
+ALCHEMY_API_KEY=[Your Alchemy API Key]
 ALLOW_OVERRIDE=1 [Set to 1 if you want to allow overiding saved data on S3, else remove or set to 0]
 ```
 
@@ -164,6 +162,10 @@ In a normal setting, for efficiency, the data is processed into a pandas datafra
 You can define the following environment variables for any ingestor.
 
 ```
+NEO_URI=[The URL of the NEO4J instance]
+NEO_USERNAME=[The user name of the DB]
+NEO_PASSWORD=[The password to the DB]
+NEO_DB=[Optional Value: If the DB is not set by the URI, or you want to target another DB]
 INGEST_FROM_DATE=[YYYY-MM-DD] #Filter the data files from the scraper from (inclusive) this date
 INGEST_TO_DATE=[YYYY-MM-DD] #Filter the data files from the scraper to (inclusive) this date
 ```
