@@ -10,12 +10,10 @@ import boto3
 import time
 import re
 
-sys.path.append(str(Path(__file__).resolve().parent))
-sys.path.append(str(Path(__file__).resolve().parents[1]))
 sys.path.append(str(Path(__file__).resolve().parents[2]))
-from twitter.helpers.cypher import *
-from helpers.graph import ChainverseGraph
-from helpers.s3 import *
+from ingestion.twitter.helpers.cypher import *
+from ingestion.helpers.graph import ChainverseGraph
+from ingestion.helpers.s3 import *
 from ingestion.helpers.cypher import create_constraints
 
 
@@ -30,7 +28,7 @@ s3 = boto3.client("s3")
 BUCKET = "chainverse"
 
 now = datetime.now()
-cutoff = now - timedelta(days=1)
+cutoff = now - timedelta(days=20)
 
 BATCH_SIZE = 100
 SPLIT_SIZE = 10000
@@ -61,7 +59,7 @@ def get_user_response(batch, retries=0):
 
     twitter_handles_batch = ",".join(batch)
     x = requests.get(
-        f"https://api.twitter.com/2/users/by?usernames={twitter_handles_batch}&user.fields=description,id,name,public_metrics,verified,profile_image_url",
+        f"https://api.twitter.com/2/users/by?usernames={twitter_handles_batch}&user.fields=description,id,name,public_metrics,verified,profile_image_url,url",
         headers=headers,
     )
     resp = json.loads(x.text)
@@ -99,7 +97,8 @@ if __name__ == "__main__":
             current_dict["verified"] = user["verified"]
             current_dict["userId"] = user["id"]
             current_dict["followerCount"] = user["public_metrics"]["followers_count"]
-            current_dict['profileImageUrl'] = user['profile_image_url']
+            current_dict["profileImageUrl"] = user["profile_image_url"]
+            current_dict["website"] = user["url"]
             set_items.remove(current_dict["handle"])
             user_list.append(current_dict)
 

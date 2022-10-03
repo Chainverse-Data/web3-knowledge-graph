@@ -34,7 +34,7 @@ def merge_proposal_nodes(url, conn):
                                   p.snapshotId = proposals.snapshotId,
                                   p.ipfsCID = proposals.ipfsCId,
                                   p.title = proposals.title,
-                                  p.body = proposals.body,
+                                  p.text = proposals.text,
                                   p.choices = proposals.choices,
                                   p.type = proposals.type,
                                   p.author = proposals.author,
@@ -45,7 +45,7 @@ def merge_proposal_nodes(url, conn):
                                   p.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                                   p.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
                                 ON MATCH set p.title = proposals.title,
-                                  p.body = proposals.body,
+                                  p.text = proposals.text,
                                   p.choices = proposals.choices,
                                   p.type = proposals.type,
                                   p.state = proposals.state,
@@ -67,4 +67,3 @@ def merge_strategy_nodes(url, conn):
 
     x = conn.query(strategy_node_query)
     print("strategy nodes merged", x)
-

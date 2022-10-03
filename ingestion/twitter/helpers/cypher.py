@@ -43,6 +43,7 @@ def add_twitter_node_info(url, conn):
                                 t.followerCount = toInteger(twitter.followerCount),
                                 t.verified = toBoolean(twitter.verified),
                                 t.userId = twitter.userId,
+                                t.website = twitter.website,
                                 t.profileImageUrl = twitter.profileImageUrl,
                                 t.lastUpdatedDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
                             return count(t)"""
@@ -61,3 +62,16 @@ def add_trash_labels(url, conn):
 
     x = conn.query(twitter_node_query)
     print("trash labels added", x)
+
+
+def merge_twitter_ens_relationships(url, conn):
+
+    twitter_ens_query = f"""
+                            LOAD CSV WITH HEADERS FROM '{url}' AS twitter
+                            MATCH (t:Twitter {{handle: twitter.handle}})
+                            MATCH (a:Alias {{name: toLower(twitter.ens)}})
+                            MERGE (t)-[r:HAS_ALIAS]->(a)
+                            return count(r)"""
+
+    x = conn.query(twitter_ens_query)
+    print("twitter ens relationships merged", x)

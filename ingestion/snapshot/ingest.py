@@ -19,7 +19,7 @@ from ingestion.helpers.cypher import (
     merge_ens_relationships,
     merge_wallet_nodes,
     merge_twitter_nodes,
-    merge_token_nodes
+    merge_token_nodes,
 )
 
 SPLIT_SIZE = 20000
@@ -225,7 +225,7 @@ if __name__ == "__main__":
         current_dict["spaceId"] = entry["space"]["id"]
 
         current_dict["title"] = entry["title"].replace('"', "").replace("'", "").replace("\\", "").strip() or ""
-        current_dict["body"] = entry["body"].replace('"', "").replace("'", "").replace("\\", "").strip() or ""
+        current_dict["text"] = entry["body"].replace('"', "").replace("'", "").replace("\\", "").strip() or ""
 
         choices = json.dumps(entry["choices"])
         choices = choices.replace('"', "").replace("'", "").strip() or ""
@@ -323,4 +323,3 @@ if __name__ == "__main__":
         )
         merge_vote_relationships(url, conn)
         set_object_private(BUCKET, f"neo/snapshot/relationships/votes/vote-{idx * SPLIT_SIZE}.csv", resource)
-

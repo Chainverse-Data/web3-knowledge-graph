@@ -31,6 +31,9 @@ def create_constraints(conn):
     mirror_query = """CREATE CONSTRAINT UniqueMirror IF NOT EXISTS FOR (d:Mirror) REQUIRE d.uri IS UNIQUE"""
     conn.query(mirror_query)
 
+    daohaus_query = """CREATE CONSTRAINT UniqueDAOhausID IF NOT EXISTS FOR (d:DaoHaus) REQUIRE d.daohausId IS UNIQUE"""
+    conn.query(daohaus_query)
+
 
 # create all indexes for nodes
 def create_indexes(conn):
@@ -57,6 +60,9 @@ def create_indexes(conn):
 
     twitter_query = """CREATE INDEX UniqueTwitterID IF NOT EXISTS FOR (n:Twitter) ON (n.handle)"""
     conn.query(twitter_query)
+
+    daohaus_query = """CREATE INDEX UniqueDAOhausID IF NOT EXISTS FOR (n:DaoHaus) ON (n.daohausId)"""
+    conn.query(daohaus_query)
 
 
 # multsig labels
@@ -126,10 +132,11 @@ def merge_ens_nodes(url, conn):
                             e.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                             e.contractAddress = ens.contractAddress
 
-                        MERGE (t:Transaction:Event {{txHash: toLower(ens.txHash)}})
+                        MERGE (t:Transaction {{txHash: toLower(ens.txHash)}})
                         ON CREATE set t.uuid = apoc.create.uuid(),
                             t.date = datetime(apoc.date.toISO8601(toInteger(ens.date), 's')),
-                            t.type = 'registrant'
+                            t.type = 'registrant',
+                            t:Event
 
                         return count(e)
                     """
@@ -144,11 +151,9 @@ def merge_ens_relationships(url, conn):
                         LOAD CSV WITH HEADERS FROM '{url}' as ens
                         MATCH (w:Wallet {{address: toLower(ens.owner)}}), 
                             (e:Ens {{editionId: ens.tokenId}}), 
-                            (s:Space {{snapshotId: ens.name}}),
                             (a:Alias {{name: toLower(ens.name)}}),
                             (t:Transaction {{txHash: toLower(ens.txHash)}})
-                        MERGE (s)-[n:HAS_ALIAS]->(a)
-                        MERGE (w)-[:HAS_ALIAS]->(a)
+                        MERGE (w)-[n:HAS_ALIAS]->(a)
                         MERGE (w)-[:RECEIVED]->(t)
                         MERGE (e)-[:TRANSFERRED]->(t)
                         MERGE (e)-[:HAS_NAME]->(a)
@@ -164,11 +169,12 @@ def merge_twitter_nodes(url, conn):
 
     twitter_node_query = f"""
                         LOAD CSV WITH HEADERS FROM '{url}' AS twitter
-                        MERGE (a:Account:Twitter {{handle: toLower(twitter.handle)}})
+                        MERGE (a:Twitter {{handle: toLower(twitter.handle)}})
                         ON CREATE set a.uuid = apoc.create.uuid(),
                             a.profileUrl = twitter.profileUrl,
                             a.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
-                            a.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
+                            a.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
+                            a:Account
 
                         return count(a)    
                         """
