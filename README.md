@@ -2,13 +2,13 @@
 
 This repo has scripts for scraping various data sources and ingesting this data into a neo4j graph database.
 
-The code is organized into two main python modules: **ingestion** and **scraping**. There are scrict design guidelines to allow for easy maintenance and expandability.
+The code is organized into three main python modules: **ingestion**, **scraping**, **analytics**. There are scrict design guidelines to allow for easy maintenance and expandability.
 
 ## Design strategy
-The code stack follows a python module approach such that one can call the following: `python3 -m module_name.service_name.action -p parameter`. For example, to scrape GitCoin `python3 -m scraping.gitcoin.scrape --start_time=`
+The code stack follows a python module approach such that one can call the following: `python3 -m module_name.service_name.action`. For example, to scrape GitCoin `python3 -m scraping.gitcoin.scrape`.
 
 ## Install
-It is recommended to created a virtual python environment using Python 3.10. Then install all requirements with `pip3 install -r requierements.txt`.
+It is recommended to created a virtual python environment using **Python 3.10**. Then install all requirements with `pip3 install -r requierements.txt`.
 
 ## Requirements
 You will need to define the two following Environment variable for the module to be running:
@@ -23,11 +23,17 @@ AWS_DEFAULT_REGION=[The targeted AWS Region]
 AWS_ACCESS_KEY_ID=[Your AWS ID]
 AWS_SECRET_ACCESS_KEY=[Your AWS Key]
 ALLOW_OVERRIDE=1 [Set to 1 if you want to allow overiding saved data on S3, else remove or set to 0]
+LOGLEVEL=[DEBUG|INFO|WARNING|ERROR] python logging library log level
 
 # Docker image
-**Work In Progress**
-TBD: But this will be an image with an entrypoint such that one can call a `docker run IMAGE python3 -m module.service.action`.
-The goal is to be able to trigger docker image launches on cloud services by a pipeline manager to have automated runs and depencies.
+The module is packaged into a Docker image for cloud deployement, or local use. To build the image just launch `docker build . -t diamond-pipelines`.
+
+You can then launch the modules through the docker image directly by replacing module, service and action with the desired pipeline module.
+ `docker run --env-file .env diamond-pipeline python3 -m [module].[service].[action]`. 
+
+**Make sure you have a `.env` file with all the environment variables set.**
+
+For convenience, a docker-compose file is also available.
 
 # The scraping module
 The scrapping module can be either imported or ran as a package using the `python -m` command. Every internal package implements a `scrape.py` file which will run the scrapping for the particular service. 
