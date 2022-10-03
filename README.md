@@ -11,7 +11,7 @@ The code stack follows a python module approach such that one can call the follo
 It is recommended to created a virtual python environment using **Python 3.10**. Then install all requirements with `pip3 install -r requierements.txt`.
 
 ## Requirements
-You will need to define the two following Environment variable for the module to be running:
+You will need to define the following Environment variable for all the modules to be running:
 ```
 AWS_BUCKET_PREFIX=[A unique bucket name prefix]
 AWS_DEFAULT_REGION=[The targeted AWS Region]
@@ -329,7 +329,7 @@ class ExampleCyphers(Cypher):
 - Wallets: `ingestion/wallets`
 
 # TODO
-- [] Remove the env.sample files
-- [] Convert the Mirror scraper to the scraper module architecture
-- [] Convert the Snapshot scraper to the scraper module architecture
-- [] Convert the Snapshot scraper to the scraper module architecture
+- [ ] Remove the env.sample files
+- [ ] Convert the Mirror scraper to the scraper module architecture
+- [ ] Convert the Snapshot scraper to the scraper module architecture
+- [ ] Convert the Snapshot scraper to the scraper module architecture
