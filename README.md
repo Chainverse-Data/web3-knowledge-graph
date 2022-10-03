@@ -328,6 +328,9 @@ class ExampleCyphers(Cypher):
 - Twitter: `ingestion/twitter`
 - Wallets: `ingestion/wallets`
 
+# Contribute
+To contribute a new service, clone the main branch, then create a new branch named after the service or analysis you are targetting. Create the scraper, ingestor, analysis or post processing scripts, then create a Pull request for code-review.
+
 # TODO
 - [ ] Remove the env.sample files
 - [ ] Convert the Mirror scraper to the scraper module architecture

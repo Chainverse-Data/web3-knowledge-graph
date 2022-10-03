@@ -76,7 +76,7 @@ class GitCoinCyphers(Cypher):
         for url in urls:
             query = f"""
                     LOAD CSV WITH HEADERS FROM '{url}' AS members
-                    MERGE(user:UserGitCoin:GitCoin:UserGitHub:GitHub:User {{id: members.userId}})
+                    MERGE(user:UserGitCoin:GitCoin:UserGitHub:GitHub:Account {{id: members.userId}})
                     ON CREATE set user.uuid = apoc.create.uuid(),
                         user.id = members.userId, 
                         user.handle = members.handle, 
@@ -149,7 +149,7 @@ class GitCoinCyphers(Cypher):
         for url in urls:
             query = f"""
                     LOAD CSV WITH HEADERS FROM '{url}' AS twitter_accounts
-                    MERGE(twitter:Twitter {{handle: twitter_accounts.handle}})
+                    MERGE(twitter:Twitter:Account {{handle: twitter_accounts.handle}})
                     ON CREATE set twitter.uuid = apoc.create.uuid(),
                         twitter.handle = twitter_accounts.handle,
                         twitter.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
@@ -274,7 +274,7 @@ class GitCoinCyphers(Cypher):
         for url in urls:
             query = f"""
                     LOAD CSV WITH HEADERS FROM '{url}' AS owners
-                    MERGE(user:UserGitCoin:GitCoin:UserGitHub:GitHub:User {{id: owners.id}})
+                    MERGE(user:UserGitCoin:GitCoin:UserGitHub:GitHub:Account {{id: owners.id}})
                     ON CREATE set user.uuid = apoc.create.uuid(),
                         user.id = owners.id, 
                         user.name = owners.name, 
@@ -364,7 +364,7 @@ class GitCoinCyphers(Cypher):
         for url in urls:
             query = f"""
                     LOAD CSV WITH HEADERS FROM '{url}' AS fullfilers
-                    MERGE(user:UserGitCoin:GitCoin:UserGitHub:GitHub:User {{id: fullfilers.id}})
+                    MERGE(user:UserGitCoin:GitCoin:UserGitHub:GitHub:Account {{id: fullfilers.id}})
                     ON CREATE set user.uuid = apoc.create.uuid(),
                         user.id = fullfilers.id, 
                         user.email = fullfilers.email, 
@@ -459,7 +459,7 @@ class GitCoinCyphers(Cypher):
         for url in urls:
             query = f"""
                     LOAD CSV WITH HEADERS FROM '{url}' AS interested
-                    MERGE(user:UserGitCoin:GitCoin:UserGitHub:GitHub:User {{id: interested.id}})
+                    MERGE(user:UserGitCoin:GitCoin:UserGitHub:GitHub:Account {{id: interested.id}})
                     ON CREATE set user.uuid = apoc.create.uuid(),
                         user.id = interested.id, 
                         user.name = interested.name, 
