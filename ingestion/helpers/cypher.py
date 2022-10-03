@@ -1,5 +1,55 @@
 from datetime import datetime
+from neo4j import GraphDatabase
+import os
+import logging
 
+class Cypher:
+    def __init__(self, database=None):
+        self.neo4j_driver = GraphDatabase.driver(
+            os.environ["NEO_URI"],
+            auth=(os.environ["NEO_USERNAME"],
+                  os.environ["NEO_PASSWORD"]))
+        if database:
+            self.database = database
+        if "NEO_DB" in os.environ:
+            self.database = os.environ["NEO_DB"]
+
+        self.create_constraints()
+        self.create_indexes()
+
+    def create_constraints(self):
+        raise NotImplementedError("This function must be implemented in the children class.")
+
+    def create_indexes(self):
+        raise NotImplementedError("This function must be implemented in the children class.")
+
+    def query(self, query, parameters=None, db=None):
+        assert self.neo4j_driver is not None, "Driver not initialized!"
+        session = None
+        response = None
+        try:
+            session = self.neo4j_driver.session(
+                database=db) if db is not None else self.neo4j_driver.session()
+            response = list(session.run(query, parameters))
+        except Exception as e:
+            logging.error("Query failed:", e)
+        finally:
+            if session is not None:
+                session.close()
+        return response
+
+    def close(self):
+        try:
+            self.neo4j_driver.close()
+        except:
+            pass
+
+    def __del__(self):
+        # Called upon class Deinstanciation or deletion to ensure the connection closes
+        self.close()
+
+
+# TODO: Remove all the functions below to their own class
 
 def create_constraints(conn):
     twitter_query = """CREATE CONSTRAINT UniqueHandle IF NOT EXISTS FOR (d:Twitter) REQUIRE d.handle IS UNIQUE"""

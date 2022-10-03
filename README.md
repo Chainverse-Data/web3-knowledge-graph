@@ -15,12 +15,14 @@ You will need to define the two following Environment variable for the module to
 NEO_URI=[The URL of the NEO4J instance]
 NEO_USERNAME=[The user name of the DB]
 NEO_PASSWORD=[The password to the DB]
+NEO_DB=[Optional Value: If the DB is not set by the URI, or you want to target another DB]
 ETHERSCAN_API_KEY=[Your Etherscan API Key]
 ALCHEMY_API_KEY=[Your Alchemy API Key]
 AWS_BUCKET_PREFIX=[A unique bucket name prefix]
 AWS_DEFAULT_REGION=[The targeted AWS Region]
 AWS_ACCESS_KEY_ID=[Your AWS ID]
 AWS_SECRET_ACCESS_KEY=[Your AWS Key]
+ALLOW_OVERRIDE=1 [Set to 1 if you want to allow overiding saved data on S3, else remove or set to 0]
 
 # Docker image
 **Work In Progress**
@@ -106,3 +108,9 @@ class Ingestor:
 
 ## Services to be added:
 - GitCoin
+
+# TODO
+- [] Remove the env.sample files
+- [] Convert the Mirror scraper to the scraper module architecture
+- [] Convert the Snapshot scraper to the scraper module architecture
+- [] Convert the Snapshot scraper to the scraper module architecture

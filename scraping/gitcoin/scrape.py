@@ -24,18 +24,21 @@ class GitCoinScraper(Scraper):
         self.get_one_grant_url = "https://gitcoin.co/grants/v1/api/grant/{}/"
         self.get_all_grants_url = "https://gitcoin.co/api/v0.1/grants/?limit={}&offset={}"
         self.get_donations_url = "https://eth-mainnet.g.alchemy.com/v2/{}".format(os.environ["ALCHEMY_API_KEY"])
-        self.get_all_bounties_url = "https://gitcoin.co/api/v0.1/bounties/slim/?limit={}&offset={}&order_by=web3_created"
+        self.get_all_bounties_url = "https://gitcoin.co/api/v0.1/bounties/?limit={}&offset={}&order_by=web3_created"
     
     def get_all_grants(self):
         logging.info("Getting the list of all the grants from GitCoin")
         self.data["grants"] = []
-        with tqdm.tqdm(total=self.gitcoin_api_limit) as pbar:
+        with tqdm.tqdm(total=self.gitcoin_api_limit, position=0) as pbar:
             while True:
                 content = self.get_request(self.get_all_grants_url.format(self.gitcoin_api_limit, self.last_grant_offset))
                 data = json.loads(content)
                 if len(data) == 0:
                     break
-                self.data["grants"] += data
+                for grant in tqdm.tqdm(data, position= 1):
+                    grant_data = self.get_request(self.get_one_grant_url.format(grant["id"]))
+                    grant_data = json.loads(grant_data)
+                    self.data["grants"].append(grant_data["grants"])
                 self.last_grant_offset += self.gitcoin_api_limit
                 self.metadata["last_grant_offset"] = self.last_grant_offset
                 pbar.update(self.gitcoin_api_limit)
@@ -68,7 +71,11 @@ class GitCoinScraper(Scraper):
                     if event["transactionHash"] not in tx_done:
                         tx_logs = parse_logs(contract, event["transactionHash"], "DonationSent")
                         for log in tx_logs:
-                            self.data["donations"].append(dict(log['args']))
+                            tmp = dict(log['args'])
+                            tmp["txHash"] = event["transactionHash"]
+                            tmp["chain"] = "Ethereum"
+                            tmp["chainId"] = "1"
+                            self.data["donations"].append(tmp)
                         tx_done.append(event["transactionHash"])
                 self.metadata["last_block_number"] = self.last_block_number
                 self.last_block_number += self.blocks_limit

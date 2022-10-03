@@ -1,6 +1,8 @@
 import pandas as pd
 import s3fs
 
+# TODO This file will probably need to be rewritten or removed
+# The use of CSV from S3 should probably change to JSON.
 
 def write_df_to_s3(df, BUCKET, file_name, resource, s3, ACL="public-read"):
     df.to_csv(f"s3://{BUCKET}/{file_name}", index=False)
