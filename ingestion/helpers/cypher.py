@@ -23,13 +23,13 @@ class Cypher:
     def create_indexes(self):
         raise NotImplementedError("This function must be implemented in the children class.")
 
-    def query(self, query, parameters=None, db=None):
+    def query(self, query, parameters=None):
         assert self.neo4j_driver is not None, "Driver not initialized!"
         session = None
         response = None
         try:
             session = self.neo4j_driver.session(
-                database=db) if db is not None else self.neo4j_driver.session()
+                database=self.database) if self.database is not None else self.neo4j_driver.session()
             response = list(session.run(query, parameters))
         except Exception as e:
             logging.error("Query failed:", e)

@@ -57,7 +57,7 @@ class Ingestor:
     def set_start_end_date(self):
         "Sets the start and end date from either params, env or metadata"
         if not self.start_date and "INGEST_FROM_DATE" in os.environ:
-            self.start_date = os.environ["START_DATE"]
+            self.start_date = os.environ["INGEST_FROM_DATE"]
         else:
             if "last_date_ingested" in self.metadata:
                 self.start_date = self.metadata["last_date_ingested"]
