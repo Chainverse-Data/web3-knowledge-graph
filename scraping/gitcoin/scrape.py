@@ -67,6 +67,8 @@ class GitCoinScraper(Scraper):
                 content = self.post_request(self.get_donations_url, json=post_data, headers=headers)
                 content = json.loads(content)
                 tx_done = []
+                if "result" not in content:
+                    break
                 for event in content["result"]:
                     if event["transactionHash"] not in tx_done:
                         tx_logs = parse_logs(contract, event["transactionHash"], "DonationSent")
