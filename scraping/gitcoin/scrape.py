@@ -37,7 +37,11 @@ class GitCoinScraper(Scraper):
                     break
                 for grant in tqdm.tqdm(data, position= 1):
                     grant_data = self.get_request(self.get_one_grant_url.format(grant["id"]))
-                    grant_data = json.loads(grant_data)
+                    try:
+                        grant_data = json.loads(grant_data)
+                    except Exception as e:
+                        logging.error("Some error occured parsing the JSON: ", grant_data)
+                        raise(e)
                     self.data["grants"].append(grant_data["grants"])
                 self.last_grant_offset += self.gitcoin_api_limit
                 self.metadata["last_grant_offset"] = self.last_grant_offset
