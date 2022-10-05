@@ -4,6 +4,7 @@ import json
 import logging
 import tqdm
 import os
+import time
 
 class GitCoinScraper(Scraper):
     def __init__(self):
@@ -44,6 +45,7 @@ class GitCoinScraper(Scraper):
                         logging.error("Some error occured parsing the JSON at \n {} \n {}".format(
                             self.get_one_grant_url.format(grant["id"]), grant_data))
                         raise(e)
+                    time.sleep(1)
                 self.last_grant_offset += self.gitcoin_api_limit
                 self.metadata["last_grant_offset"] = self.last_grant_offset
                 pbar.update(self.gitcoin_api_limit)
