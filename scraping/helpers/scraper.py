@@ -50,16 +50,21 @@ class Scraper:
             return None
         r = requests.get(url, params=params, headers=headers)
         if r.status_code != 200:
-            self.get_request(url, params=params, headers=headers, counter=counter+1)
-        return r.content
+            logging.error(f"Status code not 200: {r.status_code} Retrying (counter = {counter})...")
+            return self.get_request(url, params=params, headers=headers, counter=counter+1)
+        if "403 Forbidden" in r.content.decode('UTF-8'):
+            logging.error(f"Status code not 200: {r.status_code} Retrying (counter = {counter})...")
+            return self.get_request(url, params=params, headers=headers, counter=counter+1)
+        return r.content.decode('UTF-8')
 
     def post_request(self, url, data=None, json=None, headers=None, counter=0):
         if counter > 10:
             return None
         r = requests.post(url, data=data, json=json, headers=headers)
         if r.status_code >= 200 and r.status_code < 300:
-            self.post_request(url, data=data, json=json, headers=headers, counter=counter+1)
-        return r.content
+            logging.error(f"Status code not 200: {r.status_code} Retrying (counter = {counter})...")
+            return self.post_request(url, data=data, json=json, headers=headers, counter=counter+1)
+        return r.content.decode('UTF-8')
 
     # This section contains functions to deal with S3 storage.
 
