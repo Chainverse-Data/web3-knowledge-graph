@@ -40,8 +40,8 @@ class GitCoinScraper(Scraper):
                     try:
                         grant_data = json.loads(grant_data)
                     except Exception as e:
-                        logging.error("Some error occured parsing the JSON: ", grant_data)
-                        raise(e)
+                        logging.error("Some error occured parsing the JSON at \n {} \n {}".format(
+                            self.get_one_grant_url.format(grant["id"]), grant_data))
                     self.data["grants"].append(grant_data["grants"])
                 self.last_grant_offset += self.gitcoin_api_limit
                 self.metadata["last_grant_offset"] = self.last_grant_offset
