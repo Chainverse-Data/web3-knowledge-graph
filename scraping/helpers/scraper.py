@@ -63,7 +63,7 @@ class Scraper:
         if counter > 10:
             return None
         r = requests.post(url, data=data, json=json, headers=headers)
-        if r.status_code >= 200 and r.status_code < 300:
+        if r.status_code <= 200 and r.status_code > 300:
             logging.error(f"Status code not 200: {r.status_code} Retrying {counter*10}s (counter = {counter})...")
             return self.post_request(url, data=data, json=json, headers=headers, counter=counter+1)
         return r.content.decode('UTF-8')
