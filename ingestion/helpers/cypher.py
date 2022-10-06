@@ -9,8 +9,7 @@ class Cypher:
             os.environ["NEO_URI"],
             auth=(os.environ["NEO_USERNAME"],
                   os.environ["NEO_PASSWORD"]))
-        if database:
-            self.database = database
+        self.database = database
         if "NEO_DB" in os.environ:
             self.database = os.environ["NEO_DB"]
 
