@@ -111,7 +111,7 @@ class GitCoinScraper(Scraper):
                 pbar.refresh()
 
     def run(self):
-        # self.get_all_donnations()
+        self.get_all_donnations()
         self.get_all_grants()
         self.get_all_bounties()
         self.save_data()

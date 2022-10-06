@@ -1,9 +1,9 @@
 import requests
 import datetime
 import logging
-import json
 import os
 from helpers import S3Utils 
+import time
 
 # This class is the base class for all scrapers.
 # Every scraper must inherit this class and define its own run function
@@ -46,23 +46,25 @@ class Scraper:
         """This makes a GET request to a url and return the data. 
         It can take params and headers as parameters following python's request library.
         The method returns the raw request content, you must then parse the content with the correct parser."""
+        time.sleep(counter * 10)
         if counter > 10:
             return None
         r = requests.get(url, params=params, headers=headers)
         if r.status_code != 200:
-            logging.error(f"Status code not 200: {r.status_code} Retrying (counter = {counter})...")
+            logging.error(f"Status code not 200: {r.status_code} Retrying in {counter*10}s (counter = {counter})...")
             return self.get_request(url, params=params, headers=headers, counter=counter+1)
         if "403 Forbidden" in r.content.decode('UTF-8'):
-            logging.error(f"Status code not 200: {r.status_code} Retrying (counter = {counter})...")
+            logging.error(f"Status code not 200: {r.status_code} Retrying in {counter*10}s (counter = {counter})...")
             return self.get_request(url, params=params, headers=headers, counter=counter+1)
         return r.content.decode('UTF-8')
 
     def post_request(self, url, data=None, json=None, headers=None, counter=0):
+        time.sleep(counter * 10)
         if counter > 10:
             return None
         r = requests.post(url, data=data, json=json, headers=headers)
         if r.status_code >= 200 and r.status_code < 300:
-            logging.error(f"Status code not 200: {r.status_code} Retrying (counter = {counter})...")
+            logging.error(f"Status code not 200: {r.status_code} Retrying {counter*10}s (counter = {counter})...")
             return self.post_request(url, data=data, json=json, headers=headers, counter=counter+1)
         return r.content.decode('UTF-8')
 
