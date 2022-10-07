@@ -201,7 +201,8 @@ class GitCoinCyphers(Cypher):
         for url in urls:
             query = f"""
                     LOAD CSV WITH HEADERS FROM '{url}' AS donations
-                    MATCH (grant:EventGitCoinGrant)-[is_admin:IS_ADMIN]-(admin:Wallet {{address: donations.dest}}), (donor:Wallet {{address: donations.donor}})
+                    MATCH (grant:EventGitCoinGrant)-[is_admin:IS_ADMIN]-(admin_wallet:Wallet {{address: donations.destination}})
+                    OPTIONAL MATCH (donor:Wallet {{address: donations.donor}})
                     WITH grant, donor, donations
                     MERGE (donor)-[donation:DONATION {{txHash: donations.txHash}}]->(grant)
                     ON CREATE set donation.uuid = apoc.create.uuid(),
