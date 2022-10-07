@@ -488,7 +488,7 @@ class GitCoinCyphers(Cypher):
                     LOAD CSV WITH HEADERS FROM '{url}' AS interested
                     MATCH (user:UserGitCoin {{id: interested.id}}), (bounty:EventGitCoinBounty {{id: interested.bounty_id}})
                     WITH user, bounty, interested
-                    MERGE (user)-[link:HAS_FULLFILLED]->(bounty)
+                    MERGE (user)-[link:HAS_INTEREST]->(bounty)
                     ON CREATE set link.uuid = apoc.create.uuid(),
                         link.asOf = interested.asOf,
                         link.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
