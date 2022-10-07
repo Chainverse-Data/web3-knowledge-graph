@@ -8,7 +8,7 @@ class GitCoinIngestor(Ingestor):
 
     def sanitize(self, string):
         if string:
-            return string.replace('"','').replace('"','').replace("`","")
+            return string.replace('"','').replace('"','').replace("`","").replace("\n", "")
         else:
             return ""
 
