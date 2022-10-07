@@ -7,7 +7,10 @@ class GitCoinIngestor(Ingestor):
         super().__init__("gitcoin")
 
     def sanitize(self, string):
-        return string.replace('"','').replace('"','').replace("`","")
+        if string:
+            return string.replace('"','').replace('"','').replace("`","")
+        else:
+            return ""
 
     def ingest_grants(self):
         "This function ingests the grant data loaded in the self.data"
