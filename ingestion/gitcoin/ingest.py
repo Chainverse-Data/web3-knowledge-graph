@@ -156,7 +156,7 @@ class GitCoinIngestor(Ingestor):
                 "bounty_type": bounty["bounty_type"],
                 "project_length": bounty["project_length"],
                 "experience_level": bounty["experience_level"],
-                "keywords": bounty["keywords"].replace('"', '').replace("'", ""),
+                "keywords": bounty["keywords"],
                 "token_value_in_usdt": bounty["token_value_in_usdt"],
                 "network": bounty["network"],
                 "org_name": bounty["org_name"].replace('"', '').replace("'", ""),
@@ -221,8 +221,8 @@ class GitCoinIngestor(Ingestor):
         return bounties_data
 
     def run(self):
-        self.ingest_grants()
-        self.ingest_donations()
+        # self.ingest_grants()
+        # self.ingest_donations()
         self.ingest_bounties()
 
 if __name__ == "__main__":
