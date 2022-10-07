@@ -147,8 +147,8 @@ class GitCoinIngestor(Ingestor):
                 "id": bounty["pk"],
                 "title": bounty["title"].replace('"', '').replace("'", ""),
                 "text": bounty["issue_description_text"].replace('"','').replace("'", ""),
-                "url": bounty["url"],
-                "github_url": bounty["github_url"],
+                "url": bounty["url"].replace('"', '').replace("'", ""),
+                "github_url": bounty["github_url"].replace('"', '').replace("'", ""),
                 "status": bounty["status"],
                 "value_in_token": bounty["value_in_token"],
                 "token_name": bounty["token_name"],
@@ -156,10 +156,10 @@ class GitCoinIngestor(Ingestor):
                 "bounty_type": bounty["bounty_type"],
                 "project_length": bounty["project_length"],
                 "experience_level": bounty["experience_level"],
-                "keywords": bounty["keywords"],
+                "keywords": bounty["keywords"].replace('"', '').replace("'", ""),
                 "token_value_in_usdt": bounty["token_value_in_usdt"],
                 "network": bounty["network"],
-                "org_name": bounty["org_name"],
+                "org_name": bounty["org_name"].replace('"', '').replace("'", ""),
                 "asOf": self.asOf
             }
             bounties_data["bounties"].append(tmp)
