@@ -305,7 +305,7 @@ class GitCoinCyphers(Cypher):
                         link.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
                     ON MATCH set link.asOf = orgs.asOf,
                         link.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
-                    return count(org)
+                    return count(link)
                     """
             count += self.query(query)[0].value()
         logging.info(f"Created or merged: {count}")
