@@ -129,7 +129,7 @@ if __name__ == "__main__":
 ```
 
 ## Implemented services
-- GitCoin: `scraping/gitcoin`
+- [GitCoin](/scraping/gitcoin/README.md): `scraping/gitcoin`
 ### To be cleaned
 - Miror.xyz: `scraping/miror`
 - Snapshot: `scraping/snapshot`
@@ -319,7 +319,7 @@ class ExampleCyphers(Cypher):
 
 ## Implemented services
 
-- GitCoin: `ingestion/gitcoin`
+- [GitCoin](/ingestion/gitcoin/README.md): `ingestion/gitcoin`
 
 ### To be cleaned
 - Miror.xyz: `ingestion/miror`
