@@ -296,7 +296,7 @@ class GitCoinCyphers(Cypher):
         for url in urls:
             query = f"""
                     LOAD CSV WITH HEADERS FROM '{url}' AS orgs
-                    MATCH (bounty:EventGitCoinBounty {{orgs.bountyId}}), (entity:Entity {{name: orgs.org_name}})
+                    MATCH (bounty:EventGitCoinBounty {{id: orgs.bountyId}}), (entity:Entity {{name: orgs.org_name}})
                     WITH bounty, entity, orgs
                     MERGE (entity)-[link:HAS_BOUNTY]->(bounty)
                     ON CREATE set link.uuid = apoc.create.uuid(),
