@@ -8,7 +8,7 @@ class GitCoinIngestor(Ingestor):
 
     def sanitize(self, string):
         if string:
-            return string.replace(r'\r','').replace('"','').replace("'","").replace("`","").replace("\n", "")
+            return string.rstrip().replace('\r','').replace('\\','').replace('"','').replace("'","").replace("`","").replace("\n", "")
         else:
             return ""
 
@@ -227,8 +227,8 @@ class GitCoinIngestor(Ingestor):
         return bounties_data
 
     def run(self):
-        # self.ingest_grants()
-        # self.ingest_donations()
+        self.ingest_grants()
+        self.ingest_donations()
         self.ingest_bounties()
 
 if __name__ == "__main__":
