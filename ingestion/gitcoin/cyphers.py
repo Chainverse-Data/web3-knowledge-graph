@@ -149,7 +149,7 @@ class GitCoinCyphers(Cypher):
         for url in urls:
             query = f"""
                     LOAD CSV WITH HEADERS FROM '{url}' AS twitter_accounts
-                    MERGE(twitter:Twitter {{handle: twitter_accounts.handle}})
+                    MERGE(twitter:Twitter:Account {{handle: twitter_accounts.handle}})
                     ON CREATE set twitter.uuid = apoc.create.uuid(),
                         twitter.handle = twitter_accounts.handle,
                         twitter.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
