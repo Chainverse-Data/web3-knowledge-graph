@@ -6,6 +6,9 @@ class GitCoinIngestor(Ingestor):
         self.cyphers = GitCoinCyphers()
         super().__init__("gitcoin")
 
+    def sanitize(self, string):
+        return string.replace('"','').replace('"','').replace("`","")
+
     def ingest_grants(self):
         "This function ingests the grant data loaded in the self.data"
         grants_data = self.process_grants_data()
@@ -40,7 +43,7 @@ class GitCoinIngestor(Ingestor):
             tmp = {
                 "id": grant["id"],
                 "title": grant["title"],  
-                "text": grant["description"].replace('"', ""),  
+                "text": self.sanitize(grant["description"]),  
                 "types": [el["fields"]["name"] for el in grant["grant_type"]],  
                 "tags": [el["fields"]["name"] for el in grant["grant_tags"]],
                 "url": f"https://gitcoin.co/{grant['url']}",
@@ -145,10 +148,10 @@ class GitCoinIngestor(Ingestor):
         for bounty in self.scraper_data["bounties"]:
             tmp = {
                 "id": bounty["pk"],
-                "title": bounty["title"].replace('"', '').replace("'", ""),
-                "text": bounty["issue_description_text"].replace('"','').replace("'", ""),
-                "url": bounty["url"].replace('"', '').replace("'", ""),
-                "github_url": bounty["github_url"].replace('"', '').replace("'", ""),
+                "title": self.sanitize(bounty["title"]),
+                "text": self.sanitize(bounty["issue_description_text"]),
+                "url": self.sanitize(bounty["url"]),
+                "github_url": self.sanitize(bounty["github_url"]),
                 "status": bounty["status"],
                 "value_in_token": bounty["value_in_token"],
                 "token_name": bounty["token_name"],
@@ -159,7 +162,7 @@ class GitCoinIngestor(Ingestor):
                 "keywords": bounty["keywords"],
                 "token_value_in_usdt": bounty["token_value_in_usdt"],
                 "network": bounty["network"],
-                "org_name": bounty["org_name"].replace('"', '').replace("'", ""),
+                "org_name": bounty["org_name"],
                 "asOf": self.asOf
             }
             bounties_data["bounties"].append(tmp)
