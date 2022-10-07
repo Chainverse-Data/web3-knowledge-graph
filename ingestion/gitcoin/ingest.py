@@ -145,8 +145,8 @@ class GitCoinIngestor(Ingestor):
         for bounty in self.scraper_data["bounties"]:
             tmp = {
                 "id": bounty["pk"],
-                "title": bounty["title"].replace('"', ''),
-                "text": bounty["issue_description_text"].replace('"',''),
+                "title": bounty["title"].replace('"', '').replace("'", ""),
+                "text": bounty["issue_description_text"].replace('"','').replace("'", ""),
                 "url": bounty["url"],
                 "github_url": bounty["github_url"],
                 "status": bounty["status"],
