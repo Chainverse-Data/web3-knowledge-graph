@@ -115,6 +115,11 @@ class GitCoinIngestor(Ingestor):
         self.cyphers.create_or_merge_bounties(urls)
 
         urls = self.s3.save_json_as_csv(
+            bounties_data["bounty_orgs"], self.bucket_name, f"ingestor_bounties_orgs_{self.asOf}")
+        self.cyphers.create_or_merge_bounties_orgs(urls)
+        self.cyphers.link_or_merge_bounties_orgs(urls)
+
+        urls = self.s3.save_json_as_csv(
             bounties_data["bounties_owners"], self.bucket_name, f"ingestor_bounties_owners_{self.asOf}")
         self.cyphers.create_or_merge_bounties_owners(urls)
         self.cyphers.link_or_merge_bounties_owners(urls)
@@ -142,6 +147,7 @@ class GitCoinIngestor(Ingestor):
     def process_bounty_data(self):
         bounties_data = {
             "bounties": [],
+            "bounty_orgs": [],
             "bounties_owners": [],
             "bounties_owners_addresses": [],
             "bounties_interests": [],
@@ -169,6 +175,14 @@ class GitCoinIngestor(Ingestor):
                 "asOf": self.asOf
             }
             bounties_data["bounties"].append(tmp)
+
+            if bounty["org_name"]:
+                tmp = {
+                    "bountyId": bounty["pk"],
+                    "org_name": bounty["org_name"],
+                    "asOf": self.asOf
+                }
+                bounties_data["bounty_orgs"].append(tmp)
 
             if bounty["bounty_owner_profile"]:
                 tmp = {

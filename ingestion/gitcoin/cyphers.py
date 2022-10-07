@@ -267,7 +267,49 @@ class GitCoinCyphers(Cypher):
             
             count += self.query(query)[0].value()
         logging.info(f"Created or merged: {count}")
-        return count  
+        return count
+
+    def create_or_merge_bounties_orgs(self, urls):
+        logging.info(f"Ingesting with: {sys._getframe().f_code.co_name}")
+        count = 0
+        for url in urls:
+            query = f"""
+                    LOAD CSV WITH HEADERS FROM '{url}' AS orgs
+                    MERGE (org:Entity {{name: orgs.org_name}})
+                    ON CREATE set org.uuid = apoc.create.uuid(),
+                        org.name = orgs.org_name, 
+                        org.asOf = orgs.asOf,
+                        org.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
+                        org.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
+                    ON MATCH set org.name = orgs.org_name,
+                        org.asOf = orgs.asOf,
+                        org.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
+                    return count(org)
+                    """
+            count += self.query(query)[0].value()
+        logging.info(f"Created or merged: {count}")
+        return count
+
+    def link_or_merge_bounties_orgs(self, urls):
+        logging.info(f"Ingesting with: {sys._getframe().f_code.co_name}")
+        count = 0
+        for url in urls:
+            query = f"""
+                    LOAD CSV WITH HEADERS FROM '{url}' AS orgs
+                    MATCH (bounty:EventGitCoinBounty {{orgs.bountyId}}), (entity:Entity {{name: orgs.org_name}})
+                    WITH bounty, entity, orgs
+                    MERGE (entity)-[link:HAS_BOUNTY]->(bounty)
+                    ON CREATE set link.uuid = apoc.create.uuid(),
+                        link.asOf = orgs.asOf,
+                        link.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
+                        link.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
+                    ON MATCH set link.asOf = orgs.asOf,
+                        link.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
+                    return count(org)
+                    """
+            count += self.query(query)[0].value()
+        logging.info(f"Created or merged: {count}")
+        return count
 
     def create_or_merge_bounties_owners(self, urls):
         logging.info(f"Ingesting with: {sys._getframe().f_code.co_name}")
