@@ -16,7 +16,6 @@ class GitCoinIngestor(Ingestor):
             return ""
 
     def is_valid_address(self, address):
-        print(address)
         check = re.compile("^0x[a-fA-F0-9]{40}$")
         if check.match(address):
             return True
