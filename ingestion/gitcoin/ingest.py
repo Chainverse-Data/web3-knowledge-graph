@@ -63,22 +63,36 @@ class GitCoinIngestor(Ingestor):
                 "asOf": self.asOf,
             }
             grants_data["grants"].append(tmp)
-            
+
             if self.is_valid_address(grants_data["admin_wallets"]):
                 tmp = {
                     "grantId": grant["id"],
+                    "citation": f"https://gitcoin.co/{grant['url']}",
                     "address": grant["admin_address"].lower()
                     }
                 grants_data["admin_wallets"].append(tmp)
 
             for member in grant["team_members"]:
-                tmp = {"grantId": grant["id"], "userId": member["pk"], "handle": member["fields"]["handle"]}
+                tmp = {
+                    "grantId": grant["id"],
+                    "userId": member["pk"],
+                    "citation": f"https://gitcoin.co/{grant['url']}",
+                    "handle": member["fields"]["handle"]
+                }
                 grants_data["team_members"].append(tmp)
             if grant["twitter_handle_1"]:
-                tmp = {"grantId": grant["id"], "handle": grant["twitter_handle_1"]}
+                tmp = {
+                    "grantId": grant["id"],
+                    "citation": f"https://gitcoin.co/{grant['url']}",
+                    "handle": grant["twitter_handle_1"]
+                }
                 grants_data["twitter_accounts"].append(tmp)
                 if grant["twitter_handle_1"] != grant["twitter_handle_2"] and grant["twitter_handle_2"]:
-                    tmp = {"grantId": grant["id"], "handle": grant["twitter_handle_2"]}
+                    tmp = {
+                        "grantId": grant["id"],
+                        "citation": f"https://gitcoin.co/{grant['url']}",
+                        "handle": grant["twitter_handle_2"]
+                    }
                     grants_data["twitter_accounts"].append(tmp)
         return grants_data
 
@@ -182,15 +196,21 @@ class GitCoinIngestor(Ingestor):
             bounties_data["bounties"].append(tmp)
 
             if bounty["org_name"]:
-                tmp = {"bountyId": bounty["pk"], "org_name": bounty["org_name"], "asOf": self.asOf}
+                tmp = {
+                    "bountyId": bounty["pk"],
+                    "citation": self.sanitize(bounty["url"]),
+                    "org_name": bounty["org_name"],
+                    "asOf": self.asOf
+                }
                 bounties_data["bounty_orgs"].append(tmp)
 
             if bounty["bounty_owner_profile"]:
                 tmp = {
-                    "bounty_id": bounty["pk"],
-                    "id": bounty["bounty_owner_profile"]["id"],
-                    "handle": bounty["bounty_owner_profile"]["handle"],
-                    "name": bounty["bounty_owner_name"],
+                    "bounty_id": bounty["pk"], 
+                    "id": bounty["bounty_owner_profile"]["id"], 
+                    "handle": bounty["bounty_owner_profile"]["handle"], 
+                    "name": bounty["bounty_owner_name"], 
+                    "citation": self.sanitize(bounty["url"]),
                     "keywords": ", ".join(bounty["bounty_owner_profile"]["keywords"]),
                     "email": bounty["bounty_owner_email"],
                     "asOf": self.asOf,
@@ -200,8 +220,9 @@ class GitCoinIngestor(Ingestor):
             if bounty["bounty_owner_address"] and bounty["bounty_owner_profile"] and self.is_valid_address(bounty["bounty_owner_address"]):
                 tmp = {
                     "id": bounty["bounty_owner_profile"]["id"],
-                    "address": bounty["bounty_owner_address"].lower(),
-                    "asOf": self.asOf,
+                    "citation": self.sanitize(bounty["url"]),
+                    "address": bounty["bounty_owner_address"].lower(), 
+                    "asOf": self.asOf
                 }
                 bounties_data["bounties_owners_addresses"].append(tmp)
 
@@ -216,6 +237,7 @@ class GitCoinIngestor(Ingestor):
                         "id": fulfilment["profile"]["id"],
                         "name": fulfilment["profile"]["name"],
                         "handle": fulfilment["profile"]["handle"],
+                        "citation": self.sanitize(bounty["url"]),
                         "keywords": ", ".join(fulfilment["profile"]["keywords"]),
                         "asOf": self.asOf,
                         "organizations": ", ".join([key for key in fulfilment["profile"]["organizations"]]),
@@ -225,6 +247,7 @@ class GitCoinIngestor(Ingestor):
                     if fulfilment["fulfiller_address"] and self.is_valid_address(fulfilment["fulfiller_address"]):
                         tmp = {
                             "id": fulfilment["profile"]["id"],
+                            "citation": self.sanitize(bounty["url"]),
                             "address": fulfilment["fulfiller_address"].lower(),
                             "asOf": self.asOf,
                         }
@@ -236,6 +259,7 @@ class GitCoinIngestor(Ingestor):
                     "id": interest["profile"]["id"],
                     "name": interest["profile"]["name"],
                     "handle": interest["profile"]["handle"],
+                    "citation": self.sanitize(bounty["url"]),
                     "keywords": ", ".join(interest["profile"]["keywords"]),
                     "organizations": ", ".join([key for key in interest["profile"]["organizations"]]),
                 }
