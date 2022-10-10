@@ -13,8 +13,8 @@ import multiprocessing
 from dotenv import load_dotenv
 
 sys.path.append(str(Path(__file__).resolve().parents[2]))
-from scraping.helpers.util import tqdm_joblib, expand_path, str2bool
-from scraping.snapshot.helpers.util import run_snapshot_query, get_ens
+from scraping.helpers.utils import tqdm_joblib, expand_path, str2bool
+from scraping.snapshot.helpers.utils import run_snapshot_query, get_ens
 
 load_dotenv()
 provider = "https://eth-mainnet.alchemyapi.io/v2/" + str(os.environ.get("ALCHEMY_API_KEY"))
