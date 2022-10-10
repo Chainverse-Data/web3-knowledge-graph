@@ -1,5 +1,6 @@
 from ..helpers import Ingestor
 from .cyphers import GitCoinCyphers
+import re
 
 class GitCoinIngestor(Ingestor):
     def __init__(self):
@@ -11,6 +12,12 @@ class GitCoinIngestor(Ingestor):
             return string.rstrip().replace('\r','').replace('\\','').replace('"','').replace("'","").replace("`","").replace("\n", "")
         else:
             return ""
+
+    def is_valid_address(self, address):
+        check = re.compile("^0x[a-fA-F0-9]{40}$")
+        if len(check.match(address)) > 0:
+            return True
+        return False
 
     def ingest_grants(self):
         "This function ingests the grant data loaded in the self.data"
@@ -56,11 +63,12 @@ class GitCoinIngestor(Ingestor):
             }
             grants_data["grants"].append(tmp)
             
-            tmp = {
-                "grantId": grant["id"],
-                "address": grant["admin_address"].lower()
-                }
-            grants_data["admin_wallets"].append(tmp)
+            if self.is_valid_address(grants_data["admin_wallets"]):
+                tmp = {
+                    "grantId": grant["id"],
+                    "address": grant["admin_address"].lower()
+                    }
+                grants_data["admin_wallets"].append(tmp)
 
             for member in grant["team_members"]:
                 tmp = {
@@ -196,7 +204,7 @@ class GitCoinIngestor(Ingestor):
                 }
                 bounties_data["bounties_owners"].append(tmp)
 
-            if bounty["bounty_owner_address"] and bounty["bounty_owner_profile"]:
+            if bounty["bounty_owner_address"] and bounty["bounty_owner_profile"] and self.is_valid_address(bounty["bounty_owner_address"]):
                 tmp = {
                     "id": bounty["bounty_owner_profile"]["id"],
                     "address": bounty["bounty_owner_address"].lower(), 
@@ -220,7 +228,7 @@ class GitCoinIngestor(Ingestor):
                     }
                     bounties_data["bounties_fullfilments"].append(tmp)
 
-                    if fulfilment["fulfiller_address"]:
+                    if fulfilment["fulfiller_address"] and self.is_valid_address(fulfilment["fulfiller_address"]):
                         tmp = {
                             "id": fulfilment["profile"]["id"],
                             "address": fulfilment["fulfiller_address"].lower(),
