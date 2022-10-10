@@ -1,3 +1,4 @@
+import logging
 from ..helpers import Ingestor
 from .cyphers import GitCoinCyphers
 import re
@@ -15,13 +16,15 @@ class GitCoinIngestor(Ingestor):
             return ""
 
     def is_valid_address(self, address):
+        print(address)
         check = re.compile("^0x[a-fA-F0-9]{40}$")
-        if len(check.match(address)) > 0:
+        if check.match(address):
             return True
         return False
 
     def ingest_grants(self):
         "This function ingests the grant data loaded in the self.data"
+        logging.info("Ingesting grants data...")
         grants_data = self.process_grants_data()
 
         urls = self.s3.save_json_as_csv(grants_data["grants"], self.bucket_name, f"ingestor_grants_{self.asOf}")
@@ -44,6 +47,7 @@ class GitCoinIngestor(Ingestor):
         self.cyphers.link_or_merge_twitter_accounts(urls)
 
     def process_grants_data(self):
+        logging.info("Processing grants data...")
         grants_data = {
             "grants": [],
             "team_members": [],
@@ -64,7 +68,7 @@ class GitCoinIngestor(Ingestor):
             }
             grants_data["grants"].append(tmp)
 
-            if self.is_valid_address(grants_data["admin_wallets"]):
+            if self.is_valid_address(grant["admin_address"]):
                 tmp = {
                     "grantId": grant["id"],
                     "citation": f"https://gitcoin.co/{grant['url']}",
