@@ -102,7 +102,14 @@ class GitCoinCyphers(Cypher):
                     LOAD CSV WITH HEADERS FROM '{url}' AS members
                     MATCH (grant:EventGitCoinGrant {{id: members.grantId}}), (member:UserGitCoin {{id: members.userId}})
                     WITH grant, member
-                    MERGE (member)-[edge:MEMBER]->(grant)
+                    MERGE (member)-[edge:MEMBER_OF]->(grant)
+                    ON CREATE set edge.uuid = apoc.create.uuid(),
+                        edge.citation = members.citation,
+                        edge.asOf = members.asOf,
+                        edge.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
+                        edge.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
+                    ON MATCH set edge.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
+                        edge.asOf = members.asOf,
                     return count(edge)
             """
             count += self.query(query)[0].value()
@@ -137,6 +144,13 @@ class GitCoinCyphers(Cypher):
                     MATCH (grant:EventGitCoinGrant {{id: admin_wallets.grantId}}), (wallet:Wallet {{address: admin_wallets.address}})
                     WITH grant, wallet
                     MERGE (wallet)-[edge:IS_ADMIN]->(grant)
+                    ON CREATE set edge.uuid = apoc.create.uuid(),
+                        edge.citation = admin_wallets.citation,
+                        edge.asOf = admin_wallets.asOf,
+                        edge.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
+                        edge.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
+                    ON MATCH set edge.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
+                        edge.asOf = admin_wallets.asOf,
                     return count(edge)
             """
             count += self.query(query)[0].value()
@@ -170,6 +184,13 @@ class GitCoinCyphers(Cypher):
                     MATCH (twitter:Twitter {{handle: twitter_accounts.handle}}), (grant:EventGitCoinGrant {{id: twitter_accounts.grantId}})
                     WITH twitter, grant
                     MERGE (grant)-[edge:HAS_ACCOUNT]->(twitter)
+                    ON CREATE set edge.uuid = apoc.create.uuid(),
+                        edge.citation = twitter_accounts.citation,
+                        edge.asOf = twitter_accounts.asOf,
+                        edge.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
+                        edge.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
+                    ON MATCH set edge.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
+                        edge.asOf = twitter_accounts.asOf,
                     return count(edge)
             """
             count += self.query(query)[0].value()
@@ -301,6 +322,7 @@ class GitCoinCyphers(Cypher):
                     MERGE (entity)-[link:HAS_BOUNTY]->(bounty)
                     ON CREATE set link.uuid = apoc.create.uuid(),
                         link.asOf = orgs.asOf,
+                        link.citation = orgs.citation,
                         link.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                         link.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
                     ON MATCH set link.asOf = orgs.asOf,
@@ -347,6 +369,7 @@ class GitCoinCyphers(Cypher):
                     MERGE (user)-[link:IS_OWNER]->(bounty)
                     ON CREATE set link.uuid = apoc.create.uuid(),
                         link.asOf = owners.asOf,
+                        link.citation = owners.citation,
                         link.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                         link.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
                     ON MATCH set link.asOf = owners.asOf,
@@ -388,7 +411,7 @@ class GitCoinCyphers(Cypher):
                     WITH user, wallet, owners
                     MERGE (user)-[link:HAS_WALLET]->(wallet)
                     ON CREATE set link.uuid = apoc.create.uuid(),
-                        link.citation = "",
+                        link.citation = owners.citation,
                         link.asOf = owners.asOf,
                         link.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                         link.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
@@ -440,6 +463,7 @@ class GitCoinCyphers(Cypher):
                     MERGE (user)-[link:HAS_FULLFILLED]->(bounty)
                     ON CREATE set link.uuid = apoc.create.uuid(),
                         link.accepted = fullfilers.accepted,
+                        link.citation = fullfilers.citation,
                         link.asOf = fullfilers.asOf,
                         link.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                         link.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
@@ -483,7 +507,7 @@ class GitCoinCyphers(Cypher):
                     WITH user, wallet, fullfilers
                     MERGE (user)-[link:HAS_WALLET]->(wallet)
                     ON CREATE set link.uuid = apoc.create.uuid(),
-                        link.citation = "",
+                        link.citation = fullfilers.citation,
                         link.asOf = fullfilers.asOf,
                         link.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                         link.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
@@ -533,6 +557,7 @@ class GitCoinCyphers(Cypher):
                     MERGE (user)-[link:HAS_INTEREST]->(bounty)
                     ON CREATE set link.uuid = apoc.create.uuid(),
                         link.asOf = interested.asOf,
+                        link.citation = interested.citation,
                         link.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                         link.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
                     ON MATCH set link.asOf = interested.asOf,
