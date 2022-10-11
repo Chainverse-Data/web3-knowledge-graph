@@ -32,27 +32,29 @@ class Ingestor:
         self.load_data()
 
         self.ingest_data = {}
+        # self.create_custom_constraints()
+        # self.create_custom_indexes()
 
     def run(self):
         "Main function to be called. Every ingestor must implement its own run function!"
         raise NotImplementedError(
             "ERROR: the run function has not been implemented!")
 
-    def create_constraints(self):
-        """This function must be redefined by the child class.
-        In it you must input all the constraints that the ingestor must create.
-        If your ingestor does not need any constraints, then you must still define 
-        a function that does nothing."""
-        raise NotImplementedError(
-            "ERROR: the create_constraints function has not been implemented!")
+    # def create_custom_constraints(self):
+    #     """This function must be redefined by the child class.
+    #     In it you must input all the constraints that the ingestor must create.
+    #     If your ingestor does not need any constraints, then you must still define 
+    #     a function that does nothing."""
+    #     raise NotImplementedError(
+    #         "ERROR: the create_constraints function has not been implemented!")
 
-    def create_indexes(self):
-        """This function must be redefined by the child class.
-        In it you must input all the constraints that the ingestor must create.
-        If your ingestor does not need any constraints, then you must still define 
-        a function that does nothing"""
-        raise NotImplementedError(
-            "ERROR: the create_constraints function has not been implemented!")
+    # def create_custom_indexes(self):
+    #     """This function must be redefined by the child class.
+    #     In it you must input all the constraints that the ingestor must create.
+    #     If your ingestor does not need any constraints, then you must still define 
+    #     a function that does nothing"""
+    #     raise NotImplementedError(
+    #         "ERROR: the create_constraints function has not been implemented!")
 
     def set_start_end_date(self):
         "Sets the start and end date from either params, env or metadata"
@@ -108,4 +110,9 @@ class Ingestor:
                     self.scraper_data[root_key] += tmp_data[root_key]
         logging.info("Data files loaded")
 
+    def sanitize(self, string):
+        if string:
+            return string.rstrip().replace('\r','').replace('\\','').replace('"','').replace("'","").replace("`","").replace("\n", "")
+        else:
+            return ""
     

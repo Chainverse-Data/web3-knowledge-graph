@@ -1,6 +1,5 @@
 from ..helpers import Scraper
 from ..helpers import tqdm_joblib, get_ens_info, str2bool
-from .query_strings import spaces_query, proposals_query, votes_query
 import json
 import logging
 import tqdm
@@ -14,7 +13,7 @@ import math
 
 class SnapshotScraper(Scraper):
     def __init__(self, recent):
-        super().__init__("snapshot", allow_override=bool(os.environ["ALLOW_OVERRIDE"]))
+        super().__init__("multisig", allow_override=bool(os.environ["ALLOW_OVERRIDE"]))
         self.snapshot_url = "https://hub.snapshot.org/graphql"
         self.recent = recent
         self.spaces_query = spaces_query

@@ -1,0 +1,224 @@
+from ..helpers import Cypher
+import logging
+import sys
+
+
+class SnapshotCyphers(Cypher):
+    def __init__(self):
+        super().__init__()
+
+    def create_custom_constraints(self):
+        space_query = """CREATE CONSTRAINT UniqueID IF NOT EXISTS FOR (d:Space) REQUIRE d.snapshotId IS UNIQUE"""
+        self.query(space_query)
+
+        proposal_query = """CREATE CONSTRAINT UniqueID IF NOT EXISTS FOR (d:Proposal) REQUIRE d.snapshotId IS UNIQUE"""
+        self.query(proposal_query)
+
+    def create_custom_indexes(self):
+        proposal_query = """CREATE INDEX UniquePropID IF NOT EXISTS FOR (n:Proposal) ON (n.snapshotId)"""
+        self.query(proposal_query)
+
+        space_query = """CREATE INDEX UniqueSpaceID IF NOT EXISTS FOR (n:Space) ON (n.snapshotId)"""
+        self.query(space_query)
+
+    def create_or_merge_spaces(self, urls):
+        logging.info(f"Ingesting with: {sys._getframe().f_code.co_name}")
+        count = 0
+        for url in urls:
+            query = f"""
+                    LOAD CSV WITH HEADERS FROM '{url}' AS spaces
+                    MERGE(s:EntitySnapshotSpace:Snapshot:Space:Entity {{snapshotId: spaces.snapshotId}})
+                    ON CREATE set s.uuid = apoc.create.uuid(),
+                        s.name = spaces.name, 
+                        s.chainId = toInteger(spaces.chainId), 
+                        s.onlyMembers = spaces.onlyMembers, 
+                        s.symbol = spaces.symbol,
+                        s.twitter = spaces.twitter,
+                        s.profileUrl = spaces.profileUrl,
+                        s.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
+                        s.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
+                    ON MATCH set s.name = spaces.name,
+                        s.onlyMembers = spaces.onlyMembers,
+                        s.twitter = spaces.twitter,
+                        s.symbol = spaces.symbol,
+                        s.profileUrl = spaces.profileUrl,
+                        s.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
+                    return count(s)
+            """
+            count += self.query(query)[0].value()
+        logging.info(f"Created or merged: {count}")
+        return count
+
+    def create_or_merge_proposals(self, urls):
+        logging.info(f"Ingesting with: {sys._getframe().f_code.co_name}")
+        count = 0
+        for url in urls:
+            query = f"""
+                    LOAD CSV WITH HEADERS FROM '{url}' AS proposals
+                    MERGE(p:Snapshot:Proposal:ProposalSnapshot {{snapshotId: proposals.snapshotId}})
+                    ON CREATE set p.uuid = apoc.create.uuid(),
+                        p.snapshotId = proposals.snapshotId,
+                        p.ipfsCID = proposals.ipfsCId,
+                        p.title = proposals.title,
+                        p.text = proposals.text,
+                        p.choices = proposals.choices,
+                        p.type = proposals.type,
+                        p.author = proposals.author,
+                        p.state = proposals.state,
+                        p.link = proposals.link,
+                        p.startDt = datetime(apoc.date.toISO8601(toInteger(proposals.startDt), 's')),
+                        p.endDt = datetime(apoc.date.toISO8601(toInteger(proposals.endDt), 's')),
+                        p.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
+                        p.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
+                    ON MATCH set p.title = proposals.title,
+                        p.text = proposals.text,
+                        p.choices = proposals.choices,
+                        p.type = proposals.type,
+                        p.state = proposals.state,
+                        p.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
+                    return count(p)
+            """
+            count += self.query(query)[0].value()
+        logging.info(f"Created or merged: {count}")
+        return count
+
+    def link_proposal_spaces(self, urls):
+        logging.info(f"Ingesting with: {sys._getframe().f_code.co_name}")
+        count = 0
+        for url in urls:
+            query = f"""
+                    LOAD CSV WITH HEADERS FROM '{url}' as proposals
+                    MATCH (p:Proposal {{snapshotId: proposals.snapshotId}}), (s:Space {{snapshotId: proposals.spaceId}})
+                    MERGE (s)-[d:HAS_PROPOSAL]->(p)
+                    return count(d)
+            """
+            count += self.query(query)[0].value()
+        logging.info(f"Created or merged: {count}")
+        return count
+
+    def link_proposal_authors(self, urls):
+        logging.info(f"Ingesting with: {sys._getframe().f_code.co_name}")
+        count = 0
+        for url in urls:
+            query = f"""
+                    LOAD CSV WITH HEADERS FROM '{url}' as proposals
+                    MATCH (p:Proposal {{snapshotId: proposals.snapshotId}}), (w:Wallet {{address: proposals.address}})
+                    MERGE (p)-[d:HAS_AUTHOR]->(w)
+                    return count(d)
+            """
+            count += self.query(query)[0].value()
+        logging.info(f"Created or merged: {count}")
+        return count
+
+    def create_or_merge_strategies(self, urls):
+        logging.info(f"Ingesting with: {sys._getframe().f_code.co_name}")
+        count = 0
+        for url in urls:
+            query = f"""
+                    LOAD CSV WITH HEADERS FROM '{url}' AS strategy
+                    MERGE(s:Snapshot:Strategy {{id: strategy.id}})
+                    ON CREATE set s = strategy
+                    ON MATCH set s = strategy
+                    return count(s)
+            """
+            count += self.query(query)[0].value()
+        logging.info(f"Created or merged: {count}")
+        return count
+
+    def link_member_spaces(self, urls):
+        logging.info(f"Ingesting with: {sys._getframe().f_code.co_name}")
+        count = 0
+        for url in urls:
+            query = f"""
+                    LOAD CSV WITH HEADERS FROM '{url}' as members
+                    MATCH (w:Wallet {{address: toLower(members.address)}}), (s:Space {{snapshotId: members.space}})
+                    MERGE (w)-[r:CONTRIBUTOR]->(s)
+                    ON CREATE SET r.type = 'member',
+                        r.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
+                        r.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
+                    ON MATCH SET r.type = 'member'
+                    return count(r)
+            """
+            count += self.query(query)[0].value()
+        logging.info(f"Created or merged: {count}")
+        return count
+
+    def link_admin_spaces(self, urls):
+        logging.info(f"Ingesting with: {sys._getframe().f_code.co_name}")
+        count = 0
+        for url in urls:
+            query = f"""
+                    LOAD CSV WITH HEADERS FROM '{url}' as admins
+                    MATCH (w:Wallet {{address: toLower(admins.address)}}), (s:Space {{snapshotId: admins.space}})
+                    MERGE (w)-[r:CONTRIBUTOR]->(s)
+                    ON CREATE SET r.type = 'admin',
+                        r.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
+                        r.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
+                    ON MATCH SET r.type = 'admin'
+                    return count(r)
+            """
+            count += self.query(query)[0].value()
+        logging.info(f"Created or merged: {count}")
+        return count
+
+    def link_space_alias(self, urls):
+        logging.info(f"Ingesting with: {sys._getframe().f_code.co_name}")
+        count = 0
+        for url in urls:
+            query = f"""
+                    LOAD CSV WITH HEADERS FROM '{url}' as ens
+                    MATCH (s:Space {{snapshotId: ens.name}}),
+                        (a:Alias {{name: toLower(ens.name)}})
+                    MERGE (s)-[n:HAS_ALIAS]->(a)
+                    return count(n)
+            """
+            count += self.query(query)[0].value()
+        logging.info(f"Created or merged: {count}")
+        return count
+
+    def link_space_twitter(self, urls):
+        logging.info(f"Ingesting with: {sys._getframe().f_code.co_name}")
+        count = 0
+        for url in urls:
+            query = f"""
+                    LOAD CSV WITH HEADERS FROM '{url}' as twitter
+                    MATCH (s:Space {{snapshotId: twitter.snapshotId}}), (t:Twitter {{handle: toLower(twitter.handle)}})
+                    MERGE (s)-[r:HAS_ACCOUNT]->(t)
+                    return count(r) 
+            """
+            count += self.query(query)[0].value()
+        logging.info(f"Created or merged: {count}")
+        return count
+
+    def link_votes(self, urls):
+        logging.info(f"Ingesting with: {sys._getframe().f_code.co_name}")
+        count = 0
+        for url in urls:
+            query = f"""
+                    LOAD CSV WITH HEADERS FROM '{url}' AS votes
+                    MATCH (w:Wallet {{address: votes.voter}}), (p:Proposal {{snapshotId: votes.proposalId}}) 
+                    WITH w, p, datetime(apoc.date.toISO8601(toInteger(votes.votedAt), 's')) AS vDt, votes.choice as choice
+                    MERGE (w)-[v:VOTED]->(p)
+                    ON CREATE set v.votedDt = vDt,
+                        v.choice = choice
+                    ON MATCH set v.votedDt = vDt,
+                        v.choice = choice
+                    return count(v)
+            """
+            count += self.query(query)[0].value()
+        logging.info(f"Created or merged: {count}")
+        return count
+
+    def link_strategies(self, urls):
+        logging.info(f"Ingesting with: {sys._getframe().f_code.co_name}")
+        count = 0
+        for url in urls:
+            query = f"""
+                    LOAD CSV WITH HEADERS FROM '{url}' as strats
+                    MATCH (t:Token {{address: strats.token}}), (s:Space {{snapshotId: strats.space}})
+                    MERGE (s)-[n:HAS_STRATEGY]->(t)
+                    return count(n)
+            """
+            count += self.query(query)[0].value()
+        logging.info(f"Created or merged: {count}")
+        return count
