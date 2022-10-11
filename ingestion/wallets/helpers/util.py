@@ -26,6 +26,45 @@ def tqdm_joblib(tqdm_object):
         tqdm_object.close()
 
 
+def get_all_gnosis_multisig(start, stop, interval, url):
+    transport = AIOHTTPTransport(url=url)
+    client = Client(transport=transport, fetch_schema_from_transport=True)
+
+    multisig_list = []
+    for skip in range(start, stop, interval):
+        query = gql(
+            f""" {{
+                            wallets (first: {interval}, skip: {skip}) {{
+                                id
+                                creator
+                                network
+                                stamp
+                                factory
+                                owners
+                                threshold
+                                version
+                            }}
+                        }}"""
+        )
+
+        result = client.execute(query)
+        result = result["wallets"]
+        if len(result) == 0:
+            break
+        for entry in result:
+            for owner in entry["owners"]:
+                multisig_list.append(
+                    {
+                        "multisig": entry["id"].lower(),
+                        "address": owner.lower(),
+                        "threshold": int(entry["threshold"]),
+                        "occurDt": int(entry["stamp"]),
+                    }
+                )
+
+    return multisig_list
+
+
 def query_gnosis_multisig(address):
     transport = AIOHTTPTransport(url="https://api.thegraph.com/subgraphs/name/gjeanmart/gnosis-safe-mainnet")
     client = Client(transport=transport, fetch_schema_from_transport=True)
