@@ -84,6 +84,7 @@ class GitCoinScraper(Scraper):
                             tmp["txHash"] = event["transactionHash"]
                             tmp["chain"] = "Ethereum"
                             tmp["chainId"] = "1"
+                            tmp["blockNumber"] = int(event["blockNumber"], base=16)
                             self.data["donations"].append(tmp)
                         tx_done.append(event["transactionHash"])
                 self.metadata["last_block_number"] = self.last_block_number
