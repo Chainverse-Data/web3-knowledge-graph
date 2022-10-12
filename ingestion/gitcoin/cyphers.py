@@ -232,6 +232,7 @@ class GitcoinCyphers(Cypher):
                         donation.txHash = donations.txHash,
                         donation.chainId = donations.txHash,
                         donation.chain = donations.chain,
+                        donation.blockNumber = donations.blockNumber,
                         donation.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                         donation.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
                     ON MATCH set donation.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))

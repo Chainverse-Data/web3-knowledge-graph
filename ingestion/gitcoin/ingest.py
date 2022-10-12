@@ -115,6 +115,7 @@ class GitCoinIngestor(Ingestor):
                 "donor": donation["donor"].lower(),
                 "destination": donation["dest"].lower(),
                 "txHash": donation["txHash"].lower(),
+                "blockNumber": donation["blockNumber"],
                 "chain": donation["chain"],
                 "chainId": donation["chainId"]
             }
