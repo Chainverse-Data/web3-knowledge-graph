@@ -1,11 +1,11 @@
 import logging
 from ..helpers import Ingestor
-from .cyphers import GitCoinCyphers
+from .cyphers import GitcoinCyphers
 import re
 
 class GitCoinIngestor(Ingestor):
     def __init__(self):
-        self.cyphers = GitCoinCyphers()
+        self.cyphers = GitcoinCyphers()
         super().__init__("gitcoin")
 
     def sanitize(self, string):
