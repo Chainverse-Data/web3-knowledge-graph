@@ -49,6 +49,7 @@ You can set the following environement variables that will apply to all scraper 
 ETHERSCAN_API_KEY=[Your Etherscan API Key]
 ALCHEMY_API_KEY=[Your Alchemy API Key]
 ALLOW_OVERRIDE=1 [Set to 1 if you want to allow overiding saved data on S3, else remove or set to 0]
+REINITIALIZE=1 [Set to 1 if you want to allow overiding saved data on S3, else remove or set to 0]
 ```
 
 ## The Scraper class

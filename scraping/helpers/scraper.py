@@ -72,7 +72,7 @@ class Scraper:
 
     def read_metadata(self):
         "Access the S3 bucket to read the metadata and returns a dictionary that corresponds to the saved JSON object"
-        if "REINITIALIZE" in os.environ:
+        if "REINITIALIZE" in os.environ and os.environ["REINITIALIZE"] == 1:
             return {}
         if self.s3.check_if_file_exists(self.bucket_name, self.metadata_filename):
             return self.s3.load_json(self.bucket_name, self.metadata_filename)
