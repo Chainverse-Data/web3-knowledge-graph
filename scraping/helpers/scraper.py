@@ -21,7 +21,7 @@ class Scraper:
             raise ValueError("bucket_name is not defined!")
         self.bucket_name = os.environ["AWS_BUCKET_PREFIX"] + bucket_name
         
-        if not allow_override and "ALLOW_OVERRIDE" in os.environ and os.environ["ALLOW_OVERRIDE"] == 1:
+        if not allow_override and "ALLOW_OVERRIDE" in os.environ and os.environ["ALLOW_OVERRIDE"] == "1":
             allow_override = True
         
         self.s3 = S3Utils()
@@ -72,7 +72,7 @@ class Scraper:
 
     def read_metadata(self):
         "Access the S3 bucket to read the metadata and returns a dictionary that corresponds to the saved JSON object"
-        if "REINITIALIZE" in os.environ and os.environ["REINITIALIZE"] == 1:
+        if "REINITIALIZE" in os.environ and os.environ["REINITIALIZE"] == "1":
             return {}
         if self.s3.check_if_file_exists(self.bucket_name, self.metadata_filename):
             return self.s3.load_json(self.bucket_name, self.metadata_filename)
