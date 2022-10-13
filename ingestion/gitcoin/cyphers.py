@@ -1,4 +1,6 @@
-from ..helpers import Cypher
+from ...helpers import Cypher
+from ...helpers import Constraints
+from ...helpers import Indexes
 import logging
 import sys
 
@@ -7,36 +9,20 @@ class GitcoinCyphers(Cypher):
         super().__init__()
 
     def create_constraints(self):
-        twitter_query = """CREATE CONSTRAINT UniqueHandle IF NOT EXISTS FOR (account:Twitter) REQUIRE account.handle IS UNIQUE"""
-        self.query(twitter_query)
-
-        wallet_query = """CREATE CONSTRAINT UniqueAddress IF NOT EXISTS FOR (wallet:Wallet) REQUIRE wallet.address IS UNIQUE"""
-        self.query(wallet_query)
-
-        grant_query = """CREATE CONSTRAINT UniqueId IF NOT EXISTS FOR (grant:EventGitcoinGrant) REQUIRE grant.id IS UNIQUE"""
-        self.query(grant_query)
-
-        user_query = """CREATE CONSTRAINT UniqueHandle IF NOT EXISTS FOR (user:UserGitcoin) REQUIRE user.handle IS UNIQUE"""
-        self.query(user_query)
-
-        bounty_query = """CREATE CONSTRAINT UniqueId IF NOT EXISTS FOR (bounty:EventGitcoinBounty) REQUIRE bounty.id IS UNIQUE"""
-        self.query(bounty_query)
+        constraints = Constraints()
+        constraints.twitter()
+        constraints.wallets()
+        constraints.gitcoin_grants()
+        constraints.gitcoin_users()
+        constraints.gitcoin_bounties()
 
     def create_indexes(self):
-        twitter_query = """CREATE INDEX UniqueTwitterID IF NOT EXISTS FOR (n:Twitter) ON (n.handle)"""
-        self.query(twitter_query)
-
-        wallet_query = """CREATE INDEX UniqueAddress IF NOT EXISTS FOR (n:Wallet) ON (n.address)"""
-        self.query(wallet_query)
-
-        grant_query = """CREATE INDEX UniqueGrantID IF NOT EXISTS FOR (n:EventGitcoinGrant) ON (n.id)"""
-        self.query(grant_query)
-
-        user_query = """CREATE INDEX UniqueUserHandle IF NOT EXISTS FOR (n:UserGitcoin) ON (n.handle)"""
-        self.query(user_query)
-
-        bounty_query = """CREATE INDEX UniqueBountyID IF NOT EXISTS FOR (n:EventGitcoinBounty) ON (n.id)"""
-        self.query(bounty_query)
+        indexes = Indexes()
+        indexes.twitter()
+        indexes.wallets()
+        indexes.gitcoin_grants()
+        indexes.gitcoin_users()
+        indexes.gitcoin_bounties()
 
     def create_or_merge_grants(self, urls):
         logging.info(f"Ingesting with: {sys._getframe().f_code.co_name}")
