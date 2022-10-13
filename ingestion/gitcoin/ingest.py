@@ -8,12 +8,6 @@ class GitCoinIngestor(Ingestor):
         self.cyphers = GitcoinCyphers()
         super().__init__("gitcoin")
 
-    def sanitize(self, string):
-        if string:
-            return string.rstrip().replace('\r','').replace('\\','').replace('"','').replace("'","").replace("`","").replace("\n", "")
-        else:
-            return ""
-
     def is_valid_address(self, address):
         check = re.compile("^0x[a-fA-F0-9]{40}$")
         if check.match(address):
@@ -56,7 +50,7 @@ class GitCoinIngestor(Ingestor):
             tmp = {
                 "id": grant["id"],
                 "title": grant["title"],
-                "text": self.sanitize(grant["description"]),
+                "text": self.cyphers.sanitize_text(grant["description"]),
                 "types": [el["fields"]["name"] for el in grant["grant_type"]],
                 "tags": [el["fields"]["name"] for el in grant["grant_tags"]],
                 "url": f"https://gitcoin.co/{grant['url']}",
@@ -179,10 +173,10 @@ class GitCoinIngestor(Ingestor):
         for bounty in self.scraper_data["bounties"]:
             tmp = {
                 "id": bounty["pk"],
-                "title": self.sanitize(bounty["title"]),
-                "text": self.sanitize(bounty["issue_description_text"]),
-                "url": self.sanitize(bounty["url"]),
-                "github_url": self.sanitize(bounty["github_url"]),
+                "title": self.cyphers.sanitize_text(bounty["title"]),
+                "text": self.cyphers.sanitize_text(bounty["issue_description_text"]),
+                "url": self.cyphers.sanitize_text(bounty["url"]),
+                "github_url": self.cyphers.sanitize_text(bounty["github_url"]),
                 "status": bounty["status"],
                 "value_in_token": bounty["value_in_token"],
                 "token_name": bounty["token_name"],
@@ -201,7 +195,7 @@ class GitCoinIngestor(Ingestor):
             if bounty["org_name"]:
                 tmp = {
                     "bountyId": bounty["pk"],
-                    "citation": self.sanitize(bounty["url"]),
+                    "citation": self.cyphers.sanitize_text(bounty["url"]),
                     "org_name": bounty["org_name"],
                     "asOf": self.asOf
                 }
@@ -213,7 +207,7 @@ class GitCoinIngestor(Ingestor):
                     "id": bounty["bounty_owner_profile"]["id"], 
                     "handle": bounty["bounty_owner_profile"]["handle"], 
                     "name": bounty["bounty_owner_name"], 
-                    "citation": self.sanitize(bounty["url"]),
+                    "citation": self.cyphers.sanitize_text(bounty["url"]),
                     "keywords": ", ".join(bounty["bounty_owner_profile"]["keywords"]),
                     "email": bounty["bounty_owner_email"],
                     "asOf": self.asOf,
@@ -223,7 +217,7 @@ class GitCoinIngestor(Ingestor):
             if bounty["bounty_owner_address"] and bounty["bounty_owner_profile"] and self.is_valid_address(bounty["bounty_owner_address"]):
                 tmp = {
                     "id": bounty["bounty_owner_profile"]["id"],
-                    "citation": self.sanitize(bounty["url"]),
+                    "citation": self.cyphers.sanitize_text(bounty["url"]),
                     "address": bounty["bounty_owner_address"].lower(), 
                     "asOf": self.asOf
                 }
@@ -240,7 +234,7 @@ class GitCoinIngestor(Ingestor):
                         "id": fulfilment["profile"]["id"],
                         "name": fulfilment["profile"]["name"],
                         "handle": fulfilment["profile"]["handle"],
-                        "citation": self.sanitize(bounty["url"]),
+                        "citation": self.cyphers.sanitize_text(bounty["url"]),
                         "keywords": ", ".join(fulfilment["profile"]["keywords"]),
                         "asOf": self.asOf,
                         "organizations": ", ".join([key for key in fulfilment["profile"]["organizations"]]),
@@ -250,7 +244,7 @@ class GitCoinIngestor(Ingestor):
                     if fulfilment["fulfiller_address"] and self.is_valid_address(fulfilment["fulfiller_address"]):
                         tmp = {
                             "id": fulfilment["profile"]["id"],
-                            "citation": self.sanitize(bounty["url"]),
+                            "citation": self.cyphers.sanitize_text(bounty["url"]),
                             "address": fulfilment["fulfiller_address"].lower(),
                             "asOf": self.asOf,
                         }
@@ -262,7 +256,7 @@ class GitCoinIngestor(Ingestor):
                     "id": interest["profile"]["id"],
                     "name": interest["profile"]["name"],
                     "handle": interest["profile"]["handle"],
-                    "citation": self.sanitize(bounty["url"]),
+                    "citation": self.cyphers.sanitize_text(bounty["url"]),
                     "keywords": ", ".join(interest["profile"]["keywords"]),
                     "organizations": ", ".join([key for key in interest["profile"]["organizations"]]),
                 }

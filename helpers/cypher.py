@@ -41,3 +41,9 @@ class Cypher:
                 session.close()
         neo4j_driver.close()
         return response
+
+    def sanitize_text(self, string):
+        if string:
+            return string.rstrip().replace('\r', '').replace('\\', '').replace('"', '').replace("'", "").replace("`", "").replace("\n", "")
+        else:
+            return ""
