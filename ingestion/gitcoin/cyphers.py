@@ -101,7 +101,7 @@ class GitcoinCyphers(Cypher):
             query = f"""
                     LOAD CSV WITH HEADERS FROM '{url}' AS members
                     MATCH (grant:EventGitcoinGrant {{id: members.grantId}}), (member:UserGitcoin {{id: members.userId}})
-                    WITH grant, member
+                    WITH grant, member, members
                     MERGE (member)-[edge:MEMBER_OF]->(grant)
                     ON CREATE set edge.uuid = apoc.create.uuid(),
                         edge.citation = members.citation,
