@@ -96,7 +96,7 @@ class Ingestor:
                 if self.end_date and date <= self.end_date:
                     break
                 datafiles_to_keep.append(datafile)
-
+        logging.info("Datafiles for ingestion: {}".format(','.join(datafiles_to_keep)))
         for datafile in datafiles_to_keep:
             tmp_data = self.s3.load_json(self.bucket_name, datafile)
             for root_key in tmp_data:
