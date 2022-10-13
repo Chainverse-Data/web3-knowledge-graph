@@ -1,4 +1,6 @@
-from ..helpers import Cypher
+from ...helpers import Cypher
+from ...helpers import Constraints
+from ...helpers import Indexes
 import logging
 import sys
 
@@ -7,36 +9,20 @@ class GitcoinCyphers(Cypher):
         super().__init__()
 
     def create_constraints(self):
-        twitter_query = """CREATE CONSTRAINT UniqueHandle IF NOT EXISTS FOR (account:Twitter) REQUIRE account.handle IS UNIQUE"""
-        self.query(twitter_query)
-
-        wallet_query = """CREATE CONSTRAINT UniqueAddress IF NOT EXISTS FOR (wallet:Wallet) REQUIRE wallet.address IS UNIQUE"""
-        self.query(wallet_query)
-
-        grant_query = """CREATE CONSTRAINT UniqueId IF NOT EXISTS FOR (grant:EventGitcoinGrant) REQUIRE grant.id IS UNIQUE"""
-        self.query(grant_query)
-
-        user_query = """CREATE CONSTRAINT UniqueHandle IF NOT EXISTS FOR (user:UserGitcoin) REQUIRE user.handle IS UNIQUE"""
-        self.query(user_query)
-
-        bounty_query = """CREATE CONSTRAINT UniqueId IF NOT EXISTS FOR (bounty:EventGitcoinBounty) REQUIRE bounty.id IS UNIQUE"""
-        self.query(bounty_query)
+        constraints = Constraints()
+        constraints.twitter()
+        constraints.wallets()
+        constraints.gitcoin_grants()
+        constraints.gitcoin_users()
+        constraints.gitcoin_bounties()
 
     def create_indexes(self):
-        twitter_query = """CREATE INDEX UniqueTwitterID IF NOT EXISTS FOR (n:Twitter) ON (n.handle)"""
-        self.query(twitter_query)
-
-        wallet_query = """CREATE INDEX UniqueAddress IF NOT EXISTS FOR (n:Wallet) ON (n.address)"""
-        self.query(wallet_query)
-
-        grant_query = """CREATE INDEX UniqueGrantID IF NOT EXISTS FOR (n:EventGitcoinGrant) ON (n.id)"""
-        self.query(grant_query)
-
-        user_query = """CREATE INDEX UniqueUserHandle IF NOT EXISTS FOR (n:UserGitcoin) ON (n.handle)"""
-        self.query(user_query)
-
-        bounty_query = """CREATE INDEX UniqueBountyID IF NOT EXISTS FOR (n:EventGitcoinBounty) ON (n.id)"""
-        self.query(bounty_query)
+        indexes = Indexes()
+        indexes.twitter()
+        indexes.wallets()
+        indexes.gitcoin_grants()
+        indexes.gitcoin_users()
+        indexes.gitcoin_bounties()
 
     def create_or_merge_grants(self, urls):
         logging.info(f"Ingesting with: {sys._getframe().f_code.co_name}")
@@ -44,7 +30,7 @@ class GitcoinCyphers(Cypher):
         for url in urls:
             query = f"""
                     LOAD CSV WITH HEADERS FROM '{url}' AS grants
-                    MERGE(grant:EventGitcoinGrant:Gitcoin:Grant:Event {{id: grants.id}})
+                    MERGE(grant:Gitcoin:Grant:Event {{id: grants.id}})
                     ON CREATE set grant.uuid = apoc.create.uuid(),
                         grant.id = grants.id, 
                         grant.title = grants.title, 
@@ -76,7 +62,7 @@ class GitcoinCyphers(Cypher):
         for url in urls:
             query = f"""
                     LOAD CSV WITH HEADERS FROM '{url}' AS members
-                    MERGE(user:UserGitcoin:Gitcoin:UserGitHub:GitHub:Account {{id: members.userId}})
+                    MERGE(user:Gitcoin:GitHub:Account {{id: members.userId}})
                     ON CREATE set user.uuid = apoc.create.uuid(),
                         user.id = members.userId, 
                         user.handle = members.handle, 
@@ -100,8 +86,8 @@ class GitcoinCyphers(Cypher):
 
             query = f"""
                     LOAD CSV WITH HEADERS FROM '{url}' AS members
-                    MATCH (grant:EventGitcoinGrant {{id: members.grantId}}), (member:UserGitcoin {{id: members.userId}})
-                    WITH grant, member
+                    MATCH (grant:Gitcoin:Grant:Event {{id: members.grantId}}), (member:Gitcoin:Account {{id: members.userId}})
+                    WITH grant, member, members
                     MERGE (member)-[edge:MEMBER_OF]->(grant)
                     ON CREATE set edge.uuid = apoc.create.uuid(),
                         edge.citation = members.citation,
@@ -109,7 +95,7 @@ class GitcoinCyphers(Cypher):
                         edge.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                         edge.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
                     ON MATCH set edge.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
-                        edge.asOf = members.asOf,
+                        edge.asOf = members.asOf
                     return count(edge)
             """
             count += self.query(query)[0].value()
@@ -141,8 +127,8 @@ class GitcoinCyphers(Cypher):
         for url in urls:
             query = f"""
                     LOAD CSV WITH HEADERS FROM '{url}' AS admin_wallets
-                    MATCH (grant:EventGitcoinGrant {{id: admin_wallets.grantId}}), (wallet:Wallet {{address: admin_wallets.address}})
-                    WITH grant, wallet
+                    MATCH (grant:Gitcoin:Grant:Event {{id: admin_wallets.grantId}}), (wallet:Wallet {{address: admin_wallets.address}})
+                    WITH grant, wallet, admin_wallets
                     MERGE (wallet)-[edge:IS_ADMIN]->(grant)
                     ON CREATE set edge.uuid = apoc.create.uuid(),
                         edge.citation = admin_wallets.citation,
@@ -150,7 +136,7 @@ class GitcoinCyphers(Cypher):
                         edge.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                         edge.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
                     ON MATCH set edge.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
-                        edge.asOf = admin_wallets.asOf,
+                        edge.asOf = admin_wallets.asOf
                     return count(edge)
             """
             count += self.query(query)[0].value()
@@ -181,8 +167,8 @@ class GitcoinCyphers(Cypher):
         for url in urls:
             query = f"""
                     LOAD CSV WITH HEADERS FROM '{url}' AS twitter_accounts
-                    MATCH (twitter:Twitter {{handle: twitter_accounts.handle}}), (grant:EventGitcoinGrant {{id: twitter_accounts.grantId}})
-                    WITH twitter, grant
+                    MATCH (twitter:Twitter {{handle: twitter_accounts.handle}}), (grant:Gitcoin:Grant:Event {{id: twitter_accounts.grantId}})
+                    WITH twitter, grant, twitter_accounts
                     MERGE (grant)-[edge:HAS_ACCOUNT]->(twitter)
                     ON CREATE set edge.uuid = apoc.create.uuid(),
                         edge.citation = twitter_accounts.citation,
@@ -190,7 +176,7 @@ class GitcoinCyphers(Cypher):
                         edge.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                         edge.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
                     ON MATCH set edge.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
-                        edge.asOf = twitter_accounts.asOf,
+                        edge.asOf = twitter_accounts.asOf
                     return count(edge)
             """
             count += self.query(query)[0].value()
@@ -222,7 +208,7 @@ class GitcoinCyphers(Cypher):
         for url in urls:
             query = f"""
                     LOAD CSV WITH HEADERS FROM '{url}' AS donations
-                    MATCH (grant:EventGitcoinGrant)-[is_admin:IS_ADMIN]-(admin_wallet:Wallet {{address: donations.destination}})
+                    MATCH (grant:Gitcoin:Grant:Event)-[is_admin:IS_ADMIN]-(admin_wallet:Wallet {{address: donations.destination}})
                     OPTIONAL MATCH (donor:Wallet {{address: donations.donor}})
                     WITH grant, donor, donations
                     MERGE (donor)-[donation:DONATION {{txHash: donations.txHash}}]->(grant)
@@ -248,7 +234,7 @@ class GitcoinCyphers(Cypher):
         for url in urls:
             query = f"""
                     LOAD CSV WITH HEADERS FROM '{url}' AS bounties
-                    MERGE(bounty:EventGitcoinBounty:Gitcoin:Bounty:Event {{id: bounties.id}})
+                    MERGE(bounty:Gitcoin:Bounty:Event {{id: bounties.id}})
                     ON CREATE set bounty.uuid = apoc.create.uuid(),
                         bounty.id = bounties.id, 
                         bounty.title = bounties.title, 
@@ -318,7 +304,7 @@ class GitcoinCyphers(Cypher):
         for url in urls:
             query = f"""
                     LOAD CSV WITH HEADERS FROM '{url}' AS orgs
-                    MATCH (bounty:EventGitcoinBounty {{id: orgs.bountyId}}), (entity:Entity {{name: orgs.org_name}})
+                    MATCH (bounty:Gitcoin:Bounty:Event {{id: orgs.bountyId}}), (entity:Entity {{name: orgs.org_name}})
                     WITH bounty, entity, orgs
                     MERGE (entity)-[link:HAS_BOUNTY]->(bounty)
                     ON CREATE set link.uuid = apoc.create.uuid(),
@@ -340,7 +326,7 @@ class GitcoinCyphers(Cypher):
         for url in urls:
             query = f"""
                     LOAD CSV WITH HEADERS FROM '{url}' AS owners
-                    MERGE(user:UserGitcoin:Gitcoin:UserGitHub:GitHub:Account {{id: owners.id}})
+                    MERGE(user:Gitcoin:GitHub:Account {{id: owners.id}})
                     ON CREATE set user.uuid = apoc.create.uuid(),
                         user.id = owners.id, 
                         user.name = owners.name, 
@@ -365,7 +351,7 @@ class GitcoinCyphers(Cypher):
         for url in urls:
             query = f"""
                     LOAD CSV WITH HEADERS FROM '{url}' AS owners
-                    MATCH (user:UserGitcoin {{id: owners.id}}), (bounty:EventGitcoinBounty {{id: owners.bounty_id}})
+                    MATCH (user:Gitcoin:User {{id: owners.id}}), (bounty:Gitcoin:Bounty:Event {{id: owners.bounty_id}})
                     WITH user, bounty, owners
                     MERGE (user)-[link:IS_OWNER]->(bounty)
                     ON CREATE set link.uuid = apoc.create.uuid(),
@@ -408,7 +394,7 @@ class GitcoinCyphers(Cypher):
         for url in urls:
             query = f"""
                     LOAD CSV WITH HEADERS FROM '{url}' AS owners
-                    MATCH (user:UserGitcoin {{id: owners.id}}), (wallet:Wallet {{address: owners.address}})
+                    MATCH (user:Gitcoin:GitHub:Account {{id: owners.id}}), (wallet:Wallet {{address: owners.address}})
                     WITH user, wallet, owners
                     MERGE (user)-[link:HAS_WALLET]->(wallet)
                     ON CREATE set link.uuid = apoc.create.uuid(),
@@ -431,7 +417,7 @@ class GitcoinCyphers(Cypher):
         for url in urls:
             query = f"""
                     LOAD CSV WITH HEADERS FROM '{url}' AS fullfilers
-                    MERGE(user:UserGitcoin:Gitcoin:UserGitHub:GitHub:Account {{id: fullfilers.id}})
+                    MERGE(user:Gitcoin:GitHub:Account {{id: fullfilers.id}})
                     ON CREATE set user.uuid = apoc.create.uuid(),
                         user.id = fullfilers.id, 
                         user.email = fullfilers.email, 
@@ -459,7 +445,7 @@ class GitcoinCyphers(Cypher):
         for url in urls:
             query = f"""
                     LOAD CSV WITH HEADERS FROM '{url}' AS fullfilers
-                    MATCH (user:UserGitcoin {{id: fullfilers.id}}), (bounty:EventGitcoinBounty {{id: fullfilers.bounty_id}})
+                    MATCH (user:Gitcoin:GitHub:Account {{id: fullfilers.id}}), (bounty:Gitcoin:Bounty:Event {{id: fullfilers.bounty_id}})
                     WITH user, bounty, fullfilers
                     MERGE (user)-[link:HAS_FULLFILLED]->(bounty)
                     ON CREATE set link.uuid = apoc.create.uuid(),
@@ -504,7 +490,7 @@ class GitcoinCyphers(Cypher):
         for url in urls:
             query = f"""
                     LOAD CSV WITH HEADERS FROM '{url}' AS fullfilers
-                    MATCH (user:UserGitcoin {{id: fullfilers.id}}), (wallet:Wallet {{address: fullfilers.address}})
+                    MATCH (user:Gitcoin:GitHub:Account {{id: fullfilers.id}}), (wallet:Wallet {{address: fullfilers.address}})
                     WITH user, wallet, fullfilers
                     MERGE (user)-[link:HAS_WALLET]->(wallet)
                     ON CREATE set link.uuid = apoc.create.uuid(),
@@ -527,7 +513,7 @@ class GitcoinCyphers(Cypher):
         for url in urls:
             query = f"""
                     LOAD CSV WITH HEADERS FROM '{url}' AS interested
-                    MERGE(user:UserGitcoin:Gitcoin:UserGitHub:GitHub:Account {{id: interested.id}})
+                    MERGE(user:Gitcoin:GitHub:Account {{id: interested.id}})
                     ON CREATE set user.uuid = apoc.create.uuid(),
                         user.id = interested.id, 
                         user.name = interested.name, 
@@ -553,7 +539,7 @@ class GitcoinCyphers(Cypher):
         for url in urls:
             query = f"""
                     LOAD CSV WITH HEADERS FROM '{url}' AS interested
-                    MATCH (user:UserGitcoin {{id: interested.id}}), (bounty:EventGitcoinBounty {{id: interested.bounty_id}})
+                    MATCH (user:Gitcoin:GitHub:Account {{id: interested.id}}), (bounty:Gitcoin:Bounty:Event {{id: interested.bounty_id}})
                     WITH user, bounty, interested
                     MERGE (user)-[link:HAS_INTEREST]->(bounty)
                     ON CREATE set link.uuid = apoc.create.uuid(),

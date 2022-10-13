@@ -21,7 +21,7 @@ class Scraper:
             raise ValueError("bucket_name is not defined!")
         self.bucket_name = os.environ["AWS_BUCKET_PREFIX"] + bucket_name
         
-        if not allow_override and "ALLOW_OVERRIDE" in os.environ and int(os.environ["ALLOW_OVERRIDE"]) == 1:
+        if not allow_override and "ALLOW_OVERRIDE" in os.environ and os.environ["ALLOW_OVERRIDE"] == "1":
             allow_override = True
         
         self.s3 = S3Utils()
