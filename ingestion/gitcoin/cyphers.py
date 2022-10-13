@@ -109,7 +109,7 @@ class GitcoinCyphers(Cypher):
                         edge.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                         edge.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
                     ON MATCH set edge.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
-                        edge.asOf = members.asOf,
+                        edge.asOf = members.asOf
                     return count(edge)
             """
             count += self.query(query)[0].value()
@@ -150,7 +150,7 @@ class GitcoinCyphers(Cypher):
                         edge.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                         edge.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
                     ON MATCH set edge.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
-                        edge.asOf = admin_wallets.asOf,
+                        edge.asOf = admin_wallets.asOf
                     return count(edge)
             """
             count += self.query(query)[0].value()
@@ -190,7 +190,7 @@ class GitcoinCyphers(Cypher):
                         edge.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                         edge.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
                     ON MATCH set edge.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
-                        edge.asOf = twitter_accounts.asOf,
+                        edge.asOf = twitter_accounts.asOf
                     return count(edge)
             """
             count += self.query(query)[0].value()
