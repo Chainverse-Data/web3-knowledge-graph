@@ -142,7 +142,7 @@ class GitcoinCyphers(Cypher):
             query = f"""
                     LOAD CSV WITH HEADERS FROM '{url}' AS admin_wallets
                     MATCH (grant:EventGitcoinGrant {{id: admin_wallets.grantId}}), (wallet:Wallet {{address: admin_wallets.address}})
-                    WITH grant, wallet
+                    WITH grant, wallet, admin_wallets
                     MERGE (wallet)-[edge:IS_ADMIN]->(grant)
                     ON CREATE set edge.uuid = apoc.create.uuid(),
                         edge.citation = admin_wallets.citation,
@@ -182,7 +182,7 @@ class GitcoinCyphers(Cypher):
             query = f"""
                     LOAD CSV WITH HEADERS FROM '{url}' AS twitter_accounts
                     MATCH (twitter:Twitter {{handle: twitter_accounts.handle}}), (grant:EventGitcoinGrant {{id: twitter_accounts.grantId}})
-                    WITH twitter, grant
+                    WITH twitter, grant, twitter_accounts
                     MERGE (grant)-[edge:HAS_ACCOUNT]->(twitter)
                     ON CREATE set edge.uuid = apoc.create.uuid(),
                         edge.citation = twitter_accounts.citation,
