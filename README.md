@@ -2,13 +2,13 @@
 
 This repo has scripts for scraping various data sources and ingesting this data into a neo4j graph database.
 
-The code is organized into three main python modules: **ingestion**, **scraping**, **analytics**. There are scrict design guidelines to allow for easy maintenance and expandability.
+The code is organized into four main python modules: **ingestion**, **scraping**, **analytics**, **post-processing**. There are scrict design guidelines to allow for easy maintenance and expandability.
 
 ## Design strategy
-The code stack follows a python module approach such that one can call the following: `python3 -m module_name.service_name.action`. For example, to scrape GitCoin `python3 -m scraping.gitcoin.scrape`.
+The code stack follows a python module approach such that one can call the following: `python3 -m pipelines.[module_name].[service_name].[action]`. For example, to scrape GitCoin `python3 -m pipelines.scraping.gitcoin.scrape`.
 
 ## Install
-It is recommended to created a virtual python environment using **Python 3.10**. Then install all requirements with `pip3 install -r requierements.txt`.
+It is recommended to created a virtual python or conda environment using **Python 3.10**. Then install all requirements with `pip3 install -r requierements.txt`.
 
 ## Requirements
 You will need to define the following Environment variable for all the modules to be running:
@@ -24,7 +24,7 @@ LOGLEVEL=[DEBUG|INFO|WARNING|ERROR] python logging library log level
 The module is packaged into a Docker image for cloud deployement, or local use. To build the image just launch `docker build . -t diamond-pipelines`.
 
 You can then launch the modules through the docker image directly by replacing module, service and action with the desired pipeline module.
- `docker run --env-file .env diamond-pipeline python3 -m [module].[service].[action]`. 
+ `docker run --env-file .env diamond-pipeline python3 -m pipelines.[module].[service].[action]`. 
 
 **Make sure you have a `.env` file with all the environment variables set.**
 
@@ -260,15 +260,15 @@ class Cypher:
         self.database # If set through the ENV or through parameter, the database to target from the Neo4J instance.
 
     def create_constraints(self):
-        """This function must be redefined by the child class.
+        """This function SHOULD defined by the child class to create constraints.
         In it you must input all the constraints that the ingestor must create.
-        If your ingestor does not need any constraints, then you must still define a function that does nothing."""
+        If your ingestor does not need any constraints, you can skip defining it."""
         ...
 
     def create_indexes(self):
-        """This function must be redefined by the child class.
+        """This function SHOULD defined by the child class to create indexes.
         In it you must input all the constraints that the ingestor must create.
-        If your ingestor does not need any constraints, then you must still define a function that does nothing"""
+        If your ingestor does not need any constraints, you can skip defining it"""
         ...
 
     def query(self, query, parameters=None):
@@ -328,6 +328,10 @@ class ExampleCyphers(Cypher):
 - DAOHaus: `ingestion/daohaus` 
 - Twitter: `ingestion/twitter`
 - Wallets: `ingestion/wallets`
+
+# Analytics
+
+# Post-Processing
 
 # Contribute
 To contribute a new service, clone the main branch, then create a new branch named after the service or analysis you are targetting. Create the scraper, ingestor, analysis or post processing scripts, then create a Pull request for code-review.

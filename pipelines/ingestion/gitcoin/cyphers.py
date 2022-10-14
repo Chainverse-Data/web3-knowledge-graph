@@ -1,12 +1,15 @@
 from ...helpers import Cypher
 from ...helpers import Constraints
 from ...helpers import Indexes
+from ...helpers import Queries
+from ...helpers import count_query_logging
 import logging
 import sys
 
 class GitcoinCyphers(Cypher):
     def __init__(self):
         super().__init__()
+        self.queries = Queries()
 
     def create_constraints(self):
         constraints = Constraints()
@@ -24,8 +27,8 @@ class GitcoinCyphers(Cypher):
         indexes.gitcoin_users()
         indexes.gitcoin_bounties()
 
+    @count_query_logging
     def create_or_merge_grants(self, urls):
-        logging.info(f"Ingesting with: {sys._getframe().f_code.co_name}")
         count = 0
         for url in urls:
             query = f"""
@@ -53,11 +56,10 @@ class GitcoinCyphers(Cypher):
                     return count(grant)
             """
             count += self.query(query)[0].value()
-        logging.info(f"Created or merged: {count}")
         return count
 
+    @count_query_logging
     def create_or_merge_team_members(self, urls):
-        logging.info(f"Ingesting with: {sys._getframe().f_code.co_name}")
         count = 0
         for url in urls:
             query = f"""
@@ -76,11 +78,10 @@ class GitcoinCyphers(Cypher):
             """
 
             count += self.query(query)[0].value()
-        logging.info(f"Created or merged: {count}")
         return count
 
+    @count_query_logging
     def link_or_merge_team_members(self, urls):
-        logging.info(f"Ingesting with: {sys._getframe().f_code.co_name}")
         count = 0
         for url in urls:
 
@@ -99,30 +100,15 @@ class GitcoinCyphers(Cypher):
                     return count(edge)
             """
             count += self.query(query)[0].value()
-        logging.info(f"Created or merged: {count}")
         return count
 
+    @count_query_logging
     def create_or_merge_admins(self, urls):
-        logging.info(f"Ingesting with: {sys._getframe().f_code.co_name}")
-        count = 0
-        for url in urls:
-            query = f"""
-                    LOAD CSV WITH HEADERS FROM '{url}' AS admin_wallets
-                    MERGE(wallet:Wallet {{address: admin_wallets.address}})
-                    ON CREATE set wallet.uuid = apoc.create.uuid(),
-                        wallet.address = admin_wallets.address,
-                        wallet.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
-                        wallet.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
-                    ON MATCH set wallet.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
-                        wallet.address = admin_wallets.address
-                    return count(wallet)
-            """
-            count += self.query(query)[0].value()
-        logging.info(f"Created or merged: {count}")
+        count = self.queries.create_wallets(urls)
         return count
 
+    @count_query_logging
     def link_or_merge_admin_wallet(self, urls):
-        logging.info(f"Ingesting with: {sys._getframe().f_code.co_name}")
         count = 0
         for url in urls:
             query = f"""
@@ -140,11 +126,10 @@ class GitcoinCyphers(Cypher):
                     return count(edge)
             """
             count += self.query(query)[0].value()
-        logging.info(f"Created or merged: {count}")
         return count
 
+    @count_query_logging
     def create_or_merge_twitter_accounts(self, urls):
-        logging.info(f"Ingesting with: {sys._getframe().f_code.co_name}")
         count = 0
         for url in urls:
             query = f"""
@@ -158,11 +143,10 @@ class GitcoinCyphers(Cypher):
                     return count(twitter)
             """
             count += self.query(query)[0].value()
-        logging.info(f"Created or merged: {count}")
         return count
 
+    @count_query_logging
     def link_or_merge_twitter_accounts(self, urls):
-        logging.info(f"Ingesting with: {sys._getframe().f_code.co_name}")
         count = 0
         for url in urls:
             query = f"""
@@ -180,30 +164,15 @@ class GitcoinCyphers(Cypher):
                     return count(edge)
             """
             count += self.query(query)[0].value()
-        logging.info(f"Created or merged: {count}")
         return count
 
+    @count_query_logging
     def create_or_merge_donators(self, urls):
-        logging.info(f"Ingesting with: {sys._getframe().f_code.co_name}")
-        count = 0
-        for url in urls:
-            query = f"""
-                    LOAD CSV WITH HEADERS FROM '{url}' AS donations
-                    MERGE(wallet:Wallet {{address: donations.donor}})
-                    ON CREATE set wallet.uuid = apoc.create.uuid(),
-                        wallet.address = donations.donor,
-                        wallet.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
-                        wallet.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
-                    ON MATCH set wallet.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
-                        wallet.address = donations.donor
-                    return count(wallet)
-            """
-            count += self.query(query)[0].value()
-        logging.info(f"Created or merged: {count}")
+        count = self.queries.create_wallets(urls)
         return count
 
+    @count_query_logging
     def link_or_merge_donations(self, urls):
-        logging.info(f"Ingesting with: {sys._getframe().f_code.co_name}")
         count = 0
         for url in urls:
             query = f"""
@@ -225,11 +194,10 @@ class GitcoinCyphers(Cypher):
                     return count(donation)
             """
             count += self.query(query)[0].value()
-        logging.info(f"Created or merged: {count}")
         return count
 
+    @count_query_logging
     def create_or_merge_bounties(self, urls):
-        logging.info(f"Ingesting with: {sys._getframe().f_code.co_name}")
         count = 0
         for url in urls:
             query = f"""
@@ -274,11 +242,10 @@ class GitcoinCyphers(Cypher):
             """
             
             count += self.query(query)[0].value()
-        logging.info(f"Created or merged: {count}")
         return count
 
+    @count_query_logging
     def create_or_merge_bounties_orgs(self, urls):
-        logging.info(f"Ingesting with: {sys._getframe().f_code.co_name}")
         count = 0
         for url in urls:
             query = f"""
@@ -295,11 +262,10 @@ class GitcoinCyphers(Cypher):
                     return count(org)
                     """
             count += self.query(query)[0].value()
-        logging.info(f"Created or merged: {count}")
         return count
 
+    @count_query_logging
     def link_or_merge_bounties_orgs(self, urls):
-        logging.info(f"Ingesting with: {sys._getframe().f_code.co_name}")
         count = 0
         for url in urls:
             query = f"""
@@ -317,11 +283,10 @@ class GitcoinCyphers(Cypher):
                     return count(link)
                     """
             count += self.query(query)[0].value()
-        logging.info(f"Created or merged: {count}")
         return count
 
+    @count_query_logging
     def create_or_merge_bounties_owners(self, urls):
-        logging.info(f"Ingesting with: {sys._getframe().f_code.co_name}")
         count = 0
         for url in urls:
             query = f"""
@@ -342,11 +307,10 @@ class GitcoinCyphers(Cypher):
             """
 
             count += self.query(query)[0].value()
-        logging.info(f"Created or merged: {count}")
         return count
 
+    @count_query_logging
     def link_or_merge_bounties_owners(self, urls):
-        logging.info(f"Ingesting with: {sys._getframe().f_code.co_name}")
         count = 0
         for url in urls:
             query = f"""
@@ -365,11 +329,10 @@ class GitcoinCyphers(Cypher):
             """
 
             count += self.query(query)[0].value()
-        logging.info(f"Created or merged: {count}")
         return count
 
+    @count_query_logging
     def create_or_merge_bounty_owner_wallets(self, urls):
-        logging.info(f"Ingesting with: {sys._getframe().f_code.co_name}")
         count = 0
         for url in urls:
             query = f"""
@@ -385,11 +348,10 @@ class GitcoinCyphers(Cypher):
             """
 
             count += self.query(query)[0].value()
-        logging.info(f"Created or merged: {count}")
         return count
     
+    @count_query_logging
     def link_or_merge_bounty_owner_wallets(self, urls):
-        logging.info(f"Ingesting with: {sys._getframe().f_code.co_name}")
         count = 0
         for url in urls:
             query = f"""
@@ -408,11 +370,10 @@ class GitcoinCyphers(Cypher):
             """
 
             count += self.query(query)[0].value()
-        logging.info(f"Created or merged: {count}")
         return count
 
+    @count_query_logging
     def create_or_merge_bounties_fullfilers(self, urls):
-        logging.info(f"Ingesting with: {sys._getframe().f_code.co_name}")
         count = 0
         for url in urls:
             query = f"""
@@ -436,11 +397,10 @@ class GitcoinCyphers(Cypher):
                     return count(user)
             """
             count += self.query(query)[0].value()
-        logging.info(f"Created or merged: {count}")
         return count
 
+    @count_query_logging
     def link_or_merge_bounties_fullfilers(self, urls):
-        logging.info(f"Ingesting with: {sys._getframe().f_code.co_name}")
         count = 0
         for url in urls:
             query = f"""
@@ -461,11 +421,10 @@ class GitcoinCyphers(Cypher):
             """
 
             count += self.query(query)[0].value()
-        logging.info(f"Created or merged: {count}")
         return count
 
+    @count_query_logging
     def create_or_merge_bounties_fullfilers_wallets(self, urls):
-        logging.info(f"Ingesting with: {sys._getframe().f_code.co_name}")
         count = 0
         for url in urls:
             query = f"""
@@ -481,11 +440,10 @@ class GitcoinCyphers(Cypher):
             """
 
             count += self.query(query)[0].value()
-        logging.info(f"Created or merged: {count}")
         return count
 
+    @count_query_logging
     def link_or_merge_bounties_fullfilers_wallets(self, urls):
-        logging.info(f"Ingesting with: {sys._getframe().f_code.co_name}")
         count = 0
         for url in urls:
             query = f"""
@@ -504,11 +462,10 @@ class GitcoinCyphers(Cypher):
             """
 
             count += self.query(query)[0].value()
-        logging.info(f"Created or merged: {count}")
         return count
 
+    @count_query_logging
     def create_or_merge_bounties_interested(self, urls):
-        logging.info(f"Ingesting with: {sys._getframe().f_code.co_name}")
         count = 0
         for url in urls:
             query = f"""
@@ -530,11 +487,10 @@ class GitcoinCyphers(Cypher):
                     return count(user)
             """
             count += self.query(query)[0].value()
-        logging.info(f"Created or merged: {count}")
         return count
 
+    @count_query_logging
     def link_or_merge_bounties_interested(self, urls):
-        logging.info(f"Ingesting with: {sys._getframe().f_code.co_name}")
         count = 0
         for url in urls:
             query = f"""
@@ -554,5 +510,4 @@ class GitcoinCyphers(Cypher):
             """
 
             count += self.query(query)[0].value()
-        logging.info(f"Created or merged: {count}")
         return count
