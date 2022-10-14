@@ -10,7 +10,7 @@ class TwitterPostProcess(Processor):
 
     def clean_twitter_nodes(self):
         logging.info("Cleaning Twitter nodes that don't have the Account label")
-        self.cyphers.clean_twitter_nodes(self)
+        self.cyphers.clean_twitter_nodes()
 
     def run(self):
         self.clean_twitter_nodes()
