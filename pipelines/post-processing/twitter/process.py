@@ -7,4 +7,12 @@ class TwitterPostProcess(Processor):
         super().__init__()
         self.cyphers = TwitterCyphers()
 
-    # Do some stuff
+    def clean_twitter_nodes(self):
+        self.cyphers.clean_twitter_nodes(self)
+
+    def run(self):
+        self.clean_twitter_nodes()
+
+if __name__ == '__main__':
+    processor = TwitterPostProcess()
+    processor.run()
