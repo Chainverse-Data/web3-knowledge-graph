@@ -37,13 +37,13 @@ class Indexes(Cypher):
         self.query(query)
 
     def gitcoin_grants(self):
-        query = """CREATE INDEX UniqueGrantID IF NOT EXISTS FOR (n:EventGitcoinGrant) ON (n.id)"""
+        query = """CREATE INDEX UniqueGrantID IF NOT EXISTS FOR (n:GitcoinGrant) ON (n.id)"""
         self.query(query)
 
     def gitcoin_users(self):
-        query = """CREATE INDEX UniqueUserHandle IF NOT EXISTS FOR (n:UserGitcoin) ON (n.handle)"""
+        query = """CREATE INDEX UniqueUserHandle IF NOT EXISTS FOR (n:GitcoinUser) ON (n.handle)"""
         self.query(query)
 
     def gitcoin_bounties(self):
-        query = """CREATE INDEX UniqueBountyID IF NOT EXISTS FOR (n:EventGitcoinBounty) ON (n.id)"""
+        query = """CREATE INDEX UniqueBountyID IF NOT EXISTS FOR (n:GitcoinBounty) ON (n.id)"""
         self.query(query)

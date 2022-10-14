@@ -3,7 +3,7 @@ import os
 import logging
 from datetime import datetime
 
-from helpers.s3 import S3Utils
+from ...helpers.s3 import S3Utils
 
 class Ingestor:
     def __init__(self, bucket_name, start_date=None, end_date=None):

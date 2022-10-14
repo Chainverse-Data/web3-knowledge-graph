@@ -5,6 +5,7 @@ import logging
 import tqdm
 import os
 import time
+from datetime import datetime
 
 class GitCoinScraper(Scraper):
     def __init__(self):
@@ -24,7 +25,7 @@ class GitCoinScraper(Scraper):
         self.gitcoin_checkout_contract_address = "0x7d655c57f71464B6f83811C55D84009Cd9f5221C"
         self.get_one_grant_url = "https://gitcoin.co/grants/v1/api/grant/{}/"
         self.get_all_grants_url = "https://gitcoin.co/api/v0.1/grants/?limit={}&offset={}"
-        self.get_donations_url = "https://eth-mainnet.g.alchemy.com/v2/{}".format(os.environ["ALCHEMY_API_KEY"])
+        self.alchemy_api_url = "https://eth-mainnet.g.alchemy.com/v2/{}".format(os.environ["ALCHEMY_API_KEY"])
         self.get_all_bounties_url = "https://gitcoin.co/api/v0.1/bounties/?limit={}&offset={}&order_by=web3_created"
     
     def get_all_grants(self):
@@ -51,6 +52,7 @@ class GitCoinScraper(Scraper):
                 pbar.update(self.gitcoin_api_limit)
                 pbar.total += self.gitcoin_api_limit
                 pbar.refresh()
+        logging.info("Success: Grants scrapped!")
 
     def get_all_donnations(self):
         logging.info("Collecting all events from GitCoin BulckCheckout and extracting DonationSent events")
@@ -71,7 +73,7 @@ class GitCoinScraper(Scraper):
         self.data["donations"] = []
         with tqdm.tqdm(total=self.blocks_limit) as pbar:
             while True:
-                content = self.post_request(self.get_donations_url, json=post_data, headers=headers)
+                content = self.post_request(self.alchemy_api_url, json=post_data, headers=headers)
                 content = json.loads(content)
                 tx_done = []
                 if "result" not in content:
@@ -94,6 +96,7 @@ class GitCoinScraper(Scraper):
                 pbar.update(self.blocks_limit)
                 pbar.total += self.blocks_limit
                 pbar.refresh()
+        logging.info("Success: Donations scrapped!")
 
     def get_all_bounties(self):
         logging.info("Getting the list of all the bounties from GitCoin")
@@ -110,6 +113,34 @@ class GitCoinScraper(Scraper):
                 pbar.update(self.gitcoin_api_limit)
                 pbar.total += self.gitcoin_api_limit
                 pbar.refresh()
+        logging.info("Success: Bounties scrapped!")
+
+    def get_block_time(self):
+        logging.info("Getting block number timestamps for donations")
+        blocks = {}
+        for donation in self.data["donations"]:
+            blocks[donation["blockNumber"]] = None
+        
+        for block in tqdm.tqdm(blocks):
+            headers = {"Content-Type": "application/json"}
+            post_data = {
+                "jsonrpc":"2.0", 
+                "id": 0,
+                "method": "eth_getBlockByNumber",
+                "params": [
+                            hex(block),
+                            False
+                        ]
+            }
+            content = self.post_request(self.alchemy_api_url, json=post_data, headers=headers)
+            content = json.loads(content)
+            if "result" not in content:
+                raise Exception("Something went wrong with the Alchemy call!")
+            blocks[block] = datetime.fromtimestamp(int(content["result"]["timestamp"], base=16))
+
+        for donation in self.data["donations"]:
+            donation["timestamp"] = blocks[donation["blockNumber"]]
+        logging.info("Success: timestamps aquired!")
 
     def run(self):
         self.get_all_donnations()

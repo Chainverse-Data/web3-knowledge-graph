@@ -42,13 +42,13 @@ class Constraints(Cypher):
         self.query(query)
 
     def gitcoin_grants(self):
-        query = """CREATE CONSTRAINT UniqueId IF NOT EXISTS FOR (grant:Gitcoin:Grant:Event) REQUIRE grant.id IS UNIQUE"""
+        query = """CREATE CONSTRAINT UniqueId IF NOT EXISTS FOR (grant:GitcoinGrant) REQUIRE grant.id IS UNIQUE"""
         self.query(query)
 
     def gitcoin_users(self):
-        query = """CREATE CONSTRAINT UniqueHandle IF NOT EXISTS FOR (user:Gitcoin:Account) REQUIRE user.handle IS UNIQUE"""
+        query = """CREATE CONSTRAINT UniqueHandle IF NOT EXISTS FOR (user:GitcoinUser) REQUIRE user.handle IS UNIQUE"""
         self.query(query)
 
     def gitcoin_bounties(self):
-        query = """CREATE CONSTRAINT UniqueId IF NOT EXISTS FOR (bounty:Gitcoin:Bounty:Event) REQUIRE bounty.id IS UNIQUE"""
+        query = """CREATE CONSTRAINT UniqueId IF NOT EXISTS FOR (bounty:GitcoinBounty) REQUIRE bounty.id IS UNIQUE"""
         self.query(query)

@@ -20,10 +20,10 @@ class Cypher:
         return neo4j_driver
 
     def create_constraints(self):
-        raise NotImplementedError("This function must be implemented in the children class.")
+        logging.warning("This function should be implemented in the children class.")
 
     def create_indexes(self):
-        raise NotImplementedError("This function must be implemented in the children class.")
+        logging.warning("This function should be implemented in the children class.")
 
     def query(self, query, parameters=None):
         neo4j_driver = self.get_driver()
