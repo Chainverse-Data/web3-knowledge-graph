@@ -1,1 +1,1 @@
-__all__ = ["SnapshotScrapper"]
+__all__ = ["SnapshotScraper"]
