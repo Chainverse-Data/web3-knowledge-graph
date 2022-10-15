@@ -1,8 +1,15 @@
 from .cypher import Cypher
 
+
 class Indexes(Cypher):
     def __init__(self, database=None):
         super().__init__(database)
+
+    def create_constraints(self):
+        pass
+
+    def create_indexes(self):
+        pass
 
     def proposals(self):
         query = """CREATE INDEX UniquePropID IF NOT EXISTS FOR (n:Proposal) ON (n.snapshotId)"""
@@ -14,6 +21,10 @@ class Indexes(Cypher):
 
     def wallets(self):
         query = """CREATE INDEX UniqueAddress IF NOT EXISTS FOR (n:Wallet) ON (n.address)"""
+        self.query(query)
+    
+    def tokens(self):
+        query = """CREATE INDEX UniqueTokenAddress IF NOT EXISTS FOR (d:Token) ON (d.address)"""
         self.query(query)
 
     def ens(self):

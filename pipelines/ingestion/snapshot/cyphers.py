@@ -1,4 +1,8 @@
-from ..helpers import Cypher
+from ...helpers import Cypher
+from ...helpers import Constraints
+from ...helpers import Indexes
+from ...helpers import Queries
+from ...helpers import count_query_logging
 import logging
 import sys
 
@@ -6,23 +10,32 @@ import sys
 class SnapshotCyphers(Cypher):
     def __init__(self):
         super().__init__()
+        self.queries = Queries()
 
-    def create_custom_constraints(self):
-        space_query = """CREATE CONSTRAINT UniqueID IF NOT EXISTS FOR (d:Space) REQUIRE d.snapshotId IS UNIQUE"""
-        self.query(space_query)
+    def create_constraints(self):
+        constraints = Constraints()
+        constraints.spaces()
+        constraints.proposals()
+        constraints.wallets()
+        constraints.tokens()
+        constraints.aliases()
+        constraints.ens()
+        constraints.twitter()
+        constraints.transactions()
 
-        proposal_query = """CREATE CONSTRAINT UniqueID IF NOT EXISTS FOR (d:Proposal) REQUIRE d.snapshotId IS UNIQUE"""
-        self.query(proposal_query)
+    def create_indexes(self):
+        indexes = Indexes()
+        indexes.wallets()
+        indexes.proposals()
+        indexes.spaces()
+        indexes.tokens()
+        indexes.aliases()
+        indexes.ens()
+        indexes.twitter()
+        indexes.transactions()
 
-    def create_custom_indexes(self):
-        proposal_query = """CREATE INDEX UniquePropID IF NOT EXISTS FOR (n:Proposal) ON (n.snapshotId)"""
-        self.query(proposal_query)
-
-        space_query = """CREATE INDEX UniqueSpaceID IF NOT EXISTS FOR (n:Space) ON (n.snapshotId)"""
-        self.query(space_query)
-
+    @count_query_logging
     def create_or_merge_spaces(self, urls):
-        logging.info(f"Ingesting with: {sys._getframe().f_code.co_name}")
         count = 0
         for url in urls:
             query = f"""
@@ -46,11 +59,10 @@ class SnapshotCyphers(Cypher):
                     return count(s)
             """
             count += self.query(query)[0].value()
-        logging.info(f"Created or merged: {count}")
         return count
 
+    @count_query_logging
     def create_or_merge_proposals(self, urls):
-        logging.info(f"Ingesting with: {sys._getframe().f_code.co_name}")
         count = 0
         for url in urls:
             query = f"""
@@ -79,7 +91,41 @@ class SnapshotCyphers(Cypher):
                     return count(p)
             """
             count += self.query(query)[0].value()
-        logging.info(f"Created or merged: {count}")
+        return count
+
+    @count_query_logging
+    def create_or_merge_space_twitter(self, urls):
+        count = self.queries.create_or_merge_twitter(urls)
+        return count
+
+    @count_query_logging
+    def create_or_merge_space_tokens(self, urls):
+        count = self.queries.create_or_merge_tokens(urls)
+        return count
+
+    @count_query_logging
+    def create_or_merge_space_ens(self, urls):
+        count = self.queries.create_or_merge_ens(urls)
+        return count
+
+    @count_query_logging
+    def link_space_ens(self, urls):
+        count = self.queries.link_ens(urls)
+        return count
+
+    @count_query_logging
+    def create_or_merge_members(self, urls):
+        count = self.queries.create_wallets(urls)
+        return count
+
+    @count_query_logging
+    def create_or_merge_authors(self, urls):
+        count = self.queries.create_wallets(urls)
+        return count
+
+    @count_query_logging
+    def create_or_merge_voters(self, urls):
+        count = self.queries.create_wallets(urls)
         return count
 
     def link_proposal_spaces(self, urls):
