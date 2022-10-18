@@ -52,17 +52,18 @@ class Ingestor:
             self.start_date = datetime.strptime(self.start_date, "%Y-%m-%d")
         if self.end_date:
             self.end_date = datetime.strptime(self.end_date, "%Y-%m-%d")
+            
 
     def read_metadata(self):
         "Access the S3 bucket to read the metadata and returns a dictionary that corresponds to the saved JSON object"
         if self.s3.check_if_file_exists(self.bucket_name, self.metadata_filename):
-            return self.s3.load_json_from_s3(self.bucket_name, self.metadata_filename)
+            return self.s3.load_json(self.bucket_name, self.metadata_filename)
         else:
             return {}
 
     def save_metadata(self):
         "Saves the current metadata to S3"
-        self.save_json_to_s3(self.bucket_name, self.metadata_filename, self.metadata)
+        self.s3.save_json(self.bucket_name, self.metadata_filename, self.metadata)
 
     def load_data(self):
         "Loads the data in the S3 bucket from the start date to the end date (if defined)"
@@ -73,6 +74,7 @@ class Ingestor:
                 datafiles.append(el[1])
         dates = [datetime.strptime(key, "data_%Y-%m-%d.json") for key in datafiles]
         datafiles_to_keep = []
+        dates_to_keep = []
         for datafile, date in sorted(zip(datafiles, dates), key=lambda el: el[1]):
             if not self.start_date:
                 self.start_date = date
@@ -80,6 +82,9 @@ class Ingestor:
                 if self.end_date and date <= self.end_date:
                     break
                 datafiles_to_keep.append(datafile)
+                dates_to_keep.append(date)
+        if not self.end_date:
+            self.end_date = max(dates_to_keep)
         logging.info("Datafiles for ingestion: {}".format(','.join(datafiles_to_keep)))
         for datafile in datafiles_to_keep:
             tmp_data = self.s3.load_json(self.bucket_name, datafile)
