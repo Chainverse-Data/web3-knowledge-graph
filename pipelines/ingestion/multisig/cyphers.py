@@ -1,20 +1,28 @@
-from ..helpers import Cypher
-import logging
-import sys
+from ...helpers import Cypher
+from ...helpers import Queries, Constraints, Indexes
+from ...helpers import count_query_logging
 
 
 class MultisigCyphers(Cypher):
     def __init__(self):
         super().__init__()
+        self.queries = Queries()
 
-    def create_custom_constraints(self):
-        pass
+    def create_constraints(self):
+        constraints = Constraints()
+        constraints.wallets()
 
-    def create_custom_indexes(self):
-        pass
+    def create_indexes(self):
+        indexes = Indexes()
+        indexes.wallets()
 
+    @count_query_logging
+    def create_or_merge_multisig_wallets(self, urls):
+        count = self.queries.create_wallets(urls)
+        return count
+
+    @count_query_logging
     def add_multisig_labels(self, urls):
-        logging.info(f"Ingesting with: {sys._getframe().f_code.co_name}")
         count = 0
         for url in urls:
             query = f"""
@@ -27,11 +35,10 @@ class MultisigCyphers(Cypher):
                     return count(w)
             """
             count += self.query(query)[0].value()
-        logging.info(f"Created or merged: {count}")
         return count
 
+    @count_query_logging
     def link_multisig_signer(self, urls):
-        logging.info(f"Ingesting with: {sys._getframe().f_code.co_name}")
         count = 0
         for url in urls:
             query = f"""
@@ -41,5 +48,4 @@ class MultisigCyphers(Cypher):
                     return count(r)
             """
             count += self.query(query)[0].value()
-        logging.info(f"Created or merged: {count}")
         return count
