@@ -9,7 +9,7 @@ class EnsIngestor(Ingestor):
         self.cyphers = EnsCyphers()
         super().__init__("ens")
         self.metadata["last_date_ingested"] = self.end_date
-        if isinstance(self.start_date, datetime.datetime):
+        if isinstance(self.end_date, datetime.datetime):
             self.metadata["last_date_ingested"] = self.end_date.strftime("%Y-%m-%d")
 
     def ingest_ens(self):
