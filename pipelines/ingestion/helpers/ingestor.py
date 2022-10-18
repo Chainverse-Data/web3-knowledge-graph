@@ -53,6 +53,7 @@ class Ingestor:
             self.start_date = datetime.strptime(self.start_date, "%Y-%m-%d")
         if self.end_date:
             self.end_date = datetime.strptime(self.end_date, "%Y-%m-%d")
+            
 
     def read_metadata(self):
         "Access the S3 bucket to read the metadata and returns a dictionary that corresponds to the saved JSON object"
