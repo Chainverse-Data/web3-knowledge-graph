@@ -1,6 +1,7 @@
 from ...helpers import Cypher
-from ...helpers import Queries, Constraints, Indexes
+from ...helpers import Constraints, Indexes, Queries
 from ...helpers import count_query_logging
+
 
 
 class MultisigCyphers(Cypher):

@@ -5,19 +5,21 @@ from datetime import datetime
 
 from ...helpers.s3 import S3Utils
 
+
 class Ingestor:
     def __init__(self, bucket_name, start_date=None, end_date=None):
         self.runtime = datetime.now()
         self.asOf = f"{self.runtime.year}-{self.runtime.month}-{self.runtime.day}"
 
-        try: self.cyphers
+        try:
+            self.cyphers
         except:
             raise ValueError("Cyphers have not been instanciated to self.cyphers")
 
         if not bucket_name:
             raise ValueError("bucket_name is not defined!")
         self.bucket_name = os.environ["AWS_BUCKET_PREFIX"] + bucket_name
-        
+
         self.s3 = S3Utils()
         self.bucket = self.s3.create_or_get_bucket(self.bucket_name)
 
@@ -35,8 +37,7 @@ class Ingestor:
 
     def run(self):
         "Main function to be called. Every ingestor must implement its own run function!"
-        raise NotImplementedError(
-            "ERROR: the run function has not been implemented!")
+        raise NotImplementedError("ERROR: the run function has not been implemented!")
 
     def set_start_end_date(self):
         "Sets the start and end date from either params, env or metadata"
@@ -70,7 +71,7 @@ class Ingestor:
         logging.info("Collecting data files")
         datafiles = []
         for el in map(lambda x: (x.bucket_name, x.key), self.bucket.objects.all()):
-            if "data_" in  el[1]:
+            if "data_" in el[1]:
                 datafiles.append(el[1])
         dates = [datetime.strptime(key, "data_%Y-%m-%d.json") for key in datafiles]
         datafiles_to_keep = []
@@ -85,7 +86,7 @@ class Ingestor:
                 dates_to_keep.append(date)
         if not self.end_date:
             self.end_date = max(dates_to_keep)
-        logging.info("Datafiles for ingestion: {}".format(','.join(datafiles_to_keep)))
+        logging.info("Datafiles for ingestion: {}".format(",".join(datafiles_to_keep)))
         for datafile in datafiles_to_keep:
             tmp_data = self.s3.load_json(self.bucket_name, datafile)
             for root_key in tmp_data:
