@@ -6,7 +6,8 @@ This scraper reads from the Alchemy API to retrieve all ens names.
 
 ```json
 {
-    "ens": [<ens Object>]
+    "ens": [<ens Object>],
+    "owner_addresses": [<address>]
 }
 ```
 

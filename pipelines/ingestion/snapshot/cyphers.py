@@ -128,6 +128,7 @@ class SnapshotCyphers(Cypher):
         count = self.queries.create_wallets(urls)
         return count
 
+    @count_query_logging
     def link_proposal_spaces(self, urls):
         logging.info(f"Ingesting with: {sys._getframe().f_code.co_name}")
         count = 0
@@ -142,6 +143,7 @@ class SnapshotCyphers(Cypher):
         logging.info(f"Created or merged: {count}")
         return count
 
+    @count_query_logging
     def link_proposal_authors(self, urls):
         logging.info(f"Ingesting with: {sys._getframe().f_code.co_name}")
         count = 0
@@ -156,6 +158,7 @@ class SnapshotCyphers(Cypher):
         logging.info(f"Created or merged: {count}")
         return count
 
+    @count_query_logging
     def create_or_merge_strategies(self, urls):
         logging.info(f"Ingesting with: {sys._getframe().f_code.co_name}")
         count = 0
@@ -171,6 +174,7 @@ class SnapshotCyphers(Cypher):
         logging.info(f"Created or merged: {count}")
         return count
 
+    @count_query_logging
     def link_member_spaces(self, urls):
         logging.info(f"Ingesting with: {sys._getframe().f_code.co_name}")
         count = 0
@@ -189,6 +193,7 @@ class SnapshotCyphers(Cypher):
         logging.info(f"Created or merged: {count}")
         return count
 
+    @count_query_logging
     def link_admin_spaces(self, urls):
         logging.info(f"Ingesting with: {sys._getframe().f_code.co_name}")
         count = 0
@@ -207,6 +212,7 @@ class SnapshotCyphers(Cypher):
         logging.info(f"Created or merged: {count}")
         return count
 
+    @count_query_logging
     def link_space_alias(self, urls):
         logging.info(f"Ingesting with: {sys._getframe().f_code.co_name}")
         count = 0
@@ -222,6 +228,7 @@ class SnapshotCyphers(Cypher):
         logging.info(f"Created or merged: {count}")
         return count
 
+    @count_query_logging
     def link_space_twitter(self, urls):
         logging.info(f"Ingesting with: {sys._getframe().f_code.co_name}")
         count = 0
@@ -236,6 +243,7 @@ class SnapshotCyphers(Cypher):
         logging.info(f"Created or merged: {count}")
         return count
 
+    @count_query_logging
     def link_votes(self, urls):
         logging.info(f"Ingesting with: {sys._getframe().f_code.co_name}")
         count = 0
@@ -255,6 +263,7 @@ class SnapshotCyphers(Cypher):
         logging.info(f"Created or merged: {count}")
         return count
 
+    @count_query_logging
     def link_strategies(self, urls):
         logging.info(f"Ingesting with: {sys._getframe().f_code.co_name}")
         count = 0
