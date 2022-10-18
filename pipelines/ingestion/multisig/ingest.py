@@ -1,6 +1,6 @@
 from ..helpers import Ingestor
 from .cyphers import MultisigCyphers
-import json
+import datetime
 import pandas
 from typing import Dict, List, Any
 
@@ -9,6 +9,9 @@ class MultisigIngestor(Ingestor):
     def __init__(self):
         self.cyphers = MultisigCyphers()
         super().__init__("multisig")
+        self.metadata["last_date_ingested"] = self.end_date
+        if isinstance(self.start_date, datetime.datetime):
+            self.metadata["last_date_ingested"] = self.end_date.strftime("%Y-%m-%d")
 
     def ingest_multisig(self):
         print("Ingesting multisig...")
@@ -21,7 +24,7 @@ class MultisigIngestor(Ingestor):
 
         # add multisig and owner wallet nodes
         urls = self.s3.save_json_as_csv(wallet_dict, self.bucket_name, f"ingestor_wallets_{self.asOf}")
-        self.cyphers.create_or_merge_wallets(urls)
+        self.cyphers.create_or_merge_multisig_wallets(urls)
 
         multisig_dict = (
             pandas.DataFrame(self.scraper_data["multisig"]).drop_duplicates(subset=["multisig"]).to_dict("records")
@@ -43,6 +46,7 @@ class MultisigIngestor(Ingestor):
 
     def run(self):
         self.ingest_multisig()
+        self.save_metadata()
 
 
 if __name__ == "__main__":

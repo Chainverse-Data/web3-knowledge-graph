@@ -1,8 +1,15 @@
 from .cypher import Cypher
 
+
 class Constraints(Cypher):
     def __init__(self, database=None):
         super().__init__(database)
+
+    def create_constraints(self):
+        pass
+
+    def create_indexes(self):
+        pass
 
     def twitter(self):
         query = """CREATE CONSTRAINT UniqueHandle IF NOT EXISTS FOR (d:Twitter) REQUIRE d.handle IS UNIQUE"""
