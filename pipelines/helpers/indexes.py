@@ -1,5 +1,6 @@
 from .cypher import Cypher
 
+
 class Indexes(Cypher):
     def __init__(self, database=None):
         super().__init__(database)

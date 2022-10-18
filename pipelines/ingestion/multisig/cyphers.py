@@ -1,14 +1,13 @@
 from ...helpers import Cypher
 from ...helpers import Constraints, Indexes, queries
 from ...helpers import count_query_logging
-import logging
-import sys
+
 
 
 class MultisigCyphers(Cypher):
     def __init__(self):
         super().__init__()
-        self.queries = queries.Queries()
+        self.queries = Queries()
 
     def create_constraints(self):
         constraints = Constraints()
