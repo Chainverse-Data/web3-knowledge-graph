@@ -133,7 +133,7 @@ class SnapshotIngestor(Ingestor):
                 space_data["ens"].append(
                     {
                         "name": entry["id"],
-                        "owner": ens["owner"].lower(),
+                        "address": ens["address"].lower(),
                         "tokenId": ens["token_id"],
                         "txHash": ens["trans"]["hash"],
                         "contractAddress": ens["trans"]["rawContract"]["address"],

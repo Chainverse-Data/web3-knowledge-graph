@@ -32,14 +32,14 @@ class EnsCyphers(Cypher):
         count += self.queries.create_or_merge_alias(urls)
         count += self.queries.create_wallets(urls)
         count += self.queries.create_or_merge_ens_nft(urls)
-        count += self.queries.create_or_merge_transaction(urls)
+        # count += self.queries.create_or_merge_transaction(urls)
         return count
 
     @count_query_logging
     def link_ens(self, urls):
         count = 0
         count += self.queries.link_wallet_alias(urls)
-        count += self.queries.link_wallet_transaction_ens(urls)
-        count += self.queries.link_ens_transaction(urls)
+        # count += self.queries.link_wallet_transaction_ens(urls)
+        # count += self.queries.link_ens_transaction(urls)
         count += self.queries.link_ens_alias(urls)
         return count
