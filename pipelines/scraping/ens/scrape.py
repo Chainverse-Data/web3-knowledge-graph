@@ -33,28 +33,22 @@ class EnsScraper(Scraper):
         url = "https://eth-mainnet.g.alchemy.com/nft/v2/{}/getNFTs?owner={}&contractAddresses[]=0x57f1887a8BF19b14fC0dF6Fd9B2acc9Af147eA85&withMetadata=true".format(
             os.environ["ALCHEMY_API_KEY"], address
         )
-        try:
-            content = self.get_request(url, headers=self.headers)
+        page_key = 0
+        while page_key is not None:
+            if page_key == 0:
+                new_url = url
+            else:
+                new_url = url + "&pageKey={}".format(page_key)
+
+            content = self.get_request(new_url, headers=self.headers)
+            if content is None:
+                break
             data = json.loads(content)
             token_list.extend(data["ownedNfts"])
-        except Exception as e:
-            logging.error(f"Ens info error : {e}")
-            data = {}
-
-        pagekey = data.get("pageKey", None)
-        while pagekey is not None:
-            new_url = url + "&pageKey={}".format(pagekey)
-            try:
-                content = self.get_request(new_url, headers=self.headers)
-                data = json.loads(content)
-                token_list.extend(data["ownedNfts"])
-            except Exception as e:
-                logging.error(f"Ens info error : {e}")
-                data = {}
-            pagekey = data.get("pageKey", None)
+            page_key = data.get("pageKey", None)
 
         token_list = [
-            {"name": entry["title"], "owner": address.lower(), "token_id": int(entry["id"]["tokenId"], base=16)}
+            {"name": entry["title"], "address": address.lower(), "token_id": int(entry["id"]["tokenId"], base=16)}
             for entry in token_list
         ]
 
@@ -66,17 +60,19 @@ class EnsScraper(Scraper):
         url = "https://eth-mainnet.g.alchemy.com/nft/v2/{}/getOwnersForCollection?contractAddress=0x57f1887a8BF19b14fC0dF6Fd9B2acc9Af147eA85&withTokenBalances=false".format(
             os.environ["ALCHEMY_API_KEY"]
         )
-        content = self.get_request(url, headers=self.headers)
-        data = json.loads(content)
-        self.data["owner_addresses"] = data["ownerAddresses"]
-        pageKey = data.get("pageKey", None)
-        while pageKey is not None:
-            new_url = url + "&pageKey={}".format(pageKey)
+        page_key = 0
+        while page_key is not None:
+            if page_key == 0:
+                new_url = url
+            else:
+                new_url = url + "&pageKey={}".format(page_key)
             content = self.get_request(new_url, headers=self.headers)
+            if content is None:
+                break
             data = json.loads(content)
             self.data["owner_addresses"] += data["ownerAddresses"]
             logging.info(f"{len(self.data['owner_addresses'])} current owners")
-            pageKey = data.get("pageKey", None)
+            page_key = data.get("pageKey", None)
 
         logging.info("Found {} owner addresses".format(len(self.data["owner_addresses"])))
 
