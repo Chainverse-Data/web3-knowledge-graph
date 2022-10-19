@@ -33,7 +33,6 @@ class Queries(Cypher):
             count += self.query(query)[0].value()
         return count
 
-    @count_query_logging
     def create_or_merge_tokens(self, urls):
         count = 0
         for url in urls:
@@ -41,13 +40,12 @@ class Queries(Cypher):
                     LOAD CSV WITH HEADERS FROM '{url}' AS tokens
                     MERGE(t:Token {{address: toLower(tokens.address)}})
                     ON CREATE set t = tokens,
-                    t.uuid = apoc.create.uuid()
+                        t.uuid = apoc.create.uuid()
                     return count(t)
             """
             count += self.query(query)[0].value()
         return count
 
-    @count_query_logging
     def create_or_merge_twitter(self, urls):
         count = 0
         for url in urls:
@@ -106,7 +104,7 @@ class Queries(Cypher):
                     ON CREATE set t.uuid = apoc.create.uuid(),
                         t.date = datetime(apoc.date.toISO8601(toInteger(tx.date), 's')),
                         t:Event
-                    return count(e)
+                    return count(t)
                     """
 
             count += self.query(query)[0].value()
@@ -148,7 +146,7 @@ class Queries(Cypher):
                     MATCH (t:Transaction {{txHash: toLower(tx.txHash)}}), 
                         (e:Ens {{editionId: tx.tokenId}})
                     MERGE (e)-[r:TRANSFERRED]->(t)
-                    return count(r)
+                    return count(t)
                     """
 
             count += self.query(query)[0].value()
