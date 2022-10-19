@@ -16,19 +16,16 @@ class Queries(Cypher):
     def create_indexes(self):
         pass
 
-    @count_query_logging
     def create_wallets(self, urls):
         count = 0
         for url in urls:
             query = f"""
                     LOAD CSV WITH HEADERS FROM '{url}' AS admin_wallets
-                    MERGE(wallet:Wallet {{address: admin_wallets.address}})
+                    MERGE(wallet:Wallet {{address: toLower(admin_wallets.address)}})
                     ON CREATE set wallet.uuid = apoc.create.uuid(),
-                        wallet.address = admin_wallets.address,
                         wallet.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                         wallet.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
                     ON MATCH set wallet.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
-                        wallet.address = admin_wallets.address
                     return count(wallet)
             """
             count += self.query(query)[0].value()
@@ -68,51 +65,102 @@ class Queries(Cypher):
             count += self.query(query)[0].value()
         return count
 
-    @count_query_logging
-    def create_or_merge_ens(self, urls):
+    def create_or_merge_alias(self, urls):
         count = 0
         for url in urls:
-
             query = f"""
-                    LOAD CSV WITH HEADERS FROM '{url}' AS ens
-                    MERGE (a:Alias {{name: toLower(ens.name)}})
+                    LOAD CSV WITH HEADERS FROM '{url}' AS alias
+                    MERGE (a:Alias {{name: toLower(alias.name)}})
                     ON CREATE set a.uuid = apoc.create.uuid(),
                         a.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                         a.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
-                    MERGE (w:Wallet {{address: toLower(ens.owner)}})
-                    ON CREATE set w.uuid = apoc.create.uuid(),
-                            w.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
-                            w.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
+                    return count(a)
+                    """
+
+            count += self.query(query)[0].value()
+        return count
+
+    def create_or_merge_ens_nft(self, urls):
+        count = 0
+        for url in urls:
+            query = f"""
+                    LOAD CSV WITH HEADERS FROM '{url}' AS ens
                     MERGE (e:Ens:Nft {{editionId: ens.tokenId}})
                     ON CREATE set e.uuid = apoc.create.uuid(),
                         e.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                         e.contractAddress = ens.contractAddress
-                    MERGE (t:Transaction {{txHash: toLower(ens.txHash)}})
-                    ON CREATE set t.uuid = apoc.create.uuid(),
-                        t.date = datetime(apoc.date.toISO8601(toInteger(ens.date), 's')),
-                        t.type = 'registrant',
-                        t:Event
                     return count(e)
-            """
+                    """
+
             count += self.query(query)[0].value()
         return count
 
-    @count_query_logging
-    def link_ens(self, urls):
+    def create_or_merge_transaction(self, urls):
         count = 0
         for url in urls:
-
             query = f"""
-                    LOAD CSV WITH HEADERS FROM '{url}' as ens
-                    MATCH (w:Wallet {{address: toLower(ens.owner)}}), 
-                        (e:Ens {{editionId: ens.tokenId}}), 
-                        (a:Alias {{name: toLower(ens.name)}}),
-                        (t:Transaction {{txHash: toLower(ens.txHash)}})
-                    MERGE (w)-[n:HAS_ALIAS]->(a)
-                    MERGE (w)-[:RECEIVED]->(t)
-                    MERGE (e)-[:TRANSFERRED]->(t)
-                    MERGE (e)-[:HAS_NAME]->(a)
-                    return count(n)
-            """
+                    LOAD CSV WITH HEADERS FROM '{url}' AS tx
+                    MERGE (t:Transaction {{txHash: toLower(tx.txHash)}})
+                    ON CREATE set t.uuid = apoc.create.uuid(),
+                        t.date = datetime(apoc.date.toISO8601(toInteger(tx.date), 's')),
+                        t:Event
+                    return count(e)
+                    """
+
+            count += self.query(query)[0].value()
+        return count
+
+    def link_wallet_alias(self, urls):
+        count = 0
+        for url in urls:
+            query = f"""
+                    LOAD CSV WITH HEADERS FROM '{url}' AS alias
+                    MATCH (a:Alias {{name: toLower(alias.name)}}), 
+                        (w:Wallet {{address: toLower(alias.address)}})
+                    MERGE (w)-[r:HAS_ALIAS]->(a)
+                    return count(r)
+                    """
+
+            count += self.query(query)[0].value()
+        return count
+
+    def link_wallet_transaction_ens(self, urls):
+        count = 0
+        for url in urls:
+            query = f"""
+                    LOAD CSV WITH HEADERS FROM '{url}' AS tx
+                    MATCH (t:Transaction {{txHash: toLower(tx.txHash)}}), 
+                        (e:Ens {{editionId: tx.tokenId}})
+                    MERGE (w)-[r:RECEIVED]->(t)
+                    return count(r)
+                    """
+
+            count += self.query(query)[0].value()
+        return count
+
+    def link_ens_transaction(self, urls):
+        count = 0
+        for url in urls:
+            query = f"""
+                    LOAD CSV WITH HEADERS FROM '{url}' AS tx
+                    MATCH (t:Transaction {{txHash: toLower(tx.txHash)}}), 
+                        (e:Ens {{editionId: tx.tokenId}})
+                    MERGE (e)-[r:TRANSFERRED]->(t)
+                    return count(r)
+                    """
+
+            count += self.query(query)[0].value()
+
+    def link_ens_alias(self, urls):
+        count = 0
+        for url in urls:
+            query = f"""
+                    LOAD CSV WITH HEADERS FROM '{url}' AS ens
+                    MATCH (e:Ens {{editionId: ens.tokenId}}), 
+                        (a:Alias {{name: toLower(ens.name)}})
+                    MERGE (e)-[r:HAS_NAME]->(a)
+                    return count(r)
+                    """
+
             count += self.query(query)[0].value()
         return count

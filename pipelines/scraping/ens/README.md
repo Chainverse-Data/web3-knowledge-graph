@@ -16,7 +16,7 @@ This scraper reads from the Alchemy API to retrieve all ens names.
 ```json
 {
   "name": "rohanio.eth",
-  "owner": "0x11123123123123123",
+  "address": "0x11123123123123123",
   "token_id": 123123123123123123
 }
 ```

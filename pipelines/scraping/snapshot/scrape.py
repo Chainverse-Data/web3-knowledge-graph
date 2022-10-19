@@ -10,6 +10,7 @@ import multiprocessing
 import joblib
 import argparse
 import math
+import time
 
 
 class SnapshotScraper(Scraper):
@@ -68,11 +69,8 @@ class SnapshotScraper(Scraper):
             raw_proposals.extend(results)
             if len(raw_proposals) % 1000 == 0:
                 print(f"Current Proposals: {len(raw_proposals)}")
-            try:
-                if results[-1]["created"] < self.cutoff_timestamp:
-                    break
-            except:
-                pass
+            if results[-1].get("created", self.cutoff_timestamp) < self.cutoff_timestamp:
+                break
             offset += first
             new_query = self.proposals_query.replace("skip: 0", f"skip: {offset}")
             content = self.post_request(self.snapshot_url, json={"query": new_query})
@@ -88,19 +86,23 @@ class SnapshotScraper(Scraper):
         proposal_id_list = json.dumps(proposal_id_list)
         current_vote_query = self.votes_query.replace("$proposalIDs", f"{proposal_id_list}")
         first = int(re.search("first: \d+", current_vote_query)[0].split(" ")[1])
-        try:
-            content = self.post_request(self.snapshot_url, json={"query": current_vote_query})
+        results = True
+        retries = 0
+        while results:
+            if isinstance(results, list):
+                raw_votes.extend(results)
+            offset += first
+            new_query = current_vote_query.replace("skip: 0", f"skip: {offset}")
+            content = self.post_request(self.snapshot_url, json={"query": new_query})
+            if "504: Gateway time-out" in content or "error" in json.loads(content):
+                retries += 1
+                if retries > 10:
+                    break
+                logging.info("Gateway timeout, sleeping...")
+                time.sleep(5)
+                continue
             data = json.loads(content)
             results = data["data"]["votes"]
-            while results:
-                raw_votes.extend(results)
-                offset += first
-                new_query = current_vote_query.replace("skip: 0", f"skip: {offset}")
-                content = self.post_request(self.snapshot_url, json={"query": new_query})
-                data = json.loads(content)
-                results = data["data"]["votes"]
-        except Exception as e:
-            logging.error("Scrape Votes Error: {}".format(e))
 
         return raw_votes
 
@@ -110,7 +112,7 @@ class SnapshotScraper(Scraper):
         with tqdm_joblib(
             tqdm.tqdm(desc="Getting Votes Data", total=math.ceil(len(proposal_id_list) / 5))
         ) as progress_bar:
-            raw_votes_list = joblib.Parallel(n_jobs=multiprocessing.cpu_count() - 1, backend="threading")(
+            raw_votes_list = joblib.Parallel(n_jobs=2, backend="threading")(
                 joblib.delayed(self.scrape_votes)(proposal_id_list[i : i + 5])
                 for i in range(0, len(proposal_id_list), 5)
             )
@@ -123,7 +125,7 @@ class SnapshotScraper(Scraper):
         self.get_spaces()
         self.get_proposals()
         self.get_votes()
-        
+
         self.metadata["last_timestamp"] = self.runtime.timestamp()
         self.save_metadata()
         self.save_data()

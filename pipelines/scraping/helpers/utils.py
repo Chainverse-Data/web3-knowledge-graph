@@ -110,7 +110,7 @@ def get_ens_info(name):
                 break
 
         if flag:
-            ens_dict = {"name": name, "owner": owner, "token_id": str(token_id), "trans": trans}
+            ens_dict = {"name": name, "address": owner, "token_id": str(token_id), "trans": trans}
             return ens_dict
         else:
             return None
