@@ -1,11 +1,11 @@
 spaces_query = """
-        {
+        {{
             spaces(
-                first: 100,
-                skip: 0,
+                first: {0},
+                skip: {1},
                 orderBy: "created",
                 orderDirection: asc
-            ) {
+            ) {{
             id
                 name
                 about
@@ -17,43 +17,43 @@ spaces_query = """
                 github
                 network
                 symbol
-                strategies {
+                strategies {{
                 name
                 params
-                }
+                }}
                 admins
                 members
-                filters {
+                filters {{
                 minScore
                 onlyMembers
-                }
+                }}
                 plugins
-            }
-        }
+            }}
+        }}
         """
 
 proposals_query = """
-        {
+        {{
             proposals(
-                first: 500,
-                skip: 0,
+                first: {0},
+                skip: {1},
                 orderBy: "created",
                 orderDirection: desc
-            ) {
+            ) {{
                 id
                 ipfs
                 author
                 created
-                space {
+                space {{
                 id
                 name
-                }
+                }}
                 network
                 type
-                strategies {
+                strategies {{
                 name
                 params
-                }      
+                }}      
                 plugins
                 title
                 body
@@ -63,34 +63,34 @@ proposals_query = """
                 snapshot
                 state
                 link
-            }
-        }
+            }}
+        }}
         """
 
 votes_query = """
-        {
+        {{
             votes (
-                first: 1000
-                skip: 0
+                first: {0}
+                skip: {1}
                 orderBy: "created",
                 orderDirection: desc,
-                where: {
-                proposal_in: $proposalIDs
-                }
-            ) {
+                where: {{
+                proposal_in: {2}
+                }}
+            ) {{
                 id
                 ipfs
                 voter
                 created
                 choice
-                proposal {
+                proposal {{
                 id
                 choices
-                }
-                space {
+                }}
+                space {{
                 id
                 name
-                }
-            }
-        }
+                }}
+            }}
+        }}
         """

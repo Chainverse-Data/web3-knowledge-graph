@@ -18,33 +18,56 @@ class SnapshotScraper(Scraper):
         super().__init__("snapshot")
         self.snapshot_url = "https://hub.snapshot.org/graphql"
         self.recent = recent
-        self.spaces_query = spaces_query
-        self.proposals_query = proposals_query
-        self.votes_query = votes_query
+        self.space_limit = 100
+        self.proposal_limit = 500
+        self.vote_limit = 1000
 
-        if recent and "last_timestamp" in self.metadata:
-            self.cutoff_timestamp = self.metadata["last_timestamp"] - (60 * 60 * 24 * 15)
-        else:
-            self.cutoff_timestamp = 0
+        self.last_space_offset = 0
+        if "last_space_offset" in self.metadata:
+            self.last_space_offset = self.metadata["last_space_offset"]
+
+        self.last_proposal_offset = 0
+        if "last_proposal_offset" in self.metadata:
+            self.last_proposal_offset = self.metadata["last_proposal_offset"]
+
+        self.last_vote_offset = 0
+        if "last_vote_offset" in self.metadata:
+            self.last_vote_offset = self.metadata["last_vote_offset"]
+
+        # I'm not sure what this is for ? Debugging ?
+        # if recent and "last_timestamp" in self.metadata:
+        #     self.cutoff_timestamp = self.metadata["last_timestamp"] - (60 * 60 * 24 * 15)
+        # else:
+        #     self.cutoff_timestamp = 0
+
+    def make_api_call(self, query, counter=0, content=None):
+        time.sleep(counter)
+        if counter > 10:
+            logging.error(content)
+            raise Exception("Something went wrong while getting the spaces results from the API")
+        content = self.post_request(self.snapshot_url, json={"query": query})
+        if "504: Gateway time-out" in content:
+            return self.make_api_call(query, counter=counter+1, content=content)
+        data = json.loads(content)
+        if "data" not in data or "error" in data:
+            return self.make_api_call(query, counter=counter+1, content=content)
+        return data["data"]
 
     def get_spaces(self):
-        raw_spaces = []
-        first = int(re.search("first: \d+", self.spaces_query)[0].split(" ")[1])
-        offset = 0
         logging.info("Getting spaces...")
-        content = self.post_request(self.snapshot_url, json={"query": self.spaces_query})
-        data = json.loads(content)
-        results = data["data"]["spaces"]
+        raw_spaces = []
+        offset = self.last_space_offset
+        results = True
         while results:
-            raw_spaces.extend(results)
+            self.metadata["last_space_offset"] = offset # Put this here so that we save only the last offset with data
             if len(raw_spaces) % 1000 == 0:
                 logging.info(f"Current Spaces: {len(raw_spaces)}")
-            offset += int(first)
-            new_query = self.spaces_query.replace("skip: 0", f"skip: {offset}")
-            content = self.post_request(self.snapshot_url, json={"query": new_query})
-            data = json.loads(content)
-            results = data["data"]["spaces"]
-        logging.info(f"Total Spaces: {len(raw_spaces)}")
+            query = spaces_query.format(self.space_limit, offset)
+            data = self.make_api_call(query)
+            results = data["spaces"]
+            raw_spaces.extend(results)
+            offset += self.space_limit
+        logging.info(f"Total Spaces aquired: {len(raw_spaces)}")
 
         with tqdm_joblib(tqdm.tqdm(desc="Getting ENS Data", total=len(raw_spaces))) as progress_bar:
             ens_list = joblib.Parallel(n_jobs=multiprocessing.cpu_count() - 1)(
@@ -56,70 +79,59 @@ class SnapshotScraper(Scraper):
 
         final_spaces = [space for space in raw_spaces if space]
         self.data["spaces"] = final_spaces
+        logging.info(f"Final spaces count: {len(final_spaces)}")
 
     def get_proposals(self):
-        raw_proposals = []
-        first = int(re.search("first: \d+", self.proposals_query)[0].split(" ")[1])
-        offset = 0
         logging.info("Getting proposals...")
-        content = self.post_request(self.snapshot_url, json={"query": self.proposals_query})
-        data = json.loads(content)
-        results = data["data"]["proposals"]
+        raw_proposals = []
+        offset = self.last_proposal_offset
+        results = True
         while results:
-            raw_proposals.extend(results)
+            self.metadata["last_proposal_offset"] = offset
             if len(raw_proposals) % 1000 == 0:
-                print(f"Current Proposals: {len(raw_proposals)}")
-            if results[-1].get("created", self.cutoff_timestamp) < self.cutoff_timestamp:
-                break
-            offset += first
-            new_query = self.proposals_query.replace("skip: 0", f"skip: {offset}")
-            content = self.post_request(self.snapshot_url, json={"query": new_query})
-            data = json.loads(content)
-            results = data["data"]["proposals"]
+                logging.info(f"Current Proposals: {len(raw_proposals)}")
+            query = proposals_query.format(self.proposal_limit, offset)
+            data = self.make_api_call(query)
+            results = data["proposals"]
+            raw_proposals.extend(results)
+            offset += self.proposal_limit
+            # I'm not sure what this is for ?
+            # if results[-1].get("created", self.cutoff_timestamp) < self.cutoff_timestamp:
+            #     break
 
-        logging.info(f"Total Proposals: {len(raw_proposals)}")
-        self.data["proposals"] = [proposal for proposal in raw_proposals if proposal]
+        proposals = [proposal for proposal in raw_proposals if proposal]
+        logging.info(f"Total Proposals: {len(proposals)}")
+        self.data["proposals"] = proposals
 
-    def scrape_votes(self, proposal_id_list):
+    def scrape_votes(self, proposal_ids):
+        logging.info(f"Scraping votes for proposals: {proposal_ids}")
         raw_votes = []
         offset = 0
-        proposal_id_list = json.dumps(proposal_id_list)
-        current_vote_query = self.votes_query.replace("$proposalIDs", f"{proposal_id_list}")
-        first = int(re.search("first: \d+", current_vote_query)[0].split(" ")[1])
         results = True
-        retries = 0
         while results:
-            if isinstance(results, list):
-                raw_votes.extend(results)
-            offset += first
-            new_query = current_vote_query.replace("skip: 0", f"skip: {offset}")
-            content = self.post_request(self.snapshot_url, json={"query": new_query})
-            if "504: Gateway time-out" in content or "error" in json.loads(content):
-                retries += 1
-                if retries > 10:
-                    break
-                logging.info("Gateway timeout, sleeping...")
-                time.sleep(5)
-                continue
-            data = json.loads(content)
-            results = data["data"]["votes"]
-
+            offset += self.vote_limit
+            query = votes_query.format(self.vote_limit, offset, json.dumps(proposal_ids))
+            data = self.make_api_call(query)
+            results = data["votes"]
+            if type(results) != list:
+                raise Exception("Something went wrong while getting the data that was not caught correctly!")
+            raw_votes.extend(results)
         return raw_votes
 
     def get_votes(self):
-        proposal_id_list = [proposal["id"] for proposal in self.data["proposals"]]
         logging.info("Getting votes...")
+        proposal_ids = [proposal["id"] for proposal in self.data["proposals"]]
         with tqdm_joblib(
-            tqdm.tqdm(desc="Getting Votes Data", total=math.ceil(len(proposal_id_list) / 5))
+            tqdm.tqdm(desc="Getting Votes Data", total=math.ceil(len(proposal_ids) / 5))
         ) as progress_bar:
-            raw_votes_list = joblib.Parallel(n_jobs=2, backend="threading")(
-                joblib.delayed(self.scrape_votes)(proposal_id_list[i : i + 5])
-                for i in range(0, len(proposal_id_list), 5)
+            raw_votes = joblib.Parallel(n_jobs=2, backend="threading")(
+                joblib.delayed(self.scrape_votes)(proposal_ids[i : i + 5])
+                for i in range(0, len(proposal_ids), 5)
             )
 
-        raw_votes = [vote for votes in raw_votes_list for vote in votes]
-        logging.info(f"Total Votes: {len(raw_votes)}")
-        self.data["votes"] = raw_votes
+        votes = [vote for votes in raw_votes for vote in votes]
+        logging.info(f"Total Votes: {len(votes)}")
+        self.data["votes"] = votes
 
     def run(self):
         self.get_spaces()
