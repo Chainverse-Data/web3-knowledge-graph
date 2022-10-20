@@ -262,7 +262,7 @@ class Cypher:
     def create_constraints(self):
         """This function SHOULD defined by the child class to create constraints.
         In it you must input all the constraints that the ingestor must create.
-        If your ingestor does not need any constraints, you can skip defining it."""
+        If your ingestor does not need any constraints, you can skip defining it    ."""
         ...
 
     def create_indexes(self):
