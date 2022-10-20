@@ -1,6 +1,6 @@
 from ..helpers import Scraper
 from ..helpers import tqdm_joblib, get_ens_info, str2bool
-from .helpers.query_strings import spaces_query, proposals_query, votes_query
+from .helpers.query_strings import spaces_query, proposals_query, votes_query, proposal_status_query
 import json
 import logging
 import tqdm
@@ -30,10 +30,10 @@ class SnapshotScraper(Scraper):
         if "last_proposal_offset" in self.metadata:
             self.last_proposal_offset = self.metadata["last_proposal_offset"]
 
-        self.last_vote_offset = 0
-        if "last_vote_offset" in self.metadata:
-            self.last_vote_offset = self.metadata["last_vote_offset"]
-
+        self.open_proposals = set()
+        if "open_proposals" in self.metadata:
+            self.open_proposals = set(self.metadata["open_proposals"])
+        
         # I'm not sure what this is for ? Debugging ?
         # if recent and "last_timestamp" in self.metadata:
         #     self.cutoff_timestamp = self.metadata["last_timestamp"] - (60 * 60 * 24 * 15)
@@ -120,7 +120,8 @@ class SnapshotScraper(Scraper):
 
     def get_votes(self):
         logging.info("Getting votes...")
-        proposal_ids = [proposal["id"] for proposal in self.data["proposals"]]
+        proposal_ids = self.open_proposals + [proposal["id"] for proposal in self.data["proposals"]]
+        proposal_ids = list(set(proposal_ids))
         with tqdm_joblib(
             tqdm.tqdm(desc="Getting Votes Data", total=math.ceil(len(proposal_ids) / 5))
         ) as progress_bar:
@@ -133,12 +134,28 @@ class SnapshotScraper(Scraper):
         logging.info(f"Total Votes: {len(votes)}")
         self.data["votes"] = votes
 
+    def get_proposals_status(self):
+        proposal_statuses = []
+        for proposal_id in self.open_proposals:
+            query = proposal_status_query.format(proposal_id)
+            data = self.make_api_call(query)
+            if len(data["proposals"]) == 0:
+                raise Exception(f"Something unexpected happened with proposal id: {proposal_id}")
+            proposal_statuses += data["proposals"]
+        open_proposals = [proposal["id"] for proposal in proposal_statuses if proposal["state"] != "closed"]
+        open_proposals += [proposal["id"] for proposal in self.data["proposals"] if proposal["state"] != "closed"]
+        self.open_proposals = list(set(open_proposals))
+        self.metadata["open_proposals"] = self.open_proposals
+
+
     def run(self):
         self.get_spaces()
         self.get_proposals()
         self.get_votes()
+        self.get_proposals_status()
 
-        self.metadata["last_timestamp"] = self.runtime.timestamp()
+        # Same not sure what this is for
+        # self.metadata["last_timestamp"] = self.runtime.timestamp()
         self.save_metadata()
         self.save_data()
 
