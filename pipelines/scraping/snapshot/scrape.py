@@ -161,9 +161,11 @@ class SnapshotScraper(Scraper):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Snapshot Scraper")
-    parser.add_argument("--recent", type=str2bool, default=True, help="Scrape only recent data")
-    args = parser.parse_args()
+    # So first, this should be an ENV var, that will make it much easier
+    # Second, scrapping recent data is the default, only reinit should be flaged and that's handled through the metadata reset.
+    # parser = argparse.ArgumentParser(description="Snapshot Scraper")
+    # parser.add_argument("--recent", type=str2bool, default=True, help="Scrape only recent data")
+    # args = parser.parse_args()
 
-    scraper = SnapshotScraper(args.recent)
+    scraper = SnapshotScraper()
     scraper.run()
