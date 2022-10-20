@@ -14,10 +14,10 @@ import time
 
 
 class SnapshotScraper(Scraper):
-    def __init__(self, recent):
+    def __init__(self):
         super().__init__("snapshot")
         self.snapshot_url = "https://hub.snapshot.org/graphql"
-        self.recent = recent
+        # self.recent = recent
         self.space_limit = 100
         self.proposal_limit = 500
         self.vote_limit = 1000
