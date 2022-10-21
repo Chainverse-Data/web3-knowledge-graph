@@ -70,7 +70,7 @@ proposals_query = """
 proposal_status_query = """
         {{
             proposals(
-                where: {{id: {0}}}
+                where: {{id: "{0}"}}
             ) {{
                 id
                 state

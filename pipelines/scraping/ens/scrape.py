@@ -7,6 +7,7 @@ import os
 import multiprocessing
 import joblib
 import math
+import web3
 
 
 class EnsScraper(Scraper):
@@ -27,25 +28,25 @@ class EnsScraper(Scraper):
         self.data.pop("owner_addresses", None)
         logging.info("Found {} ENS".format(len(self.data["ens"])))
 
+    def get_primary_info(self):
+
+
     def get_ens_info(self, address):
         token_list = []
 
         url = "https://eth-mainnet.g.alchemy.com/nft/v2/{}/getNFTs?owner={}&contractAddresses[]=0x57f1887a8BF19b14fC0dF6Fd9B2acc9Af147eA85&withMetadata=true".format(
             os.environ["ALCHEMY_API_KEY"], address
         )
-        page_key = 0
+        new_url = url
+        page_key = 1
         while page_key is not None:
-            if page_key == 0:
-                new_url = url
-            else:
-                new_url = url + "&pageKey={}".format(page_key)
-
             content = self.get_request(new_url, headers=self.headers)
             if content is None:
                 break
             data = json.loads(content)
             token_list.extend(data["ownedNfts"])
             page_key = data.get("pageKey", None)
+            new_url = url + "&pageKey={}".format(page_key)
 
         token_list = [
             {"name": entry["title"], "address": address.lower(), "token_id": int(entry["id"]["tokenId"], base=16)}
@@ -61,11 +62,8 @@ class EnsScraper(Scraper):
             os.environ["ALCHEMY_API_KEY"]
         )
         page_key = 0
+        new_url = url
         while page_key is not None:
-            if page_key == 0:
-                new_url = url
-            else:
-                new_url = url + "&pageKey={}".format(page_key)
             content = self.get_request(new_url, headers=self.headers)
             if content is None:
                 break
@@ -73,6 +71,7 @@ class EnsScraper(Scraper):
             self.data["owner_addresses"] += data["ownerAddresses"]
             logging.info(f"{len(self.data['owner_addresses'])} current owners")
             page_key = data.get("pageKey", None)
+            new_url = url + "&pageKey={}".format(page_key)
 
         logging.info("Found {} owner addresses".format(len(self.data["owner_addresses"])))
 
