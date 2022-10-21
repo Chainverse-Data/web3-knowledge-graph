@@ -18,6 +18,9 @@ class EnsIngestor(Ingestor):
         self.cyphers.create_or_merge_ens(urls)
         self.cyphers.link_ens(urls)
 
+        urls = self.s3.save_json_as_csv(self.scraper_data["primary"], self.bucket_name, f"ingestor_primary_{self.asOf}")
+        self.cyphers.add_primary_property(urls)
+
     def run(self):
         self.ingest_ens()
         self.save_metadata()

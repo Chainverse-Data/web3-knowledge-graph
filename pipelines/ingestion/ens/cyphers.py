@@ -43,3 +43,18 @@ class EnsCyphers(Cypher):
         # count += self.queries.link_ens_transaction(urls)
         count += self.queries.link_ens_alias(urls)
         return count
+
+    @count_query_logging
+    def add_primary_property(self, urls):
+        count = 0
+        for url in urls:
+            query = f"""
+                    LOAD CSV WITH HEADERS FROM '{url}' AS aliases
+                    MATCH (a:Alias {{name: aliases.name}}), (w:Wallet {{address: aliases.address}})
+                    MATCH (w)-[r:HAS_ALIAS]->(a)
+                    SET r.primary = True
+                    return count(r)
+            """
+            count += self.query(query)[0].value()
+
+        return count

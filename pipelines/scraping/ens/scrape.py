@@ -87,7 +87,6 @@ class EnsScraper(Scraper):
             logging.info(f"{len(self.data['owner_addresses'])} current owners")
             page_key = data.get("pageKey", None)
             new_url = url + "&pageKey={}".format(page_key)
-            break
 
         logging.info("Found {} owner addresses".format(len(self.data["owner_addresses"])))
 

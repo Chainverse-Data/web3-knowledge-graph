@@ -21,12 +21,11 @@ class SnapshotScraper(Scraper):
         self.proposal_limit = 500
         self.vote_limit = 1000
 
-        self.last_space_offset = 0 # we collect all spaces
+        self.last_space_offset = 0  # we collect all spaces
 
         self.last_proposal_offset = 0
         if "last_proposal_offset" in self.metadata:
             self.last_proposal_offset = self.metadata["last_proposal_offset"]
-        self.last_proposal_offset = 65000
 
         self.open_proposals = set()
         if "open_proposals" in self.metadata:
@@ -132,7 +131,7 @@ class SnapshotScraper(Scraper):
         self.metadata["open_proposals"] = self.open_proposals
 
     def run(self):
-        # self.get_spaces()
+        self.get_spaces()
         self.get_proposals()
         self.get_votes()
         self.get_proposals_status()
