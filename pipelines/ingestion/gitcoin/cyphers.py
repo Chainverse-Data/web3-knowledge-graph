@@ -46,7 +46,7 @@ class GitcoinCyphers(Cypher):
                         grant.amountDenomination = grants.amountDenomination,
                         grant.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                         grant.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
-                        grant.ingestedBy = {self.CREATED_ID}
+                        grant.ingestedBy = "{self.CREATED_ID}"
                     ON MATCH set grant.title = grants.title,
                         grant.text = grants.text,
                         grant.types = grants.types,
@@ -54,7 +54,7 @@ class GitcoinCyphers(Cypher):
                         grant.amount = grants.amount,
                         grant.asOf = grants.asOf,
                         grant.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
-                        grant.ingestedBy = {self.UPDATED_ID}
+                        grant.ingestedBy = "{self.UPDATED_ID}"
                     return count(grant)
             """
             count += self.query(query)[0].value()
@@ -73,11 +73,11 @@ class GitcoinCyphers(Cypher):
                         user.asOf = members.asOf,
                         user.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                         user.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
-                        user.ingestedBy = {self.CREATED_ID}
+                        user.ingestedBy = "{self.CREATED_ID}"
                     ON MATCH set user.handle = members.handle,
                         user.asOf = members.asOf,
                         user.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
-                        user.ingestedBy = {self.UPDATED_ID}
+                        user.ingestedBy = "{self.UPDATED_ID}"
                     return count(user)
             """
 
@@ -99,10 +99,10 @@ class GitcoinCyphers(Cypher):
                         edge.asOf = members.asOf,
                         edge.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                         edge.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
-                        edge.ingestedBy = {self.CREATED_ID}
+                        edge.ingestedBy = "{self.CREATED_ID}"
                     ON MATCH set edge.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                         edge.asOf = members.asOf,
-                        edge.ingestedBy = {self.UPDATED_ID}
+                        edge.ingestedBy = "{self.UPDATED_ID}"
                     return count(edge)
             """
             count += self.query(query)[0].value()
@@ -127,10 +127,10 @@ class GitcoinCyphers(Cypher):
                         edge.asOf = admin_wallets.asOf,
                         edge.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                         edge.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
-                        edge.ingestedBy = {self.CREATED_ID}
+                        edge.ingestedBy = "{self.CREATED_ID}"
                     ON MATCH set edge.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                         edge.asOf = admin_wallets.asOf,
-                        edge.ingestedBy = {self.UPDATED_ID}
+                        edge.ingestedBy = "{self.UPDATED_ID}"
                     return count(edge)
             """
             count += self.query(query)[0].value()
@@ -147,9 +147,9 @@ class GitcoinCyphers(Cypher):
                         twitter.handle = twitter_accounts.handle,
                         twitter.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                         twitter.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
-                        twitter.ingestedBy = {self.CREATED_ID}
+                        twitter.ingestedBy = "{self.CREATED_ID}"
                     ON MATCH set twitter.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
-                        twitter.ingestedBy = {self.UPDATED_ID}
+                        twitter.ingestedBy = "{self.UPDATED_ID}"
                     return count(twitter)
             """
             count += self.query(query)[0].value()
@@ -169,10 +169,10 @@ class GitcoinCyphers(Cypher):
                         edge.asOf = twitter_accounts.asOf,
                         edge.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                         edge.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
-                        edge.ingestedBy = {self.CREATED_ID}
+                        edge.ingestedBy = "{self.CREATED_ID}"
                     ON MATCH set edge.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                         edge.asOf = twitter_accounts.asOf,
-                        edge.ingestedBy = {self.UPDATED_ID}
+                        edge.ingestedBy = "{self.UPDATED_ID}"
                     return count(edge)
             """
             count += self.query(query)[0].value()
@@ -202,9 +202,9 @@ class GitcoinCyphers(Cypher):
                         donation.blockNumber = donations.blockNumber,
                         donation.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                         donation.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')), 
-                        donation.ingestedBy = {self.CREATED_ID}
+                        donation.ingestedBy = "{self.CREATED_ID}"
                     ON MATCH set donation.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')), 
-                        donation.ingestedBy = {self.UPDATED_ID}
+                        donation.ingestedBy = "{self.UPDATED_ID}"
                     return count(donation)
             """
             count += self.query(query)[0].value()
@@ -237,7 +237,7 @@ class GitcoinCyphers(Cypher):
                         bounty.asOf = bounties.asOf,
                         bounty.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                         bounty.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
-                        bounty.ingestedBy = {self.CREATED_ID}
+                        bounty.ingestedBy = "{self.CREATED_ID}"
                     ON MATCH set bounty.title = bounties.title,
                         bounty.text = bounties.text, 
                         bounty.status = bounties.status,
@@ -253,7 +253,7 @@ class GitcoinCyphers(Cypher):
                         bounty.org_name = bounties.org_name,
                         bounty.asOf = bounties.asOf,
                         bounty.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
-                        bounty.ingestedBy = {self.UPDATED_ID}
+                        bounty.ingestedBy = "{self.UPDATED_ID}"
                     return count(bounty)
             """
             
@@ -272,11 +272,11 @@ class GitcoinCyphers(Cypher):
                         org.asOf = orgs.asOf,
                         org.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                         org.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
-                        org.ingestedBy = {self.CREATED_ID}
+                        org.ingestedBy = "{self.CREATED_ID}"
                     ON MATCH set org.name = orgs.org_name,
                         org.asOf = orgs.asOf,
                         org.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
-                        org.ingestedBy = {self.UPDATED_ID}
+                        org.ingestedBy = "{self.UPDATED_ID}"
                     return count(org)
                     """
             count += self.query(query)[0].value()
@@ -296,10 +296,10 @@ class GitcoinCyphers(Cypher):
                         link.citation = orgs.citation,
                         link.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                         link.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
-                        link.ingestedBy = {self.CREATED_ID}
+                        link.ingestedBy = "{self.CREATED_ID}"
                     ON MATCH set link.asOf = orgs.asOf,
                         link.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
-                        link.ingestedBy = {self.UPDATED_ID}
+                        link.ingestedBy = "{self.UPDATED_ID}"
                     return count(link)
                     """
             count += self.query(query)[0].value()
@@ -319,12 +319,12 @@ class GitcoinCyphers(Cypher):
                         user.asOf = owners.asOf,
                         user.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                         user.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
-                        user.ingestedBy = {self.CREATED_ID}
+                        user.ingestedBy = "{self.CREATED_ID}"
                     ON MATCH set user.handle = owners.handle,
                         user.name = owners.name, 
                         user.asOf = owners.asOf,
                         user.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
-                        user.ingestedBy = {self.UPDATED_ID}
+                        user.ingestedBy = "{self.UPDATED_ID}"
                     return count(user)
             """
 
@@ -345,10 +345,10 @@ class GitcoinCyphers(Cypher):
                         link.citation = owners.citation,
                         link.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                         link.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
-                        link.ingestedBy = {self.CREATED_ID}
+                        link.ingestedBy = "{self.CREATED_ID}"
                     ON MATCH set link.asOf = owners.asOf,
                         link.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
-                        link.ingestedBy = {self.UPDATED_ID}
+                        link.ingestedBy = "{self.UPDATED_ID}"
                     return count(link)
             """
 
@@ -374,10 +374,10 @@ class GitcoinCyphers(Cypher):
                         link.asOf = owners.asOf,
                         link.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                         link.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
-                        link.ingestedBy = {self.CREATED_ID}
+                        link.ingestedBy = "{self.CREATED_ID}"
                     ON MATCH set link.asOf = owners.asOf,
                         link.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
-                        link.ingestedBy = {self.UPDATED_ID}
+                        link.ingestedBy = "{self.UPDATED_ID}"
                     return count(link)
             """
 
@@ -400,14 +400,14 @@ class GitcoinCyphers(Cypher):
                         user.asOf = fullfilers.asOf,
                         user.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                         user.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
-                        user.ingestedBy = {self.CREATED_ID}
+                        user.ingestedBy = "{self.CREATED_ID}"
                     ON MATCH set user.handle = fullfilers.handle,
                         user.email = fullfilers.email, 
                         user.name = fullfilers.name, 
                         user.keywords = fullfilers.keywords, 
                         user.asOf = fullfilers.asOf,
                         user.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')), 
-                        user.ingestedBy = {self.UPDATED_ID}
+                        user.ingestedBy = "{self.UPDATED_ID}"
                     return count(user)
             """
             count += self.query(query)[0].value()
@@ -428,11 +428,11 @@ class GitcoinCyphers(Cypher):
                         link.asOf = fullfilers.asOf,
                         link.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                         link.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
-                        link.ingestedBy = {self.CREATED_ID}
+                        link.ingestedBy = "{self.CREATED_ID}"
                     ON MATCH set link.asOf = fullfilers.asOf,
                         link.accepted = fullfilers.accepted,
                         link.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
-                        link.ingestedBy = {self.UPDATED_ID}
+                        link.ingestedBy = "{self.UPDATED_ID}"
                     return count(link)
             """
 
@@ -458,10 +458,10 @@ class GitcoinCyphers(Cypher):
                         link.asOf = fullfilers.asOf,
                         link.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                         link.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
-                        link.ingestedBy = {self.CREATED_ID}
+                        link.ingestedBy = "{self.CREATED_ID}"
                     ON MATCH set link.asOf = fullfilers.asOf,
                         link.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
-                        link.ingestedBy = {self.UPDATED_ID}
+                        link.ingestedBy = "{self.UPDATED_ID}"
                     return count(link)
             """
 
@@ -483,13 +483,13 @@ class GitcoinCyphers(Cypher):
                         user.asOf = interested.asOf,
                         user.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                         user.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
-                        user.ingestedBy = {self.CREATED_ID}
+                        user.ingestedBy = "{self.CREATED_ID}"
                     ON MATCH set user.handle = interested.handle,
                         user.name = interested.name, 
                         user.keywords = interested.keywords, 
                         user.asOf = interested.asOf,
                         user.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
-                        user.ingestedBy = {self.UPDATED_ID}
+                        user.ingestedBy = "{self.UPDATED_ID}"
                     return count(user)
             """
             count += self.query(query)[0].value()
@@ -509,11 +509,11 @@ class GitcoinCyphers(Cypher):
                         link.citation = interested.citation,
                         link.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                         link.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
-                        link.ingestedBy = {self.CREATED_ID}
+                        link.ingestedBy = "{self.CREATED_ID}"
                     ON MATCH set link.asOf = interested.asOf,
                         link.accepted = interested.accepted,
                         link.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
-                        link.ingestedBy = {self.UPDATED_ID}
+                        link.ingestedBy = "{self.UPDATED_ID}"
                     return count(link)
             """
 
