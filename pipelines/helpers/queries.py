@@ -18,10 +18,10 @@ class Queries(Cypher):
                         wallet.address = admin_wallets.address,
                         wallet.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                         wallet.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
-                        wallet.ingestedBy = {self.CREATED_ID}
+                        wallet.ingestedBy = "{self.CREATED_ID}"
                     ON MATCH set wallet.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                         wallet.address = admin_wallets.address,
-                        wallet.ingestedBy = {self.UPDATED_ID}
+                        wallet.ingestedBy = "{self.UPDATED_ID}"
                     return count(wallet)
             """
             count += self.query(query)[0].value()
