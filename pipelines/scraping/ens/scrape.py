@@ -6,8 +6,9 @@ import tqdm
 import os
 import multiprocessing
 import joblib
-import math
+import warnings
 import web3
+from ens.auto import ns
 
 
 class EnsScraper(Scraper):
@@ -25,15 +26,29 @@ class EnsScraper(Scraper):
             )
 
         self.data["ens"] = [item for sublist in ens_list for item in sublist]
+
+        with tqdm_joblib(
+            tqdm.tqdm(desc="Getting Primary Names", total=len(self.data["owner_addresses"]))
+        ) as progress_bar:
+            primary_list = joblib.Parallel(n_jobs=multiprocessing.cpu_count() - 1, backend="threading")(
+                joblib.delayed(self.get_primary_info)(address) for address in self.data["owner_addresses"]
+            )
+        primary_list = [item for item in primary_list if item is not None]
+        self.data["primary"] = primary_list
+
         self.data.pop("owner_addresses", None)
         logging.info("Found {} ENS".format(len(self.data["ens"])))
 
-    def get_primary_info(self):
-
+    def get_primary_info(self, address):
+        warnings.filterwarnings("ignore")
+        x = ns.fromWeb3(web3.Web3(web3.Web3.HTTPProvider(self.provider)))
+        name = x.name(web3.Web3.toChecksumAddress(address))
+        if name is not None:
+            return {"name": name, "address": address.lower()}
+        return None
 
     def get_ens_info(self, address):
         token_list = []
-
         url = "https://eth-mainnet.g.alchemy.com/nft/v2/{}/getNFTs?owner={}&contractAddresses[]=0x57f1887a8BF19b14fC0dF6Fd9B2acc9Af147eA85&withMetadata=true".format(
             os.environ["ALCHEMY_API_KEY"], address
         )
@@ -72,6 +87,7 @@ class EnsScraper(Scraper):
             logging.info(f"{len(self.data['owner_addresses'])} current owners")
             page_key = data.get("pageKey", None)
             new_url = url + "&pageKey={}".format(page_key)
+            break
 
         logging.info("Found {} owner addresses".format(len(self.data["owner_addresses"])))
 
