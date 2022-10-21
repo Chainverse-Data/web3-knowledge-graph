@@ -298,7 +298,7 @@ class GitcoinCyphers(Cypher):
                         link.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                         link.ingestedBy = "{self.CREATED_ID}"
                     ON MATCH set link.asOf = orgs.asOf,
-                        link.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
+                        link.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                         link.ingestedBy = "{self.UPDATED_ID}"
                     return count(link)
                     """
