@@ -100,6 +100,7 @@ class GitCoinIngestor(Ingestor):
         donations_data = []
         for donation in self.scraper_data["donations"]:
             tmp = {
+                "address": donation["donor"].lower(),
                 "token": donation["token"].lower(),
                 "amount": donation["amount"],
                 "donor": donation["donor"].lower(),
