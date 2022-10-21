@@ -77,14 +77,16 @@ class GitCoinIngestor(Ingestor):
                 tmp = {
                     "grantId": grant["id"],
                     "citation": f"https://gitcoin.co/{grant['url']}",
-                    "handle": grant["twitter_handle_1"]
+                    "handle": grant["twitter_handle_1"],
+                    "profileUrl": f"https://twitter.com/{grant['twitter_handle_1']}"
                 }
                 grants_data["twitter_accounts"].append(tmp)
                 if grant["twitter_handle_1"] != grant["twitter_handle_2"] and grant["twitter_handle_2"]:
                     tmp = {
                         "grantId": grant["id"],
                         "citation": f"https://gitcoin.co/{grant['url']}",
-                        "handle": grant["twitter_handle_2"]
+                        "handle": grant["twitter_handle_2"],
+                        "profileUrl": f"https://twitter.com/{grant['twitter_handle_2']}"
                     }
                     grants_data["twitter_accounts"].append(tmp)
         return grants_data

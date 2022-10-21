@@ -138,21 +138,7 @@ class GitcoinCyphers(Cypher):
 
     @count_query_logging
     def create_or_merge_twitter_accounts(self, urls):
-        count = 0
-        for url in urls:
-            query = f"""
-                    LOAD CSV WITH HEADERS FROM '{url}' AS twitter_accounts
-                    MERGE(twitter:Twitter:Account {{handle: twitter_accounts.handle}})
-                    ON CREATE set twitter.uuid = apoc.create.uuid(),
-                        twitter.handle = twitter_accounts.handle,
-                        twitter.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
-                        twitter.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
-                        twitter.ingestedBy = "{self.CREATED_ID}"
-                    ON MATCH set twitter.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
-                        twitter.ingestedBy = "{self.UPDATED_ID}"
-                    return count(twitter)
-            """
-            count += self.query(query)[0].value()
+        count = self.queries.create_or_merge_twitter(urls)
         return count
 
     @count_query_logging
