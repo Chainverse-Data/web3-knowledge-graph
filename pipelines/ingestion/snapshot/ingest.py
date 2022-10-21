@@ -3,12 +3,16 @@ from .cyphers import SnapshotCyphers
 import json
 import pandas
 from typing import Dict, List, Any
+import datetime
 
 
 class SnapshotIngestor(Ingestor):
     def __init__(self):
         self.cyphers = SnapshotCyphers()
         super().__init__("snapshot")
+        self.metadata["last_date_ingested"] = self.end_date
+        if isinstance(self.end_date, datetime.datetime):
+            self.metadata["last_date_ingested"] = self.end_date.strftime("%Y-%m-%d")
 
     def ingest_spaces(self):
         print("Ingesting spaces...")
@@ -26,12 +30,12 @@ class SnapshotIngestor(Ingestor):
         twitter_df = twitter_df[twitter_df["handle"] != ""]
         twitter_dict = twitter_df.to_dict("records")
         urls = self.s3.save_json_as_csv(twitter_dict, self.bucket_name, f"ingestor_twitter_{self.asOf}")
-        self.cyphers.create_or_merge_twitter(urls)
+        self.cyphers.create_or_merge_space_twitter(urls)
         self.cyphers.link_space_twitter(urls)
 
         # add token nodes
         urls = self.s3.save_json_as_csv(space_data["tokens"], self.bucket_name, f"ingestor_tokens_{self.asOf}")
-        self.cyphers.create_or_merge_tokens(urls)
+        self.cyphers.create_or_merge_space_tokens(urls)
 
         # add strategy relationships (token-space)
         urls = self.s3.save_json_as_csv(
@@ -41,18 +45,18 @@ class SnapshotIngestor(Ingestor):
 
         # add ens nodes, ens relationships, space-alias relationships
         urls = self.s3.save_json_as_csv(space_data["ens"], self.bucket_name, f"ingestor_ens_{self.asOf}")
-        self.cyphers.create_or_merge_ens(urls)
-        self.cyphers.link_ens(urls)
+        self.cyphers.create_or_merge_space_ens(urls)
+        self.cyphers.link_space_ens(urls)
         self.cyphers.link_space_alias(urls)
 
         # add member wallet nodes, member-space relationships
         urls = self.s3.save_json_as_csv(space_data["members"], self.bucket_name, f"ingestor_members_{self.asOf}")
-        self.cyphers.create_or_merge_wallets(urls)
+        self.cyphers.create_or_merge_members(urls)
         self.cyphers.link_member_spaces(urls)
 
         # add admin wallet nodes, admin-space relationships
         urls = self.s3.save_json_as_csv(space_data["admins"], self.bucket_name, f"ingestor_admins_{self.asOf}")
-        self.cyphers.create_or_merge_wallets(urls)
+        self.cyphers.create_or_merge_members(urls)
         self.cyphers.link_admin_spaces(urls)
 
     def ingest_proposals(self):
@@ -64,7 +68,7 @@ class SnapshotIngestor(Ingestor):
         urls = self.s3.save_json_as_csv(proposal_data["proposals"], self.bucket_name, f"ingestor_proposals_{self.asOf}")
         self.cyphers.create_or_merge_proposals(urls)
         self.cyphers.link_proposal_spaces(urls)
-        self.cyphers.create_or_merge_wallets(urls)
+        self.cyphers.create_or_merge_authors(urls)
         self.cyphers.link_proposal_authors(urls)
 
     def ingest_votes(self):
@@ -80,7 +84,7 @@ class SnapshotIngestor(Ingestor):
 
         # add vote wallet nodes
         urls = self.s3.save_json_as_csv(wallet_dict, self.bucket_name, f"ingestor_wallets_{self.asOf}")
-        self.cyphers.create_or_merge_wallets(urls)
+        self.cyphers.create_or_merge_voters(urls)
 
         # add vote relationships (proposal-wallet)
         urls = self.s3.save_json_as_csv(vote_data["votes"], self.bucket_name, f"ingestor_votes_{self.asOf}")
@@ -103,7 +107,7 @@ class SnapshotIngestor(Ingestor):
                 "profileUrl"
             ] = f"https://cdn.stamp.fyi/space/{current_dict['snapshotId']}?s=160&cb=a1b40604488c19a1"
             current_dict["name"] = entry["name"]
-            current_dict["about"] = self.sanitize(entry.get("about", ""))
+            current_dict["about"] = self.cyphers.sanitize_text(entry.get("about", ""))
             current_dict["chainId"] = entry.get("network", "")
             current_dict["symbol"] = entry.get("symbol", "")
             current_dict["handle"] = entry.get("twitter", "")
@@ -129,7 +133,7 @@ class SnapshotIngestor(Ingestor):
                 space_data["ens"].append(
                     {
                         "name": entry["id"],
-                        "owner": ens["owner"].lower(),
+                        "address": ens["address"].lower(),
                         "tokenId": ens["token_id"],
                         "txHash": ens["trans"]["hash"],
                         "contractAddress": ens["trans"]["rawContract"]["address"],
@@ -168,7 +172,7 @@ class SnapshotIngestor(Ingestor):
             except:
                 continue
 
-            return space_data
+        return space_data
 
     def process_proposals(self) -> Dict[str, List[Dict[str, Any]]]:
         proposal_data = {"proposals": []}
@@ -181,10 +185,10 @@ class SnapshotIngestor(Ingestor):
             current_dict["type"] = entry["type"] or -1
             current_dict["spaceId"] = entry["space"]["id"]
 
-            current_dict["title"] = self.sanitize(entry["title"])
-            current_dict["text"] = self.sanitize(entry["body"])
+            current_dict["title"] = self.cyphers.sanitize_text(entry["title"])
+            current_dict["text"] = self.cyphers.sanitize_text(entry["body"])
 
-            choices = self.sanitize(json.dumps(entry["choices"]))
+            choices = self.cyphers.sanitize_text(json.dumps(entry["choices"]))
 
             current_dict["choices"] = choices
             current_dict["startDt"] = entry["start"] or 0
@@ -210,7 +214,7 @@ class SnapshotIngestor(Ingestor):
             current_dict["ipfs"] = entry["ipfs"]
 
             try:
-                current_dict["choice"] = self.sanitize(json.dumps(entry["choice"]))
+                current_dict["choice"] = self.cyphers.sanitize_text(json.dumps(entry["choice"]))
                 current_dict["proposalId"] = entry["proposal"]["id"]
                 current_dict["spaceId"] = entry["space"]["id"]
             except:
@@ -226,7 +230,10 @@ class SnapshotIngestor(Ingestor):
         self.ingest_proposals()
         self.ingest_votes()
 
+        self.save_metadata()
+
 
 if __name__ == "__main__":
+
     ingestor = SnapshotIngestor()
     ingestor.run()
