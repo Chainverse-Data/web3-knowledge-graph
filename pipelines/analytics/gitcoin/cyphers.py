@@ -12,10 +12,10 @@ class GitCoinAnalyticsCyphers(Cypher):
         pass
 
     @get_query_logging
-    def get_grants_donations(self):
+    def get_grants_donations_graph(self):
         query = """
-            MATCH (grant:Grant)-[donation:DONATION]-(wallet:Wallet) 
-            RETURN grant, donation, wallet
+            MATCH (grant:Grant)-[donation:DONATION]-(wallet:Wallet)
+            RETURN ID(grant), labels(grant), grant.tags, grant.types, ID(wallet), labels(wallet)
         """
         result = self.query(query)
         return result
