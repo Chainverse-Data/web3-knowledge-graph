@@ -1,5 +1,4 @@
 from .cypher import Cypher
-from .decorators import count_query_logging
 
 # This file is for universal queries only, any queries that generate new nodes or edges must be in its own cyphers.py file in the service folder
 
@@ -24,8 +23,10 @@ class Queries(Cypher):
                     MERGE(wallet:Wallet {{address: toLower(admin_wallets.address)}})
                     ON CREATE set wallet.uuid = apoc.create.uuid(),
                         wallet.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
-                        wallet.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
-                    ON MATCH set wallet.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
+                        wallet.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
+                        wallet.ingestedBy = "{self.CREATED_ID}"
+                    ON MATCH set wallet.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
+                        wallet.ingestedBy = "{self.UPDATED_ID}"
                     return count(wallet)
             """
             count += self.query(query)[0].value()
@@ -49,16 +50,16 @@ class Queries(Cypher):
         for url in urls:
 
             query = f"""
-                    LOAD CSV WITH HEADERS FROM '{url}' AS twitter
-                    MERGE (a:Twitter {{handle: toLower(twitter.handle)}})
-                    ON CREATE set a.uuid = apoc.create.uuid(),
-                        a.profileUrl = twitter.profileUrl,
-                        a.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
-                        a.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
-                        a:Account
-                    ON MATCH set a.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
-                        a:Account
-                    return count(a)    
+                    LOAD CSV WITH HEADERS FROM '{url}' AS twitter_data
+                    MERGE (twitter:Twitter:Account {{handle: toLower(twitter.handle)}})
+                    ON CREATE set twitter.uuid = apoc.create.uuid(),
+                        twitter.profileUrl = twitter.profileUrl,
+                        twitter.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
+                        twitter.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
+                        twitter.ingestedBy = "{self.CREATED_ID}"
+                    ON MATCH set twitter.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
+                        twitter.ingestedBy = "{self.UPDATED_ID}"
+                    return count(twitter)    
             """
             count += self.query(query)[0].value()
         return count

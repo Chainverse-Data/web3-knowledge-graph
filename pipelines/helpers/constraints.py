@@ -10,7 +10,7 @@ class Constraints(Cypher):
 
     def create_indexes(self):
         pass
-
+    
     def twitter(self):
         query = """CREATE CONSTRAINT UniqueHandle IF NOT EXISTS FOR (d:Twitter) REQUIRE d.handle IS UNIQUE"""
         self.query(query)

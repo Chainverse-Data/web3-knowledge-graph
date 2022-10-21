@@ -3,11 +3,15 @@ from neo4j import GraphDatabase
 import os
 import logging
 
+
 class Cypher:
     def __init__(self, database=None):
         self.database = database
         if "NEO_DB" in os.environ:
             self.database = os.environ["NEO_DB"]
+        self.unique_id = datetime.timestamp(datetime.now())
+        self.CREATED_ID = f"created:{self.unique_id}"
+        self.UPDATED_ID = f"updated:{self.unique_id}"
 
         self.create_constraints()
         self.create_indexes()
