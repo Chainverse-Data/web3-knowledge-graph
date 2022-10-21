@@ -17,40 +17,32 @@ class SnapshotScraper(Scraper):
     def __init__(self):
         super().__init__("snapshot")
         self.snapshot_url = "https://hub.snapshot.org/graphql"
-        # self.recent = recent
         self.space_limit = 100
         self.proposal_limit = 500
         self.vote_limit = 1000
 
-        self.last_space_offset = 0
-        if "last_space_offset" in self.metadata:
-            self.last_space_offset = self.metadata["last_space_offset"]
+        self.last_space_offset = 0 # we collect all spaces
 
         self.last_proposal_offset = 0
         if "last_proposal_offset" in self.metadata:
             self.last_proposal_offset = self.metadata["last_proposal_offset"]
+        self.last_proposal_offset = 65000
 
         self.open_proposals = set()
         if "open_proposals" in self.metadata:
             self.open_proposals = set(self.metadata["open_proposals"])
-        
-        # I'm not sure what this is for ? Debugging ?
-        # if recent and "last_timestamp" in self.metadata:
-        #     self.cutoff_timestamp = self.metadata["last_timestamp"] - (60 * 60 * 24 * 15)
-        # else:
-        #     self.cutoff_timestamp = 0
 
     def make_api_call(self, query, counter=0, content=None):
         time.sleep(counter)
         if counter > 10:
             logging.error(content)
-            raise Exception("Something went wrong while getting the spaces results from the API")
+            raise Exception("Something went wrong while getting the results from the API")
         content = self.post_request(self.snapshot_url, json={"query": query})
         if "504: Gateway time-out" in content:
-            return self.make_api_call(query, counter=counter+1, content=content)
+            return self.make_api_call(query, counter=counter + 1, content=content)
         data = json.loads(content)
         if "data" not in data or "error" in data:
-            return self.make_api_call(query, counter=counter+1, content=content)
+            return self.make_api_call(query, counter=counter + 1, content=content)
         return data["data"]
 
     def get_spaces(self):
@@ -59,7 +51,7 @@ class SnapshotScraper(Scraper):
         offset = self.last_space_offset
         results = True
         while results:
-            self.metadata["last_space_offset"] = offset # Put this here so that we save only the last offset with data
+            self.metadata["last_space_offset"] = offset
             if len(raw_spaces) % 1000 == 0:
                 logging.info(f"Current Spaces: {len(raw_spaces)}")
             query = spaces_query.format(self.space_limit, offset)
@@ -95,16 +87,12 @@ class SnapshotScraper(Scraper):
             results = data["proposals"]
             raw_proposals.extend(results)
             offset += self.proposal_limit
-            # I'm not sure what this is for ?
-            # if results[-1].get("created", self.cutoff_timestamp) < self.cutoff_timestamp:
-            #     break
 
         proposals = [proposal for proposal in raw_proposals if proposal]
         logging.info(f"Total Proposals: {len(proposals)}")
         self.data["proposals"] = proposals
 
     def scrape_votes(self, proposal_ids):
-        logging.info(f"Scraping votes for proposals: {proposal_ids}")
         raw_votes = []
         offset = 0
         results = True
@@ -120,14 +108,10 @@ class SnapshotScraper(Scraper):
 
     def get_votes(self):
         logging.info("Getting votes...")
-        proposal_ids = self.open_proposals + [proposal["id"] for proposal in self.data["proposals"]]
-        proposal_ids = list(set(proposal_ids))
-        with tqdm_joblib(
-            tqdm.tqdm(desc="Getting Votes Data", total=math.ceil(len(proposal_ids) / 5))
-        ) as progress_bar:
+        proposal_ids = list(self.open_proposals.union(set([proposal["id"] for proposal in self.data["proposals"]])))
+        with tqdm_joblib(tqdm.tqdm(desc="Getting Votes Data", total=math.ceil(len(proposal_ids) / 5))) as progress_bar:
             raw_votes = joblib.Parallel(n_jobs=2, backend="threading")(
-                joblib.delayed(self.scrape_votes)(proposal_ids[i : i + 5])
-                for i in range(0, len(proposal_ids), 5)
+                joblib.delayed(self.scrape_votes)(proposal_ids[i : i + 5]) for i in range(0, len(proposal_ids), 5)
             )
 
         votes = [vote for votes in raw_votes for vote in votes]
@@ -147,25 +131,17 @@ class SnapshotScraper(Scraper):
         self.open_proposals = list(set(open_proposals))
         self.metadata["open_proposals"] = self.open_proposals
 
-
     def run(self):
-        self.get_spaces()
+        # self.get_spaces()
         self.get_proposals()
         self.get_votes()
         self.get_proposals_status()
 
-        # Same not sure what this is for
-        # self.metadata["last_timestamp"] = self.runtime.timestamp()
         self.save_metadata()
         self.save_data()
 
 
 if __name__ == "__main__":
-    # So first, this should be an ENV var, that will make it much easier
-    # Second, scrapping recent data is the default, only reinit should be flaged and that's handled through the metadata reset.
-    # parser = argparse.ArgumentParser(description="Snapshot Scraper")
-    # parser.add_argument("--recent", type=str2bool, default=True, help="Scrape only recent data")
-    # args = parser.parse_args()
 
     scraper = SnapshotScraper()
     scraper.run()
