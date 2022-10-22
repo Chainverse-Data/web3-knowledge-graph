@@ -10,7 +10,7 @@ gql_log.setLevel(logging.WARNING)
 
 
 class MultisigScraper(Scraper):
-    def __init__(self, recent):
+    def __init__(self):
         super().__init__("multisig", allow_override=bool(os.environ["ALLOW_OVERRIDE"]))
         self.graph_url = (
             "https://gateway.thegraph.com/api/{}/subgraphs/id/3oPKQiPKyD1obYpi5zXBy6HoPdYoDgxXptKrZ8GC3N1N".format(
@@ -18,13 +18,11 @@ class MultisigScraper(Scraper):
             )
         )
         self.interval = 1000
-        self.recent = recent
 
     def get_multisig(self):
-        if self.recent and "last_timestamp" in self.metadata:
+        cutoff_timestamp = 0
+        if "last_timestamp" in self.metadata:
             cutoff_timestamp = int(self.metadata["last_timestamp"])
-        else:
-            cutoff_timestamp = 0
         skip = 0
 
         transport = AIOHTTPTransport(url=self.graph_url)
@@ -77,9 +75,5 @@ class MultisigScraper(Scraper):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Snapshot Scraper")
-    parser.add_argument("--recent", type=str2bool, default=True, help="Scrape only recent data")
-    args = parser.parse_args()
-
-    scraper = MultisigScraper(args.recent)
+    scraper = MultisigScraper()
     scraper.run()
