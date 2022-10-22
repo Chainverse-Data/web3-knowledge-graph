@@ -52,16 +52,16 @@ class TwitterEnsScraper(Scraper):
         # self.data["accounts"] = final_accounts
         # logging.info(f"Final accounts count: {len(final_accounts)}")
 
-    def get_ens_address(self, name):
-        warnings.filterwarnings("ignore")
-        w3 = web3.Web3(web3.Web3.HTTPProvider(self.provider))
-        try:
-            owner = w3.ens.address(name=name)
-            if owner is not None:
-                owner = owner.lower()
-        except:
-            owner = None
-        return owner
+    # def get_ens_address(self, name):
+    #     warnings.filterwarnings("ignore")
+    #     w3 = web3.Web3(web3.Web3.HTTPProvider(self.provider))
+    #     try:
+    #         owner = w3.ens.address(name=name)
+    #         if owner is not None:
+    #             owner = owner.lower()
+    #     except:
+    #         owner = None
+    #     return owner
 
     def run(self):
         self.get_accounts()
