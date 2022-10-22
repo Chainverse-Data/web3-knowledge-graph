@@ -88,6 +88,7 @@ class EnsScraper(Scraper):
             page_key = data.get("pageKey", None)
             new_url = url + "&pageKey={}".format(page_key)
 
+        self.data["owner_addresses"] = list(set(self.data["owner_addresses"]))
         logging.info("Found {} owner addresses".format(len(self.data["owner_addresses"])))
 
     def run(self):
