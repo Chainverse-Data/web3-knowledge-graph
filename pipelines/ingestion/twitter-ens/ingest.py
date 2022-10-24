@@ -13,7 +13,7 @@ class TwitterEnsIngestor(Ingestor):
         if isinstance(self.end_date, datetime.datetime):
             self.metadata["last_date_ingested"] = self.end_date.strftime("%Y-%m-%d")
 
-    def ingest_data(self):
+    def ingest_ens(self):
         print("Ingesting data...")
 
         urls = self.s3.save_json_as_csv(
@@ -27,7 +27,7 @@ class TwitterEnsIngestor(Ingestor):
         # self.cyphers.link_wallet_alias(urls)  # link wallet to alias
 
     def run(self):
-        self.ingest_data()
+        self.ingest_ens()
         self.save_metadata()
 
 

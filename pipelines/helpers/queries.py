@@ -51,12 +51,13 @@ class Queries(Cypher):
 
             query = f"""
                     LOAD CSV WITH HEADERS FROM '{url}' AS twitter_data
-                    MERGE (twitter:Twitter:Account {{handle: toLower(twitter.handle)}})
+                    MERGE (twitter:Twitter {{handle: toLower(twitter.handle)}})
                     ON CREATE set twitter.uuid = apoc.create.uuid(),
                         twitter.profileUrl = twitter.profileUrl,
                         twitter.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                         twitter.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
-                        twitter.ingestedBy = "{self.CREATED_ID}"
+                        twitter.ingestedBy = "{self.CREATED_ID}",
+                        twitter:Account
                     ON MATCH set twitter.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                         twitter.ingestedBy = "{self.UPDATED_ID}"
                     return count(twitter)    
