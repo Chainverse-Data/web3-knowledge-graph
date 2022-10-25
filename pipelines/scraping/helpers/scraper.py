@@ -1,5 +1,5 @@
 import requests
-import datetime
+from datetime import datetime
 import logging
 import os
 from ...helpers import S3Utils
@@ -16,7 +16,7 @@ import time
 
 class Scraper:
     def __init__(self, bucket_name, allow_override=None):
-        self.runtime = datetime.datetime.now()
+        self.runtime = datetime.now()
 
         if not bucket_name:
             raise ValueError("bucket_name is not defined!")

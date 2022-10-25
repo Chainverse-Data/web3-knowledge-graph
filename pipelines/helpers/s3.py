@@ -88,14 +88,16 @@ class S3Utils:
             return True
 
     def create_or_get_bucket(self, bucket_name):
-        print(f"Creating bucket: {bucket_name}")
         response = self.s3_client.list_buckets()
         if bucket_name not in [el["Name"] for el in response["Buckets"]]:
             try:
                 logging.warning("Bucket not found! Creating {}".format(bucket_name))
                 location = {"LocationConstraint": os.environ["AWS_DEFAULT_REGION"]}
                 self.s3_client.create_bucket(Bucket=bucket_name, CreateBucketConfiguration=location)
+                logging.info(f"Creating bucket: {bucket_name}")
             except ClientError as e:
                 logging.error("An error occured during the creation of the bucket!")
                 raise e
+        else:
+            logging.info(f"Using existing bucket: {bucket_name}")
         return boto3.resource("s3").Bucket(bucket_name)

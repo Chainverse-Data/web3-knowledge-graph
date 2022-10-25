@@ -1,86 +1,113 @@
-from ..helpers import Analysis
-from .cyphers import GitCoinAnalyticsCyphers
 import networkx as nx
 import logging
-import numpy as np
 from tqdm import tqdm
+from ..helpers import Analysis, Networks
+from .cyphers import GitCoinAnalyticsCyphers
+
 
 class GitCoinAnalysis(Analysis):
     def __init__(self):
-        super().__init__()
+        super().__init__("gitcoin-communities")
         self.cyphers = GitCoinAnalyticsCyphers()
-
+        self.networks = Networks()
         self.grants_weight_threshold = 1
         self.donors_weight_threshold = 1
 
-    def create_donators_communities(self):
+    def run(self):
         self.create_grant_donor_graph()
-        grants_adj, grants_id_map = self.create_grants_projection()
+        self.grants_partitions()
+        self.donors_partitions()
+
+    def grants_partitions(self):
+        partitionTarget = "Grant:Gitcoin"
+        self.cyphers.clear_partitions(partitionTarget)
+        grants_partitions, grants_labels = self.create_grants_communities()
+        data = self.prepare_partitions_data(
+            grants_partitions, grants_labels, partitionTarget)
+
+        urls = self.s3.save_json_as_csv(
+            data["labels"], self.bucket_name, f"grants_partitions_labels_{self.asOf}")
+        self.cyphers.create_or_merge_partitions(urls)
+
+        urls = self.s3.save_json_as_csv(
+            data["partitions"], self.bucket_name, f"grants_partitions_{self.asOf}")
+        self.cyphers.link_partitions(urls, partitionTarget, "id")
+
+    def donors_partitions(self):
+        partitionTarget = "Wallet"
+        self.cyphers.clear_partitions(partitionTarget)
+        donors_partitions, donors_labels = self.create_donors_communities()
+        data = self.prepare_partitions_data(
+            donors_partitions, donors_labels, partitionTarget)
+
+        urls = self.s3.save_json_as_csv(
+            data["labels"], self.bucket_name, f"donors_partitions_labels_{self.asOf}")
+        self.cyphers.create_or_merge_partitions(urls)
+
+        urls = self.s3.save_json_as_csv(
+            data["partitions"], self.bucket_name, f"donors_partitions_{self.asOf}")
+        self.cyphers.link_partitions(urls, partitionTarget, "address")
+
+    def prepare_partitions_data(self, partitions, labels, partitionTarget):
+        logging.info("Preparing grants data...")
+        data = {
+            "partitions": [],
+            "labels": [],
+        }
+        for label in labels:
+            data["labels"].append(
+                {
+                    "asOf": self.asOf,
+                    "method": "Louvain",
+                    "partition": int(label),
+                    "partitionTarget": partitionTarget
+                }
+            )
+        for node_id in partitions:
+            data["partitions"].append(
+                {
+                    "targetField": node_id,
+                    "partition": int(partitions[node_id]),
+                    "asOf": self.asOf
+                }
+            )
+        return data
+
+    def create_grants_communities(self):
+        logging.info("Creating grants communities...")
+        grants_adj = self.networks.compute_projection(
+            self.biadjacency, self.grants_weight_threshold, axis=0)
+        partitions, labels = self.networks.get_partitions(
+            grants_adj, self.grants_id_map)
+        return partitions, labels
+
+    def create_donors_communities(self):
+        logging.info("Creating donors communities...")
+        donors_adj = self.networks.compute_projection(
+            self.biadjacency, self.donors_weight_threshold, axis=1)
+        partitions, labels = self.networks.get_partitions(
+            donors_adj, self.donors_id_map)
+        return partitions, labels
 
     def create_grant_donor_graph(self):
         logging.info("Creating grant - donors graph")
         result = self.cyphers.get_grants_donations_graph()
         self.G = nx.Graph()
 
-        for record in result:
-            self.G.add_node(record[0], label=record[1][-1], tags=record[2], types=record[3])
+        for record in tqdm(result):
+            self.G.add_node(record[0], label=record[1]
+                            [-1], tags=record[2], types=record[3])
             self.G.add_node(record[4], label=record[5][-1])
             self.G.add_edge(record[0], record[4])
 
-    def create_grants_projection(self):
-        logging.info("Creating grants projection...")
-        donors = [n for n in self.G.nodes() if self.G.nodes[n]["label"] in [
+        self.donors = [n for n in self.G.nodes() if self.G.nodes[n]["label"] in [
             "Wallet", "MultiSig"] and self.G.degree[n] > 1]
-        grants = [n for n in self.G.nodes() if self.G.nodes[n]["label"] in [
+        self.grants = [n for n in self.G.nodes() if self.G.nodes[n]["label"] in [
             "GitcoinGrant", "Gitcoin"] and self.G.degree[n] > 1]
 
-        grants_id_map = {}
-        for i in range(len(grants)):
-            grants_id_map[grants[i]] = i
+        self.biadjacency, self.grants_id_map, self.donors_id_map = self.networks.compute_biadjacency(
+            self.G, self.grants, self.donors)
 
-        logging.info("Computing adjacency matrix...")
-        grants_adj = np.zeros((len(grants), len(grants)), dtype=int)
-        for donor in tqdm(donors):
-            tmp = [grants_id_map[edge[1]]
-                for edge in self.G.edges(donor) if edge[1] in grants_id_map]
-            for i in tmp:
-                for j in tmp:
-                    if i != j:
-                        grants_adj[i][j] += 1
-        logging.info(f"Filtering weights < {self.grants_weight_threshold}...")
-        B = np.zeros((len(grants), len(grants)), dtype=int)
-        for i in tqdm(range(len(grants_adj))):
-            for j in range(len(grants_adj)):
-                if grants_adj[i][j] > self.grants_weight_threshold:
-                    B[i][j] = grants_adj[i][j]
-        grants_adj = B
-        return grants_adj, grants_id_map
-
-    def create_donors_projection(self):
-        logging.info("Creating donors projection...")
-        donors = [n for n in self.G.nodes() if self.G.nodes[n]["label"] in [
-            "Wallet", "MultiSig"] and self.G.degree[n] > 1]
-        grants = [n for n in self.G.nodes() if self.G.nodes[n]["label"] in [
-            "GitcoinGrant", "Gitcoin"] and self.G.degree[n] > 1]
-
-        donors_id_map = {}
-        for i in range(len(donors)):
-            donors_id_map[donors[i]] = i
-
-        logging.info("Computing adjacency matrix...")
-        donors_adj = np.zeros((len(donors), len(donors)), dtype=int)
-        for grant in tqdm(grants):
-            tmp = [donors_id_map[edge[1]]
-                   for edge in self.G.edges(grant) if edge[1] in donors_id_map]
-            for i in tmp:
-                for j in tmp:
-                    if i != j:
-                        donors_adj[i][j] += 1
-        logging.info(f"Filtering weights < {self.donors_weight_threshold}...")
-        B = np.zeros((len(donors), len(donors)), dtype=int)
-        for i in tqdm(range(len(donors_adj))):
-            for j in range(len(donors_adj)):
-                if donors_adj[i][j] > self.donors_weight_threshold:
-                    B[i][j] = donors_adj[i][j]
-        donors_adj = B
-        return donors_adj, donors_id_map
+if __name__ == '__main__':
+    analytics = GitCoinAnalysis()
+    analytics.run()
