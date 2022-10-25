@@ -50,16 +50,17 @@ class Queries(Cypher):
         for url in urls:
 
             query = f"""
-                    LOAD CSV WITH HEADERS FROM '{url}' AS twitter_data
-                    MERGE (twitter:Twitter:Account {{handle: toLower(twitter.handle)}})
-                    ON CREATE set twitter.uuid = apoc.create.uuid(),
-                        twitter.profileUrl = twitter.profileUrl,
-                        twitter.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
-                        twitter.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
-                        twitter.ingestedBy = "{self.CREATED_ID}"
-                    ON MATCH set twitter.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
-                        twitter.ingestedBy = "{self.UPDATED_ID}"
-                    return count(twitter)    
+                    LOAD CSV WITH HEADERS FROM '{url}' AS twitter
+                    MERGE (t:Twitter {{handle: toLower(twitter.handle)}})
+                    ON CREATE set t.uuid = apoc.create.uuid(),
+                        t.profileUrl = twitter.profileUrl,
+                        t.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
+                        t.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
+                        t.ingestedBy = "{self.CREATED_ID}",
+                        t:Account
+                    ON MATCH set t.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
+                        t.ingestedBy = "{self.UPDATED_ID}"
+                    return count(t)    
             """
             count += self.query(query)[0].value()
         return count
