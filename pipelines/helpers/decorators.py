@@ -12,7 +12,7 @@ def count_query_logging(function):
 def get_query_logging(function):
     "A function wrapped with this decorator returns objects."
     def wrapper(*args, **kwargs):
-        logging.info(f"Ingesting with: {function.__name__}")
+        logging.info(f"Getting data with: {function.__name__}")
         result = function(*args, **kwargs)
         logging.info(f"Objects retrieved: {len(result)}")
         return result
