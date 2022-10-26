@@ -86,3 +86,7 @@ class WalletCommunityAnalysis(Analysis):
             adjacency[j][i] += 1
         logging.info(f"Adjacency created with {len(adjacency)} nodes")
         return adjacency, wallet_mapping
+
+if __name__ == '__main__':
+    wca = WalletCommunityAnalysis()
+    wca.run()
