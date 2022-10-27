@@ -1,4 +1,5 @@
 import networkx as nx
+import numpy as np
 import logging
 from tqdm import tqdm
 import os
