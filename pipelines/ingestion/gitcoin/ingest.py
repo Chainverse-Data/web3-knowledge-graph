@@ -53,7 +53,7 @@ class GitCoinIngestor(Ingestor):
         for grant in self.scraper_data["grants"]:
             grant_round = None
             for el in grant["grant_type"]:
-                if "gr" in el["fields"]["name"] and "Round" in el["field"]["label"]:
+                if "gr" in el["fields"]["name"] and "Round" in el["fields"]["label"]:
                     grant_round = el["fields"]["name"]
             tmp = {
                 "id": grant["id"],
