@@ -69,7 +69,7 @@ class GitCoinIngestor(Ingestor):
             }
             grants_data["grants"].append(tmp)
             
-            for tag in grant["grant_tags"] + grant["grant_types"]:
+            for tag in grant["grant_tags"] + grant["grant_type"]:
                 tmp = {
                     "grantId": grant["id"],
                     "label": tag["fields"]["name"]
