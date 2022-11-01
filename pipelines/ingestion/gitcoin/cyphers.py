@@ -67,7 +67,7 @@ class GitcoinCyphers(Cypher):
             query = f"""
                     LOAD CSV WITH HEADERS FROM '{url}' AS grants
                     MATCH (grant:GitcoinGrant:Grant {{id: grants.id}})
-                    CALL apoc.create.addLabels(grant, [grants.grant_round])
+                    SET grant:grants.grant_round
                     RETURN count(grant)
             """
             count += self.query(query)[0].value()
