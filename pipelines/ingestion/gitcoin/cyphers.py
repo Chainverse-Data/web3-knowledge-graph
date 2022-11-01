@@ -41,6 +41,7 @@ class GitcoinCyphers(Cypher):
                         grant.types = grants.types,
                         grant.tags = grants.tags,
                         grant.url = grants.url,
+                        grant.grant_round = grants.grant_round,
                         grant.asOf = grants.asOf,
                         grant.amount = toFloat(grants.amount),
                         grant.amountDenomination = grants.amountDenomination,
@@ -61,16 +62,16 @@ class GitcoinCyphers(Cypher):
         return count
 
     @count_query_logging
-    def set_grant_round(self, urls):
+    def set_grant_round(self, grants):
         count = 0
-        for url in urls:
-            query = f"""
-                    LOAD CSV WITH HEADERS FROM '{url}' AS grants
-                    MATCH (grant:GitcoinGrant:Grant {{id: grants.id}})
-                    SET grant:grants.grant_round
-                    RETURN count(grant)
-            """
-            count += self.query(query)[0].value()
+        for grant in grants:
+            if (grant["grant_round"]):
+                query = f"""
+                        MATCH (grant:GitcoinGrant:Grant {{id: {grant["id"]}}})
+                        SET grant:{grant["grant_round"]}
+                """
+                self.query(query)
+                count += 1
         return count
 
     @count_query_logging

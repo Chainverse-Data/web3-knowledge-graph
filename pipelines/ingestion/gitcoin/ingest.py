@@ -22,9 +22,7 @@ class GitCoinIngestor(Ingestor):
 
         urls = self.s3.save_json_as_csv(grants_data["grants"], self.bucket_name, f"ingestor_grants_{self.asOf}")
         self.cyphers.create_or_merge_grants(urls)
-
-        urls = self.s3.save_json_as_csv([el for el in grants_data["grants"] if el["grant_round"]], self.bucket_name, f"ingestor_grants_rounds_{self.asOf}")
-        self.cyphers.set_grant_round(urls)
+        self.cyphers.set_grant_round(grants_data["grants"])
 
         urls = self.s3.save_json_as_csv(grants_data["grants_tags"], self.bucket_name, f"ingestor_grants_tags_{self.asOf}")
         self.cyphers.create_or_merge_grants_tags(urls)
