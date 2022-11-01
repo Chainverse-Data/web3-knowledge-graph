@@ -46,6 +46,7 @@ class GitCoinIngestor(Ingestor):
         logging.info("Processing grants data...")
         grants_data = {
             "grants": [],
+            "grants_tags": [],
             "team_members": [],
             "admin_wallets": [],
             "twitter_accounts": [],
