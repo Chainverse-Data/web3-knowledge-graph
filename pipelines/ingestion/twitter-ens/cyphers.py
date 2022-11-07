@@ -45,8 +45,7 @@ class TwitterEnsCyphers(Cypher):
         for url in urls:
             query = f"""
                     LOAD CSV WITH HEADERS FROM '{url}' AS twitter
-                    MATCH (a:Alias {{alias: toLower(twitter.ens)}})
-                    MATCH (t:Twitter {{handle: toLower(twitter.handle)}})
+                    MATCH (a:Alias {{name: toLower(twitter.ens)}}), (t:Twitter {{handle: toLower(twitter.handle)}})
                     MERGE (t)-[r:HAS_ALIAS]->(a)
                     return count(r)
             """

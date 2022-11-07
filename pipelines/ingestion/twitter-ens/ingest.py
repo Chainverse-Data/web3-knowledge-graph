@@ -16,6 +16,10 @@ class TwitterEnsIngestor(Ingestor):
     def ingest_ens(self):
         print("Ingesting data...")
 
+        df = pandas.DataFrame(self.scraper_data["accounts"])
+        df = df.loc[(df["ens"].apply(self.filtering) == True) & (df["handle"].apply(self.filtering) == True)]
+        self.scraper_data["accounts"] = df.to_dict("records")
+
         urls = self.s3.save_json_as_csv(
             self.scraper_data["accounts"], self.bucket_name, f"ingestor_accounts_{self.asOf}"
         )
@@ -25,6 +29,10 @@ class TwitterEnsIngestor(Ingestor):
 
         self.cyphers.link_twitter_alias(urls)  # link alias to twitter account
         # self.cyphers.link_wallet_alias(urls)  # link wallet to alias
+
+    @staticmethod
+    def filtering(x):
+        return x.isascii() and len(x) > 0
 
     def run(self):
         self.ingest_ens()
