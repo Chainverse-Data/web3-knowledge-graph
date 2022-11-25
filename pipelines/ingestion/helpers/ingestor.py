@@ -53,7 +53,6 @@ class Ingestor:
             self.start_date = datetime.strptime(self.start_date, "%Y-%m-%d")
         if self.end_date:
             self.end_date = datetime.strptime(self.end_date, "%Y-%m-%d")
-            
 
     def read_metadata(self):
         "Access the S3 bucket to read the metadata and returns a dictionary that corresponds to the saved JSON object"
@@ -64,6 +63,7 @@ class Ingestor:
 
     def save_metadata(self):
         "Saves the current metadata to S3"
+        self.metadata["last_date_ingested"] = f"{self.start_date.year}-{self.start_date.month}-{self.start_date.day}"
         self.s3.save_json(self.bucket_name, self.metadata_filename, self.metadata)
 
     def load_data(self):

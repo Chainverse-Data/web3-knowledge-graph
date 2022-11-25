@@ -7,7 +7,6 @@ class GitCoinIngestor(Ingestor):
     def __init__(self):
         self.cyphers = GitcoinCyphers()
         super().__init__("gitcoin")
-        self.metadata["last_date_ingested"] = self.start_date
 
     def is_valid_address(self, address):
         check = re.compile("^0x[a-fA-F0-9]{40}$")
