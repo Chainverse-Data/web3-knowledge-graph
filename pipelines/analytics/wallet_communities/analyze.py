@@ -5,6 +5,7 @@ from tqdm import tqdm
 import os
 from ..helpers import Analysis, Networks
 from .cyphers import WalletCommunityAnalyticsCyphers
+from datetime import datetime
 
 # Examples
 # os.environ["MATCH_QUERY"] = """MATCH (n:DaoHaus {daohausId: "0x016e79e9101a8eaa3e7f46d6d1c267819c09c939"})-[:CONTRIBUTOR]-(wallet:Wallet)"""
@@ -89,5 +90,9 @@ class WalletCommunityAnalysis(Analysis):
         return adjacency, wallet_mapping
 
 if __name__ == '__main__':
+    logging.info(f"Starting time: {datetime.now().isoformat()}")
     wca = WalletCommunityAnalysis()
     wca.run()
+    logging.info(f"End time: {datetime.now().isoformat()}")
+
+    
