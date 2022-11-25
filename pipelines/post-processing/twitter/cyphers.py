@@ -1,5 +1,6 @@
+from datetime import datetime
 from ...helpers import Cypher
-from ...helpers import count_query_logging
+from ...helpers import count_query_logging, get_query_logging
 
 class TwitterCyphers(Cypher):
     def __init__(self, database=None):
@@ -13,4 +14,81 @@ class TwitterCyphers(Cypher):
         RETURN count(n)
         """
         count = self.query(query)[0].value()
+        return count
+
+    @get_query_logging
+    def get_recent_twitter(self, cutoff: datetime):
+        month = cutoff.month
+        day = cutoff.day
+        year = cutoff.year
+
+        twitter_node_query = f"""
+                                MATCH (t:Twitter) WHERE t.createdDt >= datetime({{year: {year}, month: {month}, day: {day}}}) AND NOT t:Trash
+                                return t.handle
+                            """
+
+        x = self.query(twitter_node_query)
+        x = [y.get("t.handle") for y in x]
+        return x
+
+    @get_query_logging
+    def get_recent_empty_twitter(self, cutoff: datetime):
+        month = cutoff.month
+        day = cutoff.day
+        year = cutoff.year
+
+        twitter_node_query = f"""
+                                MATCH (t:Twitter) WHERE t.createdDt >= datetime({{year: {year}, month: {month}, day: {day}}}) AND NOT EXISTS(t.name) AND NOT t:Trash
+                                return t.handle
+                            """
+
+        x = self.query(twitter_node_query)
+        x = [y.get("t.handle") for y in x]
+        return x
+
+    @count_query_logging
+    def add_twitter_node_info(self, urls):
+        count = 0
+        for url in urls:
+            query = f"""
+                                    LOAD CSV WITH HEADERS FROM '{url}' AS twitter
+                                    MATCH (t:Twitter {{handle: twitter.handle}})
+                                    SET t.name = twitter.name,
+                                        t.bio = twitter.bio,
+                                        t.followerCount = toInteger(twitter.followerCount),
+                                        t.verified = toBoolean(twitter.verified),
+                                        t.userId = twitter.userId,
+                                        t.website = twitter.website,
+                                        t.profileImageUrl = twitter.profileImageUrl,
+                                        t.lastUpdatedDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
+                                    return count(t)"""
+
+            count += self.query(query)[0].value()
+        return count
+
+    @count_query_logging
+    def add_trash_labels(self, urls):
+        count = 0
+        for url in urls:
+            query = f"""
+                                    LOAD CSV WITH HEADERS FROM '{url}' AS twitter
+                                    MATCH (t:Twitter {{handle: twitter.handle}})
+                                    SET t:Trash
+                                    return count(t)"""
+
+            count += self.query(query)[0].value()
+        return count
+
+    @count_query_logging
+    def merge_twitter_ens_relationships(self, urls):
+        count = 0
+        for url in urls:
+            query = f"""
+                                    LOAD CSV WITH HEADERS FROM '{url}' AS twitter
+                                    MATCH (t:Twitter {{handle: twitter.handle}})
+                                    MATCH (a:Alias {{name: toLower(twitter.ens)}})
+                                    MERGE (t)-[r:HAS_ALIAS]->(a)
+                                    return count(r)"""
+
+            count += self.query(query)[0].value()
         return count
