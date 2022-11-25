@@ -11,7 +11,7 @@ import time
 class TwitterPostProcess(Processor):
     """This class reads from the Neo4J instance for Twitter nodes to call the Twitter API and retreive extra infos"""
     def __init__(self):
-        super().__init__()
+        super().__init__("twitter-processor")
         self.cyphers = TwitterCyphers()
         self.cutoff = datetime.now() - timedelta(days=20)
 
