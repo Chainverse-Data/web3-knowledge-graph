@@ -6,6 +6,8 @@ from ..helpers import Scraper
 import logging
 import pandas as pd
 import web3
+import re
+from collections import Counter
 
 class MirrorScraper(Scraper):
     def __init__(self):
@@ -64,13 +66,14 @@ class MirrorScraper(Scraper):
     def reconcile_NFTs(self):
         arweave_NFTs = set([el["address"] for el in self.data["arweave_nfts"]])
         factory_NFTs = set([el["address"] for el in self.data["factory_NFTs"]])
-        articles = set([el["original-content-digest"] for el in self.data["arweave_articles"]])
+        articles = set([el["original_content_digest"] for el in self.data["arweave_articles"]])
         contracts_to_check = factory_NFTs.difference(arweave_NFTs)
         url = self.etherescan_ABI_API_url.format(self.writing_editions_address)
         abi = self.get_request(url, decode=False, json=True)["result"]
         missing_NFTs = []
         missing_articles = []
-        for address in contracts_to_check:
+        logging.info("Reconciling NFTs and articles")
+        for address in tqdm(contracts_to_check):
             contract = self.w3.eth.contract(address=address, abi=abi)
             mirror_url = contract.functions.description().call()
             funding_recipient = contract.functions.fundingRecipient().call()
@@ -81,7 +84,7 @@ class MirrorScraper(Scraper):
             digest = req.url.split("/")[-1]
 
             nft = {
-                "original-content-digest": digest,
+                "original_content_digest": digest,
                 "chain_id": 10,
                 "funding_recipient": funding_recipient,
                 "owner": owner,
@@ -100,8 +103,9 @@ class MirrorScraper(Scraper):
                 else:
                     ens = self.reverse_ens[data["authorship"]["contributor"]]
                 article = {
-                    "original-content-digest": digest,
-                    "current-content-digest": digest,
+                    "original_content_digest": digest,
+                    "current_content_digest": digest,
+                    "arweaveTx": arweave_hash,
                     "body": data["content"]["body"],
                     "title": data["content"]["title"],
                     "timestamp": data["content"]["timestamp"],
@@ -111,7 +115,7 @@ class MirrorScraper(Scraper):
 
                 missing_articles.append(article)
         self.data["NFTs"] = self.data["arweave_nfts"] + missing_NFTs
-        self.data["Articles"] = self.data["arweave_articles"] + missing_articles
+        self.data["articles"] = self.data["arweave_articles"] + missing_articles
 
     def get_mirror_articles(self):
         logging.info(f"Getting data from blocks: {self.start_block} to {self.end_block}")
@@ -128,7 +132,7 @@ class MirrorScraper(Scraper):
                 "transaction_id": transaction["node"]["id"],
                 "author": transaction["tags"][2]["value"],
                 "content-digest": transaction["tags"][3]["value"],
-                "original-content-digest": transaction["tags"][4]["value"],
+                "original_content_digest": transaction["tags"][4]["value"],
                 "block": transaction["block"]["height"],
                 "timestamp": transaction["block"]["timestamp"],
             }
@@ -147,13 +151,14 @@ class MirrorScraper(Scraper):
             else:
                 self.reverse_ens[author] = ""
 
-        filtered_transactions = transaction_df.sort_values("block").groupby("original-content-digest", as_index=False).head(1)
+        filtered_transactions = transaction_df.sort_values("block").groupby("original_content_digest", as_index=False).head(1)
         logging.info(f"Getting all the articles content")
         for transaction in tqdm(filtered_transactions.to_dict()):
             data = self.get_article(transaction["transaction_id"])
             article = {
-                "original-content-digest": transaction["original-content-digest"],
-                "current-content-digest": transaction["content-digest"],
+                "original_content_digest": transaction["original-content-digest"],
+                "current_content_digest": transaction["content-digest"],
+                "arweaveTx": transaction["transaction_id"],
                 "body": data["content"]["body"],
                 "title": data["content"]["title"],
                 "timestamp": data["content"]["timestamp"],
@@ -163,7 +168,7 @@ class MirrorScraper(Scraper):
             articles_cleaned.append(article)
             if "wnft" in data:
                 nft = {
-                    "original-content-digest": transaction["original-content-digest"],
+                    "original_content_digest": transaction["original-content-digest"],
                     "chain_id": data["chainId"],
                     "funding_recipient": data["fundingRecipient"],
                     "owner": data["owner"],
@@ -178,10 +183,27 @@ class MirrorScraper(Scraper):
         self.data["arweave_articles"] = articles_cleaned
         self.data["arweave_nfts"] = NFTs_cleaned
 
+    def get_twitter_accounts(self):
+        twitter_accounts = []
+        for article in tqdm(self.data["articles"]):
+            twitter_account_list = re.findall("twitter.com\/[\w]+", article["body"])
+            accounts = [account.split("/")[-1] for account in twitter_account_list]
+            counter = Counter(accounts)
+            for account in zip(counter.keys(), counter.values()):
+
+                tmp = {
+                    "original_content_digest": article["original_content_digest"],
+                    "twitter_handle": account[0],
+                    "mention_count": account[1]
+                } 
+                twitter_accounts.append(tmp)
+        self.data["twitter_accounts"] = twitter_accounts
+
     def run(self):
         self.get_mirror_articles()
         self.get_mirror_NFTs()
         self.reconcile_NFTs()
+        self.get_twitter_accounts()
         self.save_data()
         self.metadata["start_block"] = self.end_block
         self.metadata["optimism_start_block"] = self.optimism_start_block

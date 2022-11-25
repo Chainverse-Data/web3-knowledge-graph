@@ -58,3 +58,7 @@ class Indexes(Cypher):
     def gitcoin_bounties(self):
         query = """CREATE INDEX UniqueBountyID IF NOT EXISTS FOR (n:GitcoinBounty) ON (n.id)"""
         self.query(query)
+
+    def mirror_articles(self):
+        query = """CREATE INDEX UniqueArticleID IF NOT EXISTS FOR (a:Mirror) ON a.originalContentDigest"""
+        self.query(query)

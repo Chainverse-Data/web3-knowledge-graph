@@ -59,3 +59,7 @@ class Constraints(Cypher):
     def gitcoin_bounties(self):
         query = """CREATE CONSTRAINT UniqueId IF NOT EXISTS FOR (bounty:GitcoinBounty) REQUIRE bounty.id IS UNIQUE"""
         self.query(query)
+
+    def mirror_articles(self):
+        query = """CREATE CONSTRAINT UniqueArticleID IF NOT EXISTS FOR (a:Mirror) REQUIRE a.originalContentDigest IS UNIQUE"""
+        self.query(query)
