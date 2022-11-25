@@ -12,7 +12,7 @@ class TwitterPostProcess(Processor):
     """This class reads from the Neo4J instance for Twitter nodes to call the Twitter API and retreive extra infos"""
     def __init__(self):
         self.cyphers = TwitterCyphers()
-        super().__init__("twitter-processor")
+        super().__init__("twitter")
         self.cutoff = datetime.now() - timedelta(days=20)
 
         self.batch_size = 100

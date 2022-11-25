@@ -43,21 +43,25 @@ class Scraper:
 
     # This section handles requests and networking.
 
-    def get_request(self, url, params=None, headers=None, counter=0):
+    def get_request(self, url, params=None, headers=None, allow_redirects=True, decode=True, json=False, counter=0):
         """This makes a GET request to a url and return the data.
         It can take params and headers as parameters following python's request library.
         The method returns the raw request content, you must then parse the content with the correct parser."""
         time.sleep(counter * 10)
         if counter > 10:
             return None
-        r = requests.get(url, params=params, headers=headers)
+        r = requests.get(url, params=params, headers=headers,allow_redirects=allow_redirects)
         if r.status_code != 200:
             logging.error(f"Status code not 200: {r.status_code} Retrying in {counter*10}s (counter = {counter})...")
-            return self.get_request(url, params=params, headers=headers, counter=counter + 1)
+            return self.get_request(url, params=params, headers=headers, allow_redirects=allow_redirects, counter=counter + 1)
         if "403 Forbidden" in r.content.decode("UTF-8"):
             logging.error(f"Status code not 200: {r.status_code} Retrying in {counter*10}s (counter = {counter})...")
-            return self.get_request(url, params=params, headers=headers, counter=counter + 1)
-        return r.content.decode("UTF-8")
+            return self.get_request(url, params=params, headers=headers, allow_redirects=allow_redirects, counter=counter + 1)
+        if decode:
+            return r.content.decode("UTF-8")
+        if json:
+            return r.json()
+        return r
 
     def post_request(self, url, data=None, json=None, headers=None, counter=0):
         time.sleep(counter * 10)
