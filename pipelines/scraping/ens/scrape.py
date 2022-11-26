@@ -20,7 +20,7 @@ class EnsScraper(Scraper):
     def get_all_ens(self):
         logging.info("Getting all ENS...")
         self.data["ens"] = []
-        with tqdm_joblib(tqdm.tqdm(desc="Getting ENS Data", total=len(self.data["owner_addresses"]))) as progress_bar:
+        with tqdm_joblib(tqdm.tqdm(desc="Getting ENS Data", total=len(self.data["owner_addresses"])), disabled=self.isAirflow != False) as progress_bar:
             ens_list = joblib.Parallel(n_jobs=multiprocessing.cpu_count() - 1, backend="threading")(
                 joblib.delayed(self.get_ens_info)(address) for address in self.data["owner_addresses"]
             )
@@ -28,7 +28,8 @@ class EnsScraper(Scraper):
         self.data["ens"] = [item for sublist in ens_list for item in sublist]
 
         with tqdm_joblib(
-            tqdm.tqdm(desc="Getting Primary Names", total=len(self.data["owner_addresses"]))
+            tqdm.tqdm(desc="Getting Primary Names", total=len(
+                self.data["owner_addresses"]), disabled=self.isAirflow != False)
         ) as progress_bar:
             primary_list = joblib.Parallel(n_jobs=multiprocessing.cpu_count() - 1, backend="threading")(
                 joblib.delayed(self.get_primary_info)(address) for address in self.data["owner_addresses"]

@@ -31,13 +31,13 @@ class GitCoinScraper(Scraper):
     def get_all_grants(self):
         logging.info("Getting the list of all the grants from GitCoin")
         self.data["grants"] = []
-        with tqdm.tqdm(total=self.gitcoin_api_limit, position=0) as pbar:
+        with tqdm.tqdm(total=self.gitcoin_api_limit, position=0, disabled=self.isAirflow != False) as pbar:
             while True:
                 content = self.get_request(self.get_all_grants_url.format(self.gitcoin_api_limit, self.last_grant_offset))
                 data = json.loads(content)
                 if len(data) == 0:
                     break
-                for grant in tqdm.tqdm(data, position= 1):
+                for grant in tqdm.tqdm(data, position=1, disabled=self.isAirflow != False):
                     grant_data = self.get_request(self.get_one_grant_url.format(grant["id"]))
                     try:
                         grant_data = json.loads(grant_data)
@@ -71,7 +71,7 @@ class GitCoinScraper(Scraper):
                       ]
         }
         self.data["donations"] = []
-        with tqdm.tqdm(total=self.blocks_limit) as pbar:
+        with tqdm.tqdm(total=self.blocks_limit, disabled=self.isAirflow!=False) as pbar:
             while True:
                 content = self.post_request(self.alchemy_api_url, json=post_data, headers=headers)
                 content = json.loads(content)
@@ -101,7 +101,7 @@ class GitCoinScraper(Scraper):
     def get_all_bounties(self):
         logging.info("Getting the list of all the bounties from GitCoin")
         self.data["bounties"] = []
-        with tqdm.tqdm(total=self.gitcoin_api_limit) as pbar:
+        with tqdm.tqdm(total=self.gitcoin_api_limit, disabled=self.isAirflow != False) as pbar:
             while True:
                 content = self.get_request(self.get_all_bounties_url.format(self.gitcoin_api_limit, self.last_bounty_offset))
                 data = json.loads(content)
@@ -121,7 +121,7 @@ class GitCoinScraper(Scraper):
         for donation in self.data["donations"]:
             blocks[donation["blockNumber"]] = None
         
-        for block in tqdm.tqdm(blocks):
+        for block in tqdm.tqdm(blocks, disabled=self.isAirflow!=False):
             headers = {"Content-Type": "application/json"}
             post_data = {
                 "jsonrpc":"2.0", 

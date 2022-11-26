@@ -37,6 +37,8 @@ class Scraper:
         self.metadata_filename = "scraper_metadata.json"
         self.metadata = self.read_metadata()
 
+        self.isAirflow = os.environ.get("IS_AIRFLOW", False)
+
     def run(self):
         "Main function to be called. Every scrapper must implement its own run function !"
         raise NotImplementedError("ERROR: the run function has not been implemented!")

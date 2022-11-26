@@ -73,7 +73,7 @@ class MirrorScraper(Scraper):
         missing_NFTs = []
         missing_articles = []
         logging.info("Reconciling NFTs and articles")
-        for address in tqdm(contracts_to_check):
+        for address in tqdm(contracts_to_check, disabled=self.isAirflow != False):
             contract = self.w3.eth.contract(address=address, abi=abi)
             mirror_url = contract.functions.description().call()
             funding_recipient = contract.functions.fundingRecipient().call()
@@ -127,7 +127,7 @@ class MirrorScraper(Scraper):
         NFTs_cleaned = []
         done = set()
         logging.info(f"Getting all new transactions")
-        for transaction in tqdm(transactions):
+        for transaction in tqdm(transactions, disabled=self.isAirflow != False):
             tmp = {
                 "transaction_id": transaction["node"]["id"],
                 "author": transaction["tags"][2]["value"],
@@ -144,7 +144,7 @@ class MirrorScraper(Scraper):
 
         logging.info(f"Reverse authors lookup")
         unique_authors = transaction_df["author"].unique()
-        for author in tqdm(unique_authors):
+        for author in tqdm(unique_authors, disabled=self.isAirflow != False):
             ens = self.ENSsearch(author)
             if ens:
                 self.reverse_ens[author] = ens
@@ -153,7 +153,7 @@ class MirrorScraper(Scraper):
 
         filtered_transactions = transaction_df.sort_values("block").groupby("original_content_digest", as_index=False).head(1)
         logging.info(f"Getting all the articles content")
-        for transaction in tqdm(filtered_transactions.to_dict()):
+        for transaction in tqdm(filtered_transactions.to_dict(), disabled=self.isAirflow != False):
             data = self.get_article(transaction["transaction_id"])
             article = {
                 "original_content_digest": transaction["original-content-digest"],
@@ -185,7 +185,7 @@ class MirrorScraper(Scraper):
 
     def get_twitter_accounts(self):
         twitter_accounts = []
-        for article in tqdm(self.data["articles"]):
+        for article in tqdm(self.data["articles"], disabled=self.isAirflow != False):
             twitter_account_list = re.findall("twitter.com\/[\w]+", article["body"])
             accounts = [account.split("/")[-1] for account in twitter_account_list]
             counter = Counter(accounts)
