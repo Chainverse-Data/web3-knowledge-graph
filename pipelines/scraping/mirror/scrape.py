@@ -190,7 +190,6 @@ class MirrorScraper(Scraper):
             accounts = [account.split("/")[-1] for account in twitter_account_list]
             counter = Counter(accounts)
             for account in zip(counter.keys(), counter.values()):
-
                 tmp = {
                     "original_content_digest": article["original_content_digest"],
                     "twitter_handle": account[0],

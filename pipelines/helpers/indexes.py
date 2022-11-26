@@ -11,6 +11,10 @@ class Indexes(Cypher):
     def create_indexes(self):
         pass
 
+    def contracts(self):
+        query = """CREATE INDEX UniqueAddress IF NOT EXISTS FOR (n:Contract) ON (n.address)"""
+        self.query(query)
+
     def proposals(self):
         query = """CREATE INDEX UniquePropID IF NOT EXISTS FOR (n:Proposal) ON (n.snapshotId)"""
         self.query(query)

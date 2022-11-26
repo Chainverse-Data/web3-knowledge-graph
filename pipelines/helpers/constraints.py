@@ -10,6 +10,10 @@ class Constraints(Cypher):
 
     def create_indexes(self):
         pass
+
+    def contracts(self):
+        query = """CREATE CONSTRAINT UniqueAddress IF NOT EXISTS FOR (d:Contract) REQUIRE d.address IS UNIQUE"""
+        self.query(query)
     
     def twitter(self):
         query = """CREATE CONSTRAINT UniqueHandle IF NOT EXISTS FOR (d:Twitter) REQUIRE d.handle IS UNIQUE"""
