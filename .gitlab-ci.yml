@@ -9,6 +9,10 @@
 # This template uses one generic job with conditional builds
 # for the default branch and all other (MR) branches.
 
+stages:
+  - build
+  - deploy
+
 docker-build:
   # Use the official docker image.
   image: docker:latest
@@ -30,6 +34,7 @@ docker-build:
       fi
     - docker build --pull -t "$CI_REGISTRY_IMAGE${tag}" .
     - docker push "$CI_REGISTRY_IMAGE${tag}"
+    - docker run -e ALCHEMY_API_KEY=$ALCHEMY_API_KEY -c "$CI_REGISTRY_IMAGE${tag}" python3 -m pipelines.helpers.upload_dags_to_s3
   # Run this job in a branch where a Dockerfile exists
   rules:
     - if: $CI_COMMIT_BRANCH
