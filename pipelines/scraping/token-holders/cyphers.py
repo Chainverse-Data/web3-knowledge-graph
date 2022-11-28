@@ -11,5 +11,5 @@ class TokenHoldersCypher(Cypher):
             MATCH wallet:Wallet
             RETURN wallet.address
         """
-        result = self.query()
+        result = self.query(query)
         return result
