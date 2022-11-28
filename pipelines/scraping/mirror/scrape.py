@@ -7,9 +7,8 @@ import logging
 import pandas as pd
 import web3
 import re
-import time
 from collections import Counter
-DEBUG = True
+DEBUG = False
 
 class MirrorScraper(Scraper):
     def __init__(self):
