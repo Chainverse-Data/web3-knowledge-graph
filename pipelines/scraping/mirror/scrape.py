@@ -1,204 +1,250 @@
 import requests
-import argparse
-import boto3
-from dotenv import load_dotenv
-from datetime import datetime
 import os
-import json
 from tqdm import tqdm
-from joblib import Parallel, delayed
-from pathlib import Path
-import sys
+from .helpers.arweave import MirrorScraperHelper
+from ..helpers import Scraper
+import logging
+import pandas as pd
+import web3
+import re
+from collections import Counter
+DEBUG = False
 
-sys.path.append(str(Path(__file__).resolve().parents[2]))
-from scraping.mirror.helpers.arweave import getArweaveTxs
-from scraping.helpers.utils import tqdm_joblib
+class MirrorScraper(Scraper):
+    def __init__(self):
+        super().__init__("mirror", allow_override=DEBUG)
+        self.optimism_start_block = self.metadata.get("optimism_start_block", 8557803)
+        content = self.get_request("https://api-optimistic.etherscan.io/api?module=proxy&action=eth_blockNumber&apikey=" + os.environ.get("OPTIMISTIC_ETHERSCAN_API_KEY", ""), decode=False, json=True)
+        self.optimism_end_block = int(content["result"], 16)
+        if DEBUG:
+            self.optimism_start_block = 8557803
+            self.optimism_end_block = 8567803
+        self.start_block = self.metadata.get("start_block", 595567)
+        self.end_block = self.get_request("https://arweave.net/info", decode=False, json=True)["blocks"]
+        if DEBUG:
+            self.start_block = 595567
+            self.end_block = 596567
+        self.arweave_url = "https://arweave.net/{}"
+        self.arweaveHelpers = MirrorScraperHelper()
+        self.ensSearchURL = "https://eth-mainnet.g.alchemy.com/nft/v2/{}/getNFTs?owner={}&contractAddresses[]=0x57f1887a8BF19b14fC0dF6Fd9B2acc9Af147eA85&withMetadata=true"
+        self.reverse_ens = {}
+        self.mirror_NFT_factory_address = "0x302f746eE2fDC10DDff63188f71639094717a766"
+        self.writing_editions_address = "0xfd8077F228E5CD9dED1b558Ac21F98ECF18f1a28"
+        self.etherescan_API_url = "https://api-optimistic.etherscan.io/api?module=account&action=txlistinternal&address={}&startblock={}&endblock={}&page={}&offset={}&sort=asc&apikey=" + os.environ.get("OPTIMISTIC_ETHERSCAN_API_KEY", "")
+        self.etherescan_ABI_API_url = "https://api-optimistic.etherscan.io/api?module=contract&action=getabi&address={}&apikey=" + os.environ.get("OPTIMISTIC_ETHERSCAN_API_KEY", "")
+        self.alchemy_optimism_rpc = f"https://opt-mainnet.g.alchemy.com/v2/{os.environ['ALCHEMY_API_KEY']}"
+        self.w3 = web3.Web3(web3.HTTPProvider(self.alchemy_optimism_rpc))
 
-load_dotenv()
-s3 = boto3.resource("s3")
-client = boto3.client("s3")
-BUCKET = "chainverse"
+    def ENSsearch(self, address):
+        url = self.ensSearchURL.format(os.environ["ALCHEMY_API_KEY"], address)
+        content = self.get_request(url, decode=False, json=True)
+        if len(content["ownedNfts"]) > 0:
+            return content["ownedNfts"][0]["title"]
+        return None
 
+    def get_article(self, arweaveHash):
+        url = self.arweave_url.format(arweaveHash)
+        print(url)
+        content = self.get_request(url, decode=False, json=True)
+        return content
 
-def exportData(all_txs, load=False):
-    final = []
-    failed = []
+    def get_mirror_NFTs(self):
+        NFT_addresses = []
+        logging.info("Getting all NFTs from Mirror Factory")
+        page = 1
+        offset = 10000           
+        while page:
+            logging.info(f"Scrapping ... currently got {len(NFT_addresses)} NFTs from Optimism...")
+            url = self.etherescan_API_url.format(self.mirror_NFT_factory_address, self.optimism_start_block, self.optimism_end_block, page, offset)
+            print(url)
+            transactions = self.get_request(url, decode=False, json=True)
+            print(transactions)
+            if transactions["status"] == '1':
+                for transaction in transactions["result"]:
+                    if transaction["type"] in ["create2", "create"]:
+                        tmp = {
+                            "address": transaction["contractAddress"],
+                            "block": transaction["blockNumber"],
+                            "timestamp": transaction["timeStamp"],
+                            "hash": transaction["hash"]
+                        }
+                        NFT_addresses.append(tmp)
+                page += 1
+            else:
+                if transactions["message"] == "No transactions found":
+                    page = None
+        self.data["factory_NFTs"] = NFT_addresses
 
-    now = datetime.now()
-    if load:
-        for tx in all_txs:
+    def reconcile_NFTs(self):
+        arweave_NFTs = set([el["address"] for el in self.data["arweave_nfts"]])
+        factory_NFTs = set([el["address"] for el in self.data["factory_NFTs"]])
+        articles = set([el["original_content_digest"] for el in self.data["arweave_articles"]])
+        contracts_to_check = factory_NFTs.difference(arweave_NFTs)
+        url = self.etherescan_ABI_API_url.format(self.writing_editions_address)
+        abi = self.get_request(url, decode=False, json=True)["result"]
+        missing_NFTs = []
+        missing_articles = []
+        logging.info("Reconciling NFTs and articles")
+        for address in tqdm(contracts_to_check):
+            logging.info(f"Getting informations from NFT at: {address}")
             try:
-                s3Object = s3.Object(BUCKET, f"mirror/data/{tx}.json")
-                body = json.loads(json.loads(s3Object.get()["Body"].read().decode("utf-8")))
-                body["id"] = tx
-                final.append(body)
-            except:
-                failed.append(tx.split("/")[-1].split(".")[0])
-    else:
-        for tx in all_txs:
-            body = json.loads(tx[0])
-            body["id"] = tx[1]
-            final.append(body)
+                contract = self.w3.eth.contract(address=self.w3.toChecksumAddress(address), abi=abi)
+                mirror_url = contract.functions.description().call()
+                print(mirror_url)
+                funding_recipient = contract.functions.fundingRecipient().call()
+                print(funding_recipient)
+                supply = contract.functions.limit().call()
+                print(supply)
+                owner = contract.functions.owner().call()
+                print(owner)
+                symbol = contract.functions.symbol().call()
+                print(symbol)
+                req = requests.get(mirror_url)
+                print(req.url)
+                digest = req.url.split("/")[-1]
 
-    def generate_data(row):
-        try:
-            if row["authorship"]:
-                newRow = {
-                    "contributor": row["authorship"].get("contributor", ""),
-                    "publication": row["content"].get("publication", ""),
-                    "title": row["content"].get("title", ""),
-                    "body": row["content"].get("body", ""),
-                    "timestamp": row["content"].get("timestamp", 0),
-                    "transaction": row["id"],
+                nft = {
+                    "original_content_digest": digest,
+                    "chain_id": 10,
+                    "funding_recipient": funding_recipient,
+                    "owner": owner,
+                    "address": address,
+                    "supply": supply,
+                    "symbol": symbol,
                 }
-                return newRow
-        except:
-            print(row)
-            return ""
+                print(nft)
+                missing_NFTs.append(nft)
 
-    final = [generate_data(row) for row in final]
-    final = [row for row in final if row != ""]
+                if digest not in articles and digest != address:
+                    arweave_hash = contract.functions.contentURI().call()
+                    print("hash", arweave_hash)
+                    if (arweave_hash.strip()):
+                        data = self.get_article(arweave_hash)
+                        print("data", data)
+                        if data["authorship"]["contributor"] not in self.reverse_ens:
+                            ens = self.ENSsearch(data["authorship"]["contributor"])
+                        else:
+                            ens = self.reverse_ens[data["authorship"]["contributor"]]
+                        article = {
+                            "original_content_digest": digest,
+                            "current_content_digest": digest,
+                            "arweaveTx": arweave_hash,
+                            "body": data["content"]["body"],
+                            "title": data["content"]["title"],
+                            "timestamp": data["content"]["timestamp"],
+                            "author": data["authorship"]["contributor"],
+                            "ens": ens,
+                        }
 
-    s3Object = s3.Object(BUCKET, f"mirror/final/{now.strftime('%m-%d-%Y')}/data.json")
-    s3Object.put(Body=json.dumps(final))
-
-    s3Object = s3.Object(BUCKET, f"mirror/final/{now.strftime('%m-%d-%Y')}/failed.json")
-    s3Object.put(Body=json.dumps(failed))
-
-    print("Exported {} transactions".format(len(final)))
-    print("Failed to export {} transactions".format(len(failed)))
-
-    return final
-
-
-def exportArticles(all_articles, load=False):
-    final = []
-    failed = []
-
-    now = datetime.now()
-    if load:
-        for article in all_articles:
-            try:
-                s3Object = s3.Object(BUCKET, f"mirror/articles/{article}.json")
-                body = json.loads(s3Object.get()["Body"].read().decode("utf-8"))
-                final.append(body)
+                        missing_articles.append(article)
             except:
-                failed.append(tx.split("/")[-1].split(".")[0])
+                logging.warning(f"Contract: {address} is probably not a Mirror NFT")
+        self.data["NFTs"] = self.data["arweave_nfts"] + missing_NFTs
+        self.data["articles"] = self.data["arweave_articles"] + missing_articles
 
-    else:
-        for article in all_articles:
-            final.append(article)
+    def get_mirror_articles(self):
+        logging.info(f"Getting data from blocks: {self.start_block} to {self.end_block}")
 
-    final = [x for y in final for x in y]
+        transactions = self.arweaveHelpers.getArweaveTxs(self.start_block, self.end_block, 400)
 
-    s3Object = s3.Object(BUCKET, f"mirror/final/{now.strftime('%m-%d-%Y')}/articles.json")
-    s3Object.put(Body=json.dumps(final))
+        transactions_cleaned = []
+        articles_cleaned = []
+        NFTs_cleaned = []
+        done = set()
+        logging.info(f"Getting all new transactions")
+        for transaction in tqdm(transactions):
+            print(transaction)
+            author, content_digest, original_content_digest = None, None, None
+            for tag in transaction["node"]["tags"]:
+                if tag["name"] == "Contributor":
+                    author = tag["value"]
+                if tag["name"] == "Content-Digest":
+                    content_digest = tag["value"]
+                if tag["name"] == "Original-Content-Digest":
+                    original_content_digest = tag["value"]
+            if not original_content_digest:
+                original_content_digest = content_digest
+            tmp = {
+                "transaction_id": transaction["node"]["id"],
+                "author": author,
+                "content_digest": content_digest,
+                "original_content_digest": original_content_digest,
+                "block": transaction["node"]["block"]["height"],
+                "timestamp": transaction["node"]["block"]["timestamp"],
+            }
+            if tmp["transaction_id"] not in done:
+                transactions_cleaned.append(tmp)
+                done.add(tmp["transaction_id"]) 
+        transaction_df = pd.DataFrame.from_dict(transactions_cleaned)
+        logging.info(f"Retrieved {len(transaction_df)} transactions")
 
-    print("Exported {} articles".format(len(final)))
+        logging.info(f"Reverse authors lookup")
+        unique_authors = transaction_df["author"].unique()
+        for author in tqdm(unique_authors):
+            ens = self.ENSsearch(author)
+            if ens:
+                self.reverse_ens[author] = ens
+            else:
+                self.reverse_ens[author] = ""
 
-    return final
+        filtered_transactions = transaction_df.sort_values("block").groupby("original_content_digest", as_index=False).head(1)
+        logging.info(f"Getting all the articles content")
+        for transaction in tqdm(filtered_transactions.to_dict('records')):
+            print(transaction)
+            data = self.get_article(transaction["transaction_id"])
+            article = {
+                "original_content_digest": transaction["original_content_digest"],
+                "current_content_digest": transaction["content_digest"],
+                "arweaveTx": transaction["transaction_id"],
+                "body": data["content"]["body"],
+                "title": data["content"]["title"],
+                "timestamp": data["content"]["timestamp"],
+                "author": transaction["author"],
+                "ens": self.reverse_ens[transaction["author"]],
+            }
+            articles_cleaned.append(article)
+            if "wnft" in data:
+                nft = {
+                    "original_content_digest": transaction["original-content-digest"],
+                    "chain_id": data["chainId"],
+                    "funding_recipient": data["fundingRecipient"],
+                    "owner": data["owner"],
+                    "address": data["proxyAddress"],
+                    "supply": data["supply"],
+                    "symbol": data["symbol"]
+                }
+                NFTs_cleaned.append(nft)
+        logging.info(f"Retrieved {len(articles_cleaned)} articles")
 
+        self.data["arweave_transactions"] = transactions_cleaned
+        self.data["arweave_articles"] = articles_cleaned
+        self.data["arweave_nfts"] = NFTs_cleaned
 
-def reqData(i):
-    r = requests.get(f"https://arweave.net/{i}", allow_redirects=True)
-    try:
-        body = r.text
-        return body
+    def get_twitter_accounts(self):
+        twitter_accounts = []
+        for article in tqdm(self.data["articles"]):
+            twitter_account_list = re.findall("twitter.com\/[\w]+", article["body"])
+            accounts = [account.split("/")[-1] for account in twitter_account_list]
+            counter = Counter(accounts)
+            for account in zip(counter.keys(), counter.values()):
+                tmp = {
+                    "original_content_digest": article["original_content_digest"],
+                    "twitter_handle": account[0],
+                    "mention_count": account[1]
+                } 
+                twitter_accounts.append(tmp)
+        self.data["twitter_accounts"] = twitter_accounts
 
-    except:
-        print("Error getting data")
-        return ""
+    def run(self):
+        self.get_mirror_articles()
+        self.get_mirror_NFTs()
+        self.reconcile_NFTs()
+        self.get_twitter_accounts()
+        self.save_data()
+        self.metadata["start_block"] = self.end_block
+        self.metadata["optimism_start_block"] = self.optimism_start_block
+        self.save_metadata()
 
-
-def fetchData(item):
-    x = reqData(item[1])
-    if x != "":
-        return (x, item[1])
-
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-s", "--start", help="Start block", type=int, default=0)
-    parser.add_argument("-e", "--end", help="End block", type=int, default=0)
-    parser.add_argument("-a", "--all", help="Export all data", action="store_true")
-
-    args = parser.parse_args()
-
-    if args.end == 0:
-        r = requests.get("https://arweave.net/info")
-        x = json.loads(r.text)
-        end_block = x["blocks"]
-    else:
-        end_block = args.end
-
-    if args.start != 0:
-        start_block = args.start
-    else:
-        os.chdir(os.path.abspath(os.path.dirname(__file__)))
-        if Path("start_block.txt").is_file():
-            with open("start_block.txt", "r") as f:
-                start_block = int(f.read())
-        else:
-            raise Exception("No start block file found")
-
-    print(f"Getting data from {start_block} to {end_block}")
-
-    tickets = getArweaveTxs(start_block, end_block, 400)
-
-    all_ids = set()
-    cleanedTickets = []
-    for ticket in tickets:
-        transaction_id = ticket["node"]["id"]
-        if transaction_id in all_ids:
-            continue
-        all_ids.add(transaction_id)
-        contributer = ticket["node"]["tags"][2]["value"]
-
-        cleanedTickets.append([contributer, transaction_id])
-
-    uniqCleanedTickets = cleanedTickets
-    print(f"{len(uniqCleanedTickets)} unique tickets found")
-
-    with tqdm_joblib(tqdm(desc="Fetching Data", total=len(uniqCleanedTickets))) as progress_bar:
-        fetched_data = Parallel(n_jobs=-1)(delayed(fetchData)(item) for item in uniqCleanedTickets)
-    print(f"{len(fetched_data)} data fetched")
-
-    # fetched_data = fetchData(uniqCleanedTickets)
-    for entry in fetched_data:
-        s3Object = s3.Object(BUCKET, "mirror/data/{}.json".format(entry[1]))
-        s3Object.put(Body=json.dumps(entry[0]))
-    print("Data uploaded to S3")
-
-    # with tqdm_joblib(tqdm(desc="Fetching Articles", total=len(fetched_data))) as progress_bar:
-    #     fetched_articles = Parallel(n_jobs=-1)(delayed(parse_items)(entry) for entry in fetched_data)
-    # fetched_articles = [x for x in fetched_articles if len(x) > 0]
-    # print(f"{len([x for y in fetched_articles for x in y])} articles fetched")
-
-    # for entry in fetched_articles:
-    #     s3Object = s3.Object(BUCKET, "mirror/articles/{}.json".format(entry[0]["transaction"]))
-    #     s3Object.put(Body=json.dumps(entry[0]))
-    # print("Articles uploaded to S3")
-
-    all_txs = [entry[1] for entry in fetched_data]
-
-    if args.all:
-        all_txs = []
-        paginator = client.get_paginator("list_objects_v2")
-        result = paginator.paginate(Bucket=BUCKET, Prefix="mirror/data/")
-        for page in result:
-            for key in page["Contents"]:
-                keyString = key["Key"]
-                tx = keyString.split("/")[-1].split(".")[0]
-                all_txs.append(tx)
-
-        exportData(all_txs, True)
-        # exportArticles(all_txs, True)
-    else:
-        exportData(fetched_data, False)
-        # exportArticles(fetched_articles, False)
-
-    # update end block for next run
-    if args.end == 0:
-        with open("start_block.txt", "w") as f:
-            f.write(str(end_block))
-
+if __name__ == '__main__':
+    scrapper = MirrorScraper()
+    scrapper.run()

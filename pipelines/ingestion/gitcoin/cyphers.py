@@ -41,6 +41,7 @@ class GitcoinCyphers(Cypher):
                         grant.types = grants.types,
                         grant.tags = grants.tags,
                         grant.url = grants.url,
+                        grant.grant_round = grants.grant_round,
                         grant.asOf = grants.asOf,
                         grant.amount = toFloat(grants.amount),
                         grant.amountDenomination = grants.amountDenomination,
@@ -57,6 +58,58 @@ class GitcoinCyphers(Cypher):
                         grant.ingestedBy = "{self.UPDATED_ID}"
                     return count(grant)
             """
+            count += self.query(query)[0].value()
+        return count
+
+    @count_query_logging
+    def set_grant_round(self, grants):
+        count = 0
+        for grant in grants:
+            if (grant["grant_round"]):
+                query = f"""
+                        MATCH (grant:GitcoinGrant:Grant {{id: {grant["id"]}}})
+                        SET grant:{grant["grant_round"]}
+                """
+                self.query(query)
+                count += 1
+        return count
+
+    @count_query_logging
+    def create_or_merge_grants_tags(self, urls):
+        count = 0
+        for url in urls:
+            query = f"""
+                    LOAD CSV WITH HEADERS FROM '{url}' AS tags
+                    MERGE (tag:Tag {{label: toLower(tags.label)}})
+                    ON CREATE set tag.uuid = apoc.create.uuid(),
+                        tag.label = tags.label, 
+                        tag.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
+                        tag.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
+                        tag.ingestedBy = "{self.CREATED_ID}"
+                    ON MATCH set tag.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
+                        tag.ingestedBy = "{self.UPDATED_ID}"
+                    return count(tag)
+            """
+            count += self.query(query)[0].value()
+        return count
+
+    @count_query_logging
+    def link_grants_tag(self, urls):
+        count = 0
+        for url in urls:
+            query = f"""
+                        LOAD CSV WITH HEADERS FROM '{url}' AS grant_tags
+                        MATCH (grant:GitcoinGrant {{id: grant_tags.grantId}}), (tag:Tag {{label: toLower(grant_tags.label)}})
+                        WITH grant, tag
+                        MERGE (grant)-[edge:HAS_TAG]->(tag)
+                        ON CREATE set edge.uuid = apoc.create.uuid(),
+                            edge.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
+                            edge.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
+                            edge.ingestedBy = "{self.CREATED_ID}"
+                        ON MATCH set edge.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
+                            edge.ingestedBy = "{self.UPDATED_ID}"
+                        return count(edge)
+                """
             count += self.query(query)[0].value()
         return count
 

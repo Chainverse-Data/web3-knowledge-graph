@@ -11,6 +11,10 @@ class Indexes(Cypher):
     def create_indexes(self):
         pass
 
+    def contracts(self):
+        query = """CREATE INDEX UniqueAddress IF NOT EXISTS FOR (n:Contract) ON (n.address)"""
+        self.query(query)
+
     def proposals(self):
         query = """CREATE INDEX UniquePropID IF NOT EXISTS FOR (n:Proposal) ON (n.snapshotId)"""
         self.query(query)
@@ -57,4 +61,8 @@ class Indexes(Cypher):
 
     def gitcoin_bounties(self):
         query = """CREATE INDEX UniqueBountyID IF NOT EXISTS FOR (n:GitcoinBounty) ON (n.id)"""
+        self.query(query)
+
+    def mirror_articles(self):
+        query = """CREATE INDEX UniqueArticleID IF NOT EXISTS FOR (a:Mirror) ON a.originalContentDigest"""
         self.query(query)

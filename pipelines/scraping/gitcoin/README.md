@@ -2,6 +2,21 @@
 
 This scraper reads from the GitCoin API to retrieve the grants and bounties. It also reads onChain events for the BulkCheckout contract of GitCoin to recoved the donations event.
 
+# Bucket
+
+This scraper reads and writes from the following bucket: `gitcoin`
+
+# Metadata
+
+The scraper reads and writes the following metadata variables:
+- last_grant_offset: Sets the offset for reading only new grants
+- last_bounty_offset: Sets the offset for reading only new bounties
+- last_block_number: : Sets the offset for reading only new blocks
+
+# Flags
+
+No unique flags created
+
 # Data
 
 ```json
@@ -399,18 +414,3 @@ This scraper reads from the GitCoin API to retrieve the grants and bounties. It 
 
 ```
 
-
-# Bucket
-
-This scraper reads and writes from the following bucket: `gitcoin`
-
-# Metadata
-
-The scraper reads and writes the following metadata variables:
-- last_grant_offset: Sets the offset for reading only new grants
-- last_bounty_offset: Sets the offset for reading only new bounties
-- last_block_number: : Sets the offset for reading only new blocks
-
-# Flags
-
-No unique flags created

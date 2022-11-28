@@ -10,6 +10,10 @@ class Constraints(Cypher):
 
     def create_indexes(self):
         pass
+
+    def contracts(self):
+        query = """CREATE CONSTRAINT UniqueAddress IF NOT EXISTS FOR (d:Contract) REQUIRE d.address IS UNIQUE"""
+        self.query(query)
     
     def twitter(self):
         query = """CREATE CONSTRAINT UniqueHandle IF NOT EXISTS FOR (d:Twitter) REQUIRE d.handle IS UNIQUE"""
@@ -58,4 +62,8 @@ class Constraints(Cypher):
 
     def gitcoin_bounties(self):
         query = """CREATE CONSTRAINT UniqueId IF NOT EXISTS FOR (bounty:GitcoinBounty) REQUIRE bounty.id IS UNIQUE"""
+        self.query(query)
+
+    def mirror_articles(self):
+        query = """CREATE CONSTRAINT UniqueArticleID IF NOT EXISTS FOR (a:Mirror) REQUIRE a.originalContentDigest IS UNIQUE"""
         self.query(query)

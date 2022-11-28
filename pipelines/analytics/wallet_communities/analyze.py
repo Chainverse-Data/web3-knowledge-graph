@@ -1,9 +1,11 @@
 import networkx as nx
+import numpy as np
 import logging
 from tqdm import tqdm
 import os
 from ..helpers import Analysis, Networks
 from .cyphers import WalletCommunityAnalyticsCyphers
+from datetime import datetime
 
 # Examples
 # os.environ["MATCH_QUERY"] = """MATCH (n:DaoHaus {daohausId: "0x016e79e9101a8eaa3e7f46d6d1c267819c09c939"})-[:CONTRIBUTOR]-(wallet:Wallet)"""
@@ -86,3 +88,11 @@ class WalletCommunityAnalysis(Analysis):
             adjacency[j][i] += 1
         logging.info(f"Adjacency created with {len(adjacency)} nodes")
         return adjacency, wallet_mapping
+
+if __name__ == '__main__':
+    logging.info(f"Starting time: {datetime.now().isoformat()}")
+    wca = WalletCommunityAnalysis()
+    wca.run()
+    logging.info(f"End time: {datetime.now().isoformat()}")
+
+    

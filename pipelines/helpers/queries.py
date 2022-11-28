@@ -16,11 +16,12 @@ class Queries(Cypher):
         pass
 
     def create_wallets(self, urls):
+        """csv is: address"""
         count = 0
         for url in urls:
             query = f"""
-                    LOAD CSV WITH HEADERS FROM '{url}' AS admin_wallets
-                    MERGE(wallet:Wallet {{address: toLower(admin_wallets.address)}})
+                    LOAD CSV WITH HEADERS FROM '{url}' AS wallets
+                    MERGE(wallet:Wallet {{address: toLower(wallets.address)}})
                     ON CREATE set wallet.uuid = apoc.create.uuid(),
                         wallet.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                         wallet.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
@@ -48,7 +49,6 @@ class Queries(Cypher):
     def create_or_merge_twitter(self, urls):
         count = 0
         for url in urls:
-
             query = f"""
                     LOAD CSV WITH HEADERS FROM '{url}' AS twitter
                     MERGE (t:Twitter {{handle: toLower(twitter.handle)}})

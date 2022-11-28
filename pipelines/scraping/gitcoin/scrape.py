@@ -37,7 +37,7 @@ class GitCoinScraper(Scraper):
                 data = json.loads(content)
                 if len(data) == 0:
                     break
-                for grant in tqdm.tqdm(data, position= 1):
+                for grant in tqdm.tqdm(data, position=1):
                     grant_data = self.get_request(self.get_one_grant_url.format(grant["id"]))
                     try:
                         grant_data = json.loads(grant_data)
@@ -71,7 +71,7 @@ class GitCoinScraper(Scraper):
                       ]
         }
         self.data["donations"] = []
-        with tqdm.tqdm(total=self.blocks_limit) as pbar:
+        with tqdm.tqdm(total=self.blocks_limit, disabled=self.isAirflow!=False) as pbar:
             while True:
                 content = self.post_request(self.alchemy_api_url, json=post_data, headers=headers)
                 content = json.loads(content)
@@ -121,7 +121,7 @@ class GitCoinScraper(Scraper):
         for donation in self.data["donations"]:
             blocks[donation["blockNumber"]] = None
         
-        for block in tqdm.tqdm(blocks):
+        for block in tqdm.tqdm(blocks, disabled=self.isAirflow!=False):
             headers = {"Content-Type": "application/json"}
             post_data = {
                 "jsonrpc":"2.0", 

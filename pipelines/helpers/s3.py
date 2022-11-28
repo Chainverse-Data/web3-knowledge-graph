@@ -26,6 +26,14 @@ class S3Utils:
             logging.error("Something went wrong while uploading to S3!")
             raise e
 
+    def save_file(self, bucket_name, local_path, s3_path):
+        "This will save the data field to the S3 bucket set during initialization. The data must be a JSON compliant python object."
+        try:
+            self.s3_client.upload_file(local_path, bucket_name, s3_path)
+        except Exception as e:
+            logging.error("Something went wrong while uploading to S3!")
+            raise e
+
     def save_json_as_csv(self, data, bucket_name, file_name, ACL="public-read"):
         """Function to save a python list of dictionaries (json compatible) to a CSV in S3.
         This functions takes care of splitting the array if the resulting CSV is more than 10Mb.

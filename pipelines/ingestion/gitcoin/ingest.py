@@ -7,7 +7,6 @@ class GitCoinIngestor(Ingestor):
     def __init__(self):
         self.cyphers = GitcoinCyphers()
         super().__init__("gitcoin")
-        self.metadata["last_date_ingested"] = self.start_date
 
     def is_valid_address(self, address):
         check = re.compile("^0x[a-fA-F0-9]{40}$")
@@ -22,6 +21,11 @@ class GitCoinIngestor(Ingestor):
 
         urls = self.s3.save_json_as_csv(grants_data["grants"], self.bucket_name, f"ingestor_grants_{self.asOf}")
         self.cyphers.create_or_merge_grants(urls)
+        self.cyphers.set_grant_round(grants_data["grants"])
+
+        urls = self.s3.save_json_as_csv(grants_data["grants_tags"], self.bucket_name, f"ingestor_grants_tags_{self.asOf}")
+        self.cyphers.create_or_merge_grants_tags(urls)
+        self.cyphers.link_grants_tag(urls)
 
         urls = self.s3.save_json_as_csv(grants_data["team_members"], self.bucket_name, f"ingestor_team_members_{self.asOf}")
         self.cyphers.create_or_merge_team_members(urls)
@@ -39,23 +43,36 @@ class GitCoinIngestor(Ingestor):
         logging.info("Processing grants data...")
         grants_data = {
             "grants": [],
+            "grants_tags": [],
             "team_members": [],
             "admin_wallets": [],
             "twitter_accounts": [],
         }
         for grant in self.scraper_data["grants"]:
+            grant_round = None
+            for el in grant["grant_type"]:
+                if "gr" in el["fields"]["name"] and "Round" in el["fields"]["label"]:
+                    grant_round = el["fields"]["name"]
             tmp = {
                 "id": grant["id"],
                 "title": grant["title"],
                 "text": self.cyphers.sanitize_text(grant["description"]),
                 "types": [el["fields"]["name"] for el in grant["grant_type"]],
                 "tags": [el["fields"]["name"] for el in grant["grant_tags"]],
+                "grant_round": grant_round,
                 "url": f"https://gitcoin.co/{grant['url']}",
                 "amount": grant["amount_received"],
                 "amountDenomination": "USD",
                 "asOf": self.asOf,
             }
             grants_data["grants"].append(tmp)
+            
+            for tag in grant["grant_tags"] + grant["grant_type"]:
+                tmp = {
+                    "grantId": grant["id"],
+                    "label": tag["fields"]["name"]
+                }
+                grants_data["grants_tags"].append(tmp)
 
             if self.is_valid_address(grant["admin_address"]):
                 tmp = {
