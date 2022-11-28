@@ -7,7 +7,7 @@ from ..helpers import Scraper
 from .cyphers import TokenHoldersCypher
 
 class TokenHolderScraper(Scraper):
-    def __init__(self, bucket_name="ERC20-tokens"):
+    def __init__(self, bucket_name="token-holders"):
         super().__init__(bucket_name)
         self.cyphers = TokenHoldersCypher()
         self.wallets_last_block = self.metadata.get("wallets_last_block", {})
