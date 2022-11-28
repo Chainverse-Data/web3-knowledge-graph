@@ -58,18 +58,16 @@ class TokenHolderScraper(Scraper):
         self.data["assets"] = assets
         self.data["tokens"] = tokens
 
-    def alchemy_API_call_iterate(self, payload, key):
-        results = []
+    def alchemy_API_call_iterate(self, payload, key, pagekey=1, counter=0, results=[]):
+        if counter > 10:
+            time.sleep(counter)
+            return results
         headers = {"Content-Type": "application/json"}
-        pagekey = 1
         while pagekey:
-            content = self.post_request(
-                self.alchemy_api_url, json=payload, headers=headers)
+            content = self.post_request(self.alchemy_api_url, json=payload, headers=headers)
             content = json.loads(content)
             if "result" not in content:
-                time.sleep(10)
-                content = self.post_request(
-                    self.alchemy_api_url, json=payload, headers=headers)
+                return self.alchemy_API_call_iterate(payload, key, pagekey, counter=counter+1, results=results)
             result = content["result"]
             pagekey = result.get("pagekey", None)
             if pagekey:
