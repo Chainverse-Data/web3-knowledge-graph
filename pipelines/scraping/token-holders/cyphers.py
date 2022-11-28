@@ -8,8 +8,9 @@ class TokenHoldersCypher(Cypher):
     @get_query_logging
     def get_all_wallets(self):
         query = """
-            MATCH wallet:Wallet
+            MATCH (wallet:Wallet)
             RETURN wallet.address
         """
         result = self.query(query)
+        print(result)
         return result
