@@ -12,5 +12,5 @@ class TokenHoldersCypher(Cypher):
             RETURN wallet.address
         """
         result = self.query(query)
-        print(result)
+        result = [el[0] for el in result]
         return result

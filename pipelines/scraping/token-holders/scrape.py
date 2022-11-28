@@ -5,6 +5,7 @@ import os
 from tqdm import tqdm
 from ..helpers import Scraper
 from .cyphers import TokenHoldersCypher
+import logging
 
 class TokenHolderScraper(Scraper):
     def __init__(self, bucket_name="token-holders"):
@@ -12,6 +13,7 @@ class TokenHolderScraper(Scraper):
         self.cyphers = TokenHoldersCypher()
         self.wallets_last_block = self.metadata.get("wallets_last_block", {})
         self.alchemy_api_url = "https://eth-mainnet.g.alchemy.com/v2/{}".format(os.environ["ALCHEMY_API_KEY"])
+        self.get_current_block()
 
     def get_current_block(self):
         headers = {"Content-Type": "application/json"}
@@ -20,32 +22,35 @@ class TokenHolderScraper(Scraper):
             "id": 0,
             "method": "eth_blockNumber"
         }
-        content = self.post_request(self.alchemy_api_url, json=payload, headers=headers).json()
+        content = self.post_request(self.alchemy_api_url, json=payload, headers=headers)
+        content = json.loads(content)
         self.current_block = int(content["result"], 16)
 
     def get_all_wallets_in_db(self):
         self.wallet_list  = self.cyphers.get_all_wallets()
 
     def get_transactions_assets_balances(self):
+        logging.info("Getting all transactions assets and balances")
         transactions = {}
         balances = {}
         assets = {}
         tokens = {}
-        for wallet in tqdm(self.wallet_list["wallets"]):
+        for wallet in tqdm(self.wallet_list):
             assets[wallet] = set()
             transactions[wallet] = {}
             transactions[wallet]["received"] = self.get_received_transactions(wallet, self.wallets_last_block.get(wallet, 0))
             transactions[wallet]["sent"] = self.get_sent_transactions(wallet, self.wallets_last_block.get(wallet, 0))
             for transaction in transactions[wallet]["received"] + transactions[wallet]["sent"]:
                 if transaction["category"] in ["erc20", "erc721", "erc1155"]:
-                    contractAddress = transaction["rawContract"]
+                    contractAddress = transaction["rawContract"]["address"]
                     if contractAddress not in tokens:
                         tokens[contractAddress] = {
                             "contractType": transaction["category"],
                             "symbol": transaction["asset"],
-                            "decimal": transaction["decimal"],
+                            "decimal": transaction["rawContract"]["decimal"],
                         }
                     assets[wallet].add(contractAddress)
+            assets[wallet] = list(assets[wallet])
             balances[wallet] = self.get_balances(wallet, assets[wallet])
             self.wallets_last_block[wallet] = self.current_block
         self.data["transactions"] = transactions
@@ -53,7 +58,7 @@ class TokenHolderScraper(Scraper):
         self.data["assets"] = assets
         self.data["tokens"] = tokens
 
-    def alchemy_API_call_iterate(self, payload):
+    def alchemy_API_call_iterate(self, payload, key):
         results = []
         headers = {"Content-Type": "application/json"}
         pagekey = 1
@@ -66,9 +71,10 @@ class TokenHolderScraper(Scraper):
                 content = self.post_request(
                     self.alchemy_api_url, json=payload, headers=headers)
             result = content["result"]
-            pagekey = result["pagekey"]
-            payload["params"][0]["pagekey"] = pagekey
-            results += result["transfers"]
+            pagekey = result.get("pagekey", None)
+            if pagekey:
+                payload["params"][0]["pagekey"] = pagekey
+            results += result[key]
         return results
 
     def get_sent_transactions(self, address, start_block):
@@ -89,7 +95,7 @@ class TokenHolderScraper(Scraper):
                 }
             ],
         }
-        transactions = self.alchemy_API_call_iterate(payload)
+        transactions = self.alchemy_API_call_iterate(payload, "transfers")
         return transactions
 
     def get_received_transactions(self, address, start_block):
@@ -110,10 +116,12 @@ class TokenHolderScraper(Scraper):
                 }
             ],
         }
-        transactions = self.alchemy_API_call_iterate(payload)
+        transactions = self.alchemy_API_call_iterate(payload, "transfers")
         return transactions
 
     def get_balances(self, wallet, tokenList):
+        if len(tokenList) == 0:
+            return []
         payload = {
             "jsonrpc": "2.0",
             "id": 0,
@@ -123,7 +131,8 @@ class TokenHolderScraper(Scraper):
                 tokenList
             ]
         }
-        token_balances = self.alchemy_API_call_iterate(payload)
+        token_balances = self.alchemy_API_call_iterate(
+            payload, "tokenBalances")
         return token_balances
 
     def run(self):
