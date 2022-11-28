@@ -31,13 +31,13 @@ class GitCoinScraper(Scraper):
     def get_all_grants(self):
         logging.info("Getting the list of all the grants from GitCoin")
         self.data["grants"] = []
-        with tqdm.tqdm(total=self.gitcoin_api_limit, position=0, disabled=self.isAirflow != False) as pbar:
+        with tqdm.tqdm(total=self.gitcoin_api_limit, position=0) as pbar:
             while True:
                 content = self.get_request(self.get_all_grants_url.format(self.gitcoin_api_limit, self.last_grant_offset))
                 data = json.loads(content)
                 if len(data) == 0:
                     break
-                for grant in tqdm.tqdm(data, position=1, disabled=self.isAirflow != False):
+                for grant in tqdm.tqdm(data, position=1):
                     grant_data = self.get_request(self.get_one_grant_url.format(grant["id"]))
                     try:
                         grant_data = json.loads(grant_data)
@@ -101,7 +101,7 @@ class GitCoinScraper(Scraper):
     def get_all_bounties(self):
         logging.info("Getting the list of all the bounties from GitCoin")
         self.data["bounties"] = []
-        with tqdm.tqdm(total=self.gitcoin_api_limit, disabled=self.isAirflow != False) as pbar:
+        with tqdm.tqdm(total=self.gitcoin_api_limit) as pbar:
             while True:
                 content = self.get_request(self.get_all_bounties_url.format(self.gitcoin_api_limit, self.last_bounty_offset))
                 data = json.loads(content)

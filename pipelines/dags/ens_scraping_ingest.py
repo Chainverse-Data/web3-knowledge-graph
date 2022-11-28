@@ -15,7 +15,7 @@ dag = DAG(
         "schedule_interval": "@daily"
     },
     max_active_runs=1,
-    dagrun_timeout=timedelta(minutes=1440)
+    dagrun_timeout=timedelta(minutes=10080)
 )
 
 # Get ECS configuration from SSM parameters

@@ -1,19 +1,37 @@
+import logging
+from gql.transport.requests import log as requests_logger
+requests_logger.setLevel(logging.WARNING)
 from gql import gql, Client
 from gql.transport.aiohttp import AIOHTTPTransport
 import re
 from newspaper import Article
 import json
+import time
+
 
 class MirrorScraperHelper():
-    def requestData(self, startBlock, step):
-        stopBlock = startBlock + step
-        all_results = []
+    
+    def get_transations(self, query_string, counter=0):
+        time.sleep(counter)
+        if counter > 10:
+            return None
         transport = AIOHTTPTransport(url="https://arweave.net/graphql")
         client = Client(transport=transport, fetch_schema_from_transport=True)
+        query = gql(query_string)
+        try:
+            results = client.execute(query)
+        except:
+            return self.get_transations(query_string, counter=counter+1)
+        return results
+    
+    def get_all_transactions(self, startBlock, step):
+        stopBlock = startBlock + step
+        cursor = ""
+        all_results = []
 
-        query_string = f"""
+        query_string = """
                 {{
-                    transactions(first:100, block: {{min:{startBlock}, max:{stopBlock}}}, tags: {{name: "App-Name", values: "MirrorXYZ"}}) {{
+                    transactions(first:100,{} block: {{min:{}, max:{}}}, tags: {{name: "App-Name", values: "MirrorXYZ"}}) {{
                         edges {{
                         cursor
                             node {{
@@ -31,24 +49,15 @@ class MirrorScraperHelper():
                     }}
                 }}
                 """
-        query = gql(query_string)
-        try:
-            results = client.execute(query)
-            results = results["transactions"]["edges"]
-            while len(results) == 100:
-                all_results.extend(results)
-                cursor = results[-1]["cursor"]
-                new_query = query_string.replace("first:100", f'first:100, after:"{cursor}"')
-                query = gql(new_query)
-                results = client.execute(query)
-                results = results["transactions"]["edges"]
-
-            all_results.extend(results)
-        except:
-            return []
-
+        
+        results = ["init"]
+        while len(results) > 0:
+            content = self.get_transations(query_string.format(cursor, startBlock, stopBlock))
+            results = content["transactions"]["edges"]
+            all_results += results
+            if len(results) > 0:
+                cursor = f'after: "{results[-1]["cursor"]}", '
         return all_results
-
 
     def getArweaveTxs(self, startBlock, endBlock, initialStep):
         step = initialStep
@@ -56,7 +65,8 @@ class MirrorScraperHelper():
 
         currentBlock = startBlock
         while currentBlock < endBlock:
-            returned = self.requestData(currentBlock, step)
+            returned = self.get_all_transactions(currentBlock, step)
+            logging.info(f"==========> Retrieved {len(returned)} transactions from block {currentBlock} to block {currentBlock+step}")
             if len(returned) == 100 and step != 1:
                 step = step // 10
                 currentBlock -= step

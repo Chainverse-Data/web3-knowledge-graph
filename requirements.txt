@@ -12,3 +12,4 @@ networkx==2.8.4
 communities==3.0.0
 scikit-network==0.27.1
 newspaper3k==0.2.8
+requests_toolbelt==0.10.1

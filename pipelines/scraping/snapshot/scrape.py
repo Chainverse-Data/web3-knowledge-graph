@@ -60,7 +60,7 @@ class SnapshotScraper(Scraper):
             offset += self.space_limit
         logging.info(f"Total Spaces aquired: {len(raw_spaces)}")
 
-        with tqdm_joblib(tqdm.tqdm(desc="Getting ENS Data", total=len(raw_spaces)), disabled=self.isAirflow != False) as progress_bar:
+        with tqdm_joblib(tqdm.tqdm(desc="Getting ENS Data", total=len(raw_spaces))) as progress_bar:
             ens_list = joblib.Parallel(n_jobs=multiprocessing.cpu_count() - 1)(
                 joblib.delayed(get_ens_info)(space["id"]) for space in raw_spaces
             )
@@ -108,7 +108,7 @@ class SnapshotScraper(Scraper):
     def get_votes(self):
         logging.info("Getting votes...")
         proposal_ids = list(self.open_proposals.union(set([proposal["id"] for proposal in self.data["proposals"]])))
-        with tqdm_joblib(tqdm.tqdm(desc="Getting Votes Data", total=math.ceil(len(proposal_ids) / 5)), disabled=self.isAirflow != False) as progress_bar:
+        with tqdm_joblib(tqdm.tqdm(desc="Getting Votes Data", total=math.ceil(len(proposal_ids) / 5))) as progress_bar:
             raw_votes = joblib.Parallel(n_jobs=2, backend="threading")(
                 joblib.delayed(self.scrape_votes)(proposal_ids[i : i + 5]) for i in range(0, len(proposal_ids), 5)
             )

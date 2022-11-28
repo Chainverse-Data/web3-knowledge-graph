@@ -31,7 +31,7 @@ class TokenHolderScraper(Scraper):
         balances = {}
         assets = {}
         tokens = {}
-        for wallet in tqdm(self.wallet_list["wallets"], disabled=self.isAirflow != False):
+        for wallet in tqdm(self.wallet_list["wallets"]):
             assets[wallet] = set()
             transactions[wallet] = {}
             transactions[wallet]["received"] = self.get_received_transactions(wallet, self.wallets_last_block.get(wallet, 0))
