@@ -98,7 +98,7 @@ def get_ens_info(name):
             "Content-Type": "application/json",
         }
 
-        response = requests.post(alchemy_url, json=payload, headers=headers)
+        response = requests.post(alchemy_url, json=payload, headers=headers, verify=False)
         x = json.loads(response.text)
         transfers = x["result"]["transfers"]
         flag = False

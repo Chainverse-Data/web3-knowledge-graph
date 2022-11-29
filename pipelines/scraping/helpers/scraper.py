@@ -52,7 +52,8 @@ class Scraper:
         time.sleep(counter * 10)
         if counter > 10:
             return None
-        r = requests.get(url, params=params, headers=headers,allow_redirects=allow_redirects)
+        r = requests.get(url, params=params, headers=headers,
+                         allow_redirects=allow_redirects, verify=False)
         if r.status_code != 200:
             logging.error(f"Status code not 200: {r.status_code} Retrying in {counter*10}s (counter = {counter})...")
             return self.get_request(url, params=params, headers=headers, allow_redirects=allow_redirects, counter=counter + 1)
@@ -69,7 +70,7 @@ class Scraper:
         time.sleep(counter * 10)
         if counter > 10:
             return None
-        r = requests.post(url, data=data, json=json, headers=headers)
+        r = requests.post(url, data=data, json=json, headers=headers, verify=False)
         if r.status_code <= 200 and r.status_code > 300:
             logging.error(f"Status code not 200: {r.status_code} Retrying {counter*10}s (counter = {counter})...")
             return self.post_request(url, data=data, json=json, headers=headers, counter=counter + 1)

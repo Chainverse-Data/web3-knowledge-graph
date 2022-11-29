@@ -99,7 +99,7 @@ class MirrorScraper(Scraper):
                 print(owner)
                 symbol = contract.functions.symbol().call()
                 print(symbol)
-                req = requests.get(mirror_url)
+                req = requests.get(mirror_url, verify=False)
                 print(req.url)
                 digest = req.url.split("/")[-1]
 

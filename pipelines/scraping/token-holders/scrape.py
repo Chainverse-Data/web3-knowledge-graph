@@ -1,6 +1,5 @@
 import time
 import json
-import requests
 import os
 from tqdm import tqdm
 from ..helpers import Scraper
