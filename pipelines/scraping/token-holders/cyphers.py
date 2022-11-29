@@ -10,7 +10,6 @@ class TokenHoldersCypher(Cypher):
         query = """
             MATCH (wallet:Wallet)
             RETURN wallet.address
-            LIMIT 20
         """
         result = self.query(query)
         result = [el[0] for el in result]

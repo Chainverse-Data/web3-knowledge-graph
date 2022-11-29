@@ -22,7 +22,9 @@ class MirrorScraperHelper():
             results = client.execute(query)
         except:
             return self.get_transations(query_string, counter=counter+1)
-        return results
+        if results:
+            return results
+        return self.get_transations(query_string, counter=counter+1)
     
     def get_all_transactions(self, startBlock, step):
         stopBlock = startBlock + step
@@ -53,7 +55,7 @@ class MirrorScraperHelper():
         results = ["init"]
         while len(results) > 0:
             content = self.get_transations(query_string.format(cursor, startBlock, stopBlock))
-            results = content["transactions"]["edges"]
+            results = content.get("transactions", {"edges": []})["edges"]
             all_results += results
             if len(results) > 0:
                 cursor = f'after: "{results[-1]["cursor"]}", '

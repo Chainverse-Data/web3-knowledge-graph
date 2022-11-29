@@ -66,9 +66,9 @@ class TokenHolderScraper(Scraper):
         while pagekey:
             content = self.post_request(self.alchemy_api_url, json=payload, headers=headers)
             content = json.loads(content)
-            if "result" not in content:
-                return self.alchemy_API_call_iterate(payload, key, pagekey, counter=counter+1, results=results)
-            result = content["result"]
+            result = content.get("result", None)
+            if not result:
+                return self.alchemy_API_call_iterate(payload, key, pagekey=pagekey, counter=counter+1, results=results)
             pagekey = result.get("pagekey", None)
             if pagekey:
                 payload["params"][0]["pagekey"] = pagekey
@@ -93,7 +93,8 @@ class TokenHolderScraper(Scraper):
                 }
             ],
         }
-        transactions = self.alchemy_API_call_iterate(payload, "transfers")
+        transactions = self.alchemy_API_call_iterate(
+            payload, "transfers", pagekey=1, counter=0, results=[])
         return transactions
 
     def get_received_transactions(self, address, start_block):
@@ -114,7 +115,8 @@ class TokenHolderScraper(Scraper):
                 }
             ],
         }
-        transactions = self.alchemy_API_call_iterate(payload, "transfers")
+        transactions = self.alchemy_API_call_iterate(
+            payload, "transfers", pagekey=1, counter=0, results=[])
         return transactions
 
     def get_balances(self, wallet, tokenList):
@@ -130,7 +132,7 @@ class TokenHolderScraper(Scraper):
             ]
         }
         token_balances = self.alchemy_API_call_iterate(
-            payload, "tokenBalances")
+            payload, "tokenBalances", pagekey=1, counter=0, results=[])
         return token_balances
 
     def run(self):
