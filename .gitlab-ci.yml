@@ -70,5 +70,5 @@ publish-aws:
         echo "Running on branch '$CI_COMMIT_BRANCH': tag = $tag"
       fi
     - docker pull "$CI_REGISTRY_IMAGE${tag}"
-    - docker tag "$CI_REGISTRY_IMAGE${tag}" $DOCKER_REGISTRY/$APP_NAME:${tag}
-    - docker push $DOCKER_REGISTRY/$APP_NAME:${tag}
+    - docker tag "$CI_REGISTRY_IMAGE${tag}" "$DOCKER_REGISTRY/$APP_NAME:${tag}"
+    - docker push "$DOCKER_REGISTRY/$APP_NAME:${tag}"
