@@ -8,7 +8,7 @@ import pandas as pd
 import web3
 import re
 from collections import Counter
-DEBUG = False
+DEBUG = True
 
 class MirrorScraper(Scraper):
     def __init__(self):
@@ -23,7 +23,7 @@ class MirrorScraper(Scraper):
         self.end_block = self.get_request("https://arweave.net/info", decode=False, json=True)["blocks"]
         if DEBUG:
             self.start_block = 595567
-            self.end_block = 596567
+            self.end_block = 599567
         self.arweave_url = "https://arweave.net/{}"
         self.arweaveHelpers = MirrorScraperHelper()
         self.ensSearchURL = "https://eth-mainnet.g.alchemy.com/nft/v2/{}/getNFTs?owner={}&contractAddresses[]=0x57f1887a8BF19b14fC0dF6Fd9B2acc9Af147eA85&withMetadata=true"

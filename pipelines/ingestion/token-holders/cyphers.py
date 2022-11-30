@@ -21,15 +21,20 @@ class TokenHoldersCyphers(Cypher):
         for url in urls:
             query = f"""
                 LOAD CSV WITH HEADERS FROM '{url}' AS tokens
-                    MERGE(token:Contract:Token:{token_type} {{address: toLower(tokens.contractAddress)}})
-                    ON CREATE set token.uuid = apoc.create.uuid(),
-                        token.symbol = tokens.id, 
-                        token.decimal = tokens.id, 
-                        token.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
-                        token.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
-                        token.ingestedBy = "{self.CREATED_ID}"
-                    return count(token)
+                MERGE(token:Token {{address: toLower(tokens.contractAddress)}})
+                ON CREATE set token.uuid = apoc.create.uuid(),
+                    token.symbol = tokens.id, 
+                    token.decimal = tokens.id, 
+                    token.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
+                    token.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
+                    token.ingestedBy = "{self.CREATED_ID}",
+                    token:{token_type}
+                ON MATCH set token.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
+                    token.ingestedBy = "{self.UPDATED_ID}"
+                return count(token)
             """
+            count += self.query(query)[0].value()
+        return count
 
     @count_query_logging
     def link_wallet_tokens(self, urls):
@@ -38,7 +43,7 @@ class TokenHoldersCyphers(Cypher):
         for url in urls:
             query = f"""
                 LOAD CSV WITH HEADERS FROM '{url}' AS holdings
-                MATCH (token:Contract:Token {{address: toLower(holdings.contractAddress)}}), (wallet:Wallet {{address: toLower(holdings.address)}})
+                MATCH (token:Token {{address: toLower(holdings.contractAddress)}}), (wallet:Wallet {{address: toLower(holdings.address)}})
                 WITH token, wallet, holdings
                 MERGE (wallet)-[edge:HOLDS]->(token)
                 ON CREATE set edge.uuid = apoc.create.uuid(),
@@ -53,3 +58,5 @@ class TokenHoldersCyphers(Cypher):
                     edge.ingestedBy = "{self.UPDATED_ID}"
                 return count(edge)
             """
+            count += self.query(query)[0].value()
+        return count

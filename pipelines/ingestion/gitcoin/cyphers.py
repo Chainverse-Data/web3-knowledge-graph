@@ -52,7 +52,7 @@ class GitcoinCyphers(Cypher):
                         grant.text = grants.text,
                         grant.types = grants.types,
                         grant.tags = grants.tags,
-                        grant.amount = grants.amount,
+                        grant.amount = toFloat(grants.amount),
                         grant.asOf = grants.asOf,
                         grant.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                         grant.ingestedBy = "{self.UPDATED_ID}"

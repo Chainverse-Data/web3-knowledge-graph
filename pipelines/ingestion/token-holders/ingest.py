@@ -12,8 +12,8 @@ class TokenHoldersIngestor(Ingestor):
             "ERC721": [],
             "ERC1155": []
         }
-        for tokenAddress in self.data["tokens"]:
-            token = self.data["tokens"][tokenAddress]
+        for tokenAddress in self.scraper_data["tokens"]:
+            token = self.scraper_data["tokens"][tokenAddress]
             tmp = {
                 "contractAddress": tokenAddress, 
                 "symbol": token["symbol"],
@@ -31,26 +31,31 @@ class TokenHoldersIngestor(Ingestor):
 
     def prepare_holdings_data(self):
         data = []
-        for wallet in self.data["balances"]:
-            for balance in self.data["balances"][balance]:
-                contractAddress = balance["contractAddress"]
-                balance = balance["tokenBalance"]
-                if self.data["tokens"][contractAddress]["contractType"] == "erc20":
-                    numericBalance = int(balance, 16) / 10**self.data["tokens"][contractAddress]["decimal"]
-                else:
-                    numericBalance = int(balance, 16)
-                data.append({
-                    "address": wallet,
-                    "contractAddress": contractAddress,
-                    "balance": balance,
-                    "numericBalance": numericBalance
-                })
+        for wallet in self.scraper_data["balances"]:
+            for balance in self.scraper_data["balances"][wallet]:
+                if "error" not in balance:
+                    contractAddress = balance["contractAddress"]
+                    decimal = self.scraper_data["tokens"][contractAddress]["decimal"]
+                    if type(decimal) == str and "0x" in decimal:
+                        decimal = int(decimal, 16)
+                    elif type(decimal) == str:
+                        decimal = int(decimal)
+                    if self.scraper_data["tokens"][contractAddress]["contractType"] == "erc20" and decimal:
+                        numericBalance = int(balance["tokenBalance"], 16) / 10**decimal
+                    else:
+                        numericBalance = int(balance["tokenBalance"], 16)
+                    data.append({
+                        "address": wallet,
+                        "contractAddress": contractAddress,
+                        "balance": balance,
+                        "numericBalance": numericBalance
+                    })
         return data
 
     def ingest_holdings(self):
         holding_data = self.prepare_holdings_data()
         urls = self.s3.save_json_as_csv(holding_data, self.bucket_name, f"ingestor_holdings_{self.asOf}")
-        self.cyphers.create_or_merge_tokens(urls)
+        self.cyphers.link_wallet_tokens(urls)
 
     def run(self):
         self.ingest_tokens()

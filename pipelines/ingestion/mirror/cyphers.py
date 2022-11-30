@@ -34,11 +34,11 @@ class MirrorCyphers(Cypher):
                     article.text = articles.body,
                     article.datePublished = datetime(apoc.date.toISO8601(toInteger(articles.timestamp), 's')),
                     article.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
-                    article.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
+                    article.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                     article.ingestedBy = "{self.CREATED_ID}"
                 ON MATCH set article.title = articles.title,
                     article.body = articles.body,
-                    article.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
+                    article.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                     article.ingestedBy = "{self.UPDATED_ID}"
                 return count(article)
             """
@@ -55,7 +55,7 @@ class MirrorCyphers(Cypher):
                     ON CREATE set twitter.uuid = apoc.create.uuid(),
                         twitter.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                         twitter.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
-                        twitter.ingestedBy = "{self.CREATED_ID}",
+                        twitter.ingestedBy = "{self.CREATED_ID}"
                     ON MATCH set twitter.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                         twitter.ingestedBy = "{self.UPDATED_ID}"
                     return count(twitter)    
@@ -71,16 +71,16 @@ class MirrorCyphers(Cypher):
                     LOAD CSV WITH HEADERS FROM '{url}' AS NFTs
                     MERGE (nft:Mirror:ERC721 {{address: toLower(NFTs.address)}})
                     ON CREATE set nft.uuid = apoc.create.uuid(),
-                        nft.chainId = NTFs.chain_id,
+                        nft.chainId = NFTs.chain_id,
                         nft.supply = NFTs.supply,
-                        nft.symbol = NTF.symbol,
+                        nft.symbol = NFTs.symbol,
                         nft.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                         nft.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
-                        nft.ingestedBy = "{self.CREATED_ID}",
+                        nft.ingestedBy = "{self.CREATED_ID}"
                     ON MATCH set nft.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
-                        nft.chainId = NTFs.chainId,
+                        nft.chainId = NFTs.chainId,
                         nft.supply = NFTs.supply,
-                        nft.symbol = NTF.symbol,
+                        nft.symbol = NFTs.symbol,
                         nft.ingestedBy = "{self.UPDATED_ID}"
                     return count(nft)    
             """
@@ -112,8 +112,8 @@ class MirrorCyphers(Cypher):
         count = 0
         for url in urls:
             query = f"""
-                        LOAD CSV WITH HEADERS FROM '{url}' AS NTFs_articles
-                        MATCH (article:Mirror:Article {{originalContentDigest: NFTs_articles.original_content_digest}}), (nft:Mirror:ERC721 {{address: toLower(NTFs_articles.address)}})
+                        LOAD CSV WITH HEADERS FROM '{url}' AS NFTs_articles
+                        MATCH (article:Mirror:Article {{originalContentDigest: NFTs_articles.original_content_digest}}), (nft:Mirror:ERC721 {{address: toLower(NFTs_articles.address)}})
                         WITH article, nft
                         MERGE (article)-[edge:HAS_NFT]->(nft)
                         ON CREATE set edge.uuid = apoc.create.uuid(),
@@ -132,8 +132,8 @@ class MirrorCyphers(Cypher):
         count = 0
         for url in urls:
             query = f"""
-                        LOAD CSV WITH HEADERS FROM '{url}' AS NTFs_articles
-                        MATCH (wallet:Wallet {{address: NFTs_articles.owner}}), (nft:Mirror:ERC721 {{address: toLower(NTFs_articles.address)}})
+                        LOAD CSV WITH HEADERS FROM '{url}' AS NFTs_articles
+                        MATCH (wallet:Wallet {{address: NFTs_articles.owner}}), (nft:Mirror:ERC721 {{address: toLower(NFTs_articles.address)}})
                         WITH wallet, nft
                         MERGE (wallet)-[edge:IS_OWNER]->(nft)
                         ON CREATE set edge.uuid = apoc.create.uuid(),
@@ -152,8 +152,8 @@ class MirrorCyphers(Cypher):
         count = 0
         for url in urls:
             query = f"""
-                        LOAD CSV WITH HEADERS FROM '{url}' AS NTFs_articles
-                        MATCH (wallet:Wallet {{address: NFTs_articles.funding_recipient}}), (nft:Mirror:ERC721 {{address: toLower(NTFs_articles.address)}})
+                        LOAD CSV WITH HEADERS FROM '{url}' AS NFTs_articles
+                        MATCH (wallet:Wallet {{address: NFTs_articles.funding_recipient}}), (nft:Mirror:ERC721 {{address: toLower(NFTs_articles.address)}})
                         WITH wallet, nft
                         MERGE (wallet)-[edge:IS_RECEIPIENT]->(nft)
                         ON CREATE set edge.uuid = apoc.create.uuid(),

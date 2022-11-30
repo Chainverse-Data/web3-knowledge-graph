@@ -130,8 +130,7 @@ class TokenHolderScraper(Scraper):
                 tokenList
             ]
         }
-        token_balances = self.alchemy_API_call_iterate(
-            payload, "tokenBalances", pagekey=1, counter=0, results=[])
+        token_balances = self.alchemy_API_call_iterate(payload, "tokenBalances", pagekey=1, counter=0, results=[])
         return token_balances
 
     def run(self):
