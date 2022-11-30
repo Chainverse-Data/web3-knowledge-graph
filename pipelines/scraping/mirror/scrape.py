@@ -38,7 +38,7 @@ class MirrorScraper(Scraper):
     def ENSsearch(self, address):
         url = self.ensSearchURL.format(os.environ["ALCHEMY_API_KEY"], address)
         content = self.get_request(url, decode=False, json=True)
-        if len(content["ownedNfts"]) > 0:
+        if len(content.get("ownedNfts", 0)) > 0:
             return content["ownedNfts"][0]["title"]
         return None
 
@@ -121,10 +121,10 @@ class MirrorScraper(Scraper):
                     if (arweave_hash.strip()):
                         data = self.get_article(arweave_hash)
                         print("data", data)
-                        if data["authorship"]["contributor"] not in self.reverse_ens:
-                            ens = self.ENSsearch(data["authorship"]["contributor"])
-                        else:
-                            ens = self.reverse_ens[data["authorship"]["contributor"]]
+                        # if data["authorship"]["contributor"] not in self.reverse_ens:
+                        #     ens = self.ENSsearch(data["authorship"]["contributor"])
+                        # else:
+                        #     ens = self.reverse_ens[data["authorship"]["contributor"]]
                         article = {
                             "original_content_digest": digest,
                             "current_content_digest": digest,
@@ -133,7 +133,7 @@ class MirrorScraper(Scraper):
                             "title": data["content"]["title"],
                             "timestamp": data["content"]["timestamp"],
                             "author": data["authorship"]["contributor"],
-                            "ens": ens,
+                            # "ens": ens,
                         }
 
                         missing_articles.append(article)
@@ -180,12 +180,12 @@ class MirrorScraper(Scraper):
 
         logging.info(f"Reverse authors lookup")
         unique_authors = transaction_df["author"].unique()
-        for author in tqdm(unique_authors):
-            ens = self.ENSsearch(author)
-            if ens:
-                self.reverse_ens[author] = ens
-            else:
-                self.reverse_ens[author] = ""
+        # for author in tqdm(unique_authors):
+        #     ens = self.ENSsearch(author)
+        #     if ens:
+        #         self.reverse_ens[author] = ens
+        #     else:
+        #         self.reverse_ens[author] = ""
 
         filtered_transactions = transaction_df.sort_values("block").groupby("original_content_digest", as_index=False).head(1)
         logging.info(f"Getting all the articles content")
@@ -200,7 +200,7 @@ class MirrorScraper(Scraper):
                 "title": data["content"]["title"],
                 "timestamp": data["content"]["timestamp"],
                 "author": transaction["author"],
-                "ens": self.reverse_ens[transaction["author"]],
+                # "ens": self.reverse_ens[transaction["author"]],
             }
             articles_cleaned.append(article)
             if "wnft" in data:
