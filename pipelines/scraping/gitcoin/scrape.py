@@ -71,7 +71,7 @@ class GitCoinScraper(Scraper):
                       ]
         }
         self.data["donations"] = []
-        with tqdm.tqdm(total=self.blocks_limit, disabled=self.isAirflow!=False) as pbar:
+        with tqdm.tqdm(total=self.blocks_limit) as pbar:
             while True:
                 content = self.post_request(self.alchemy_api_url, json=post_data, headers=headers)
                 content = json.loads(content)
@@ -121,7 +121,7 @@ class GitCoinScraper(Scraper):
         for donation in self.data["donations"]:
             blocks[donation["blockNumber"]] = None
         
-        for block in tqdm.tqdm(blocks, disabled=self.isAirflow!=False):
+        for block in tqdm.tqdm(blocks):
             headers = {"Content-Type": "application/json"}
             post_data = {
                 "jsonrpc":"2.0", 
