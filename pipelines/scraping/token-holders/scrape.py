@@ -6,6 +6,10 @@ from ..helpers import Scraper
 from .cyphers import TokenHoldersCypher
 import logging
 
+# I have to add try except statements to this because the overall api calls from alchemy have a 1/20000 chance of SSL failure.
+# This is an issue as there are over a million wallets as of dec 2022
+# For the future, there should be a better way to do this.
+
 class TokenHolderScraper(Scraper):
     def __init__(self, bucket_name="token-holders"):
         super().__init__(bucket_name)
@@ -92,8 +96,11 @@ class TokenHolderScraper(Scraper):
                 }
             ],
         }
-        transactions = self.alchemy_API_call_iterate(
-            payload, "transfers", pagekey=1, counter=0, results=[])
+        try:
+            transactions = self.alchemy_API_call_iterate(
+                payload, "transfers", pagekey=1, counter=0, results=[])
+        except:
+            logging.error("There has been an error getting information about the address: ", address)
         return transactions
 
     def get_received_transactions(self, address, start_block):
@@ -114,8 +121,11 @@ class TokenHolderScraper(Scraper):
                 }
             ],
         }
-        transactions = self.alchemy_API_call_iterate(
-            payload, "transfers", pagekey=1, counter=0, results=[])
+        try:
+            transactions = self.alchemy_API_call_iterate(
+                payload, "transfers", pagekey=1, counter=0, results=[])
+        except:
+            logging.error("There has been an error getting information about the address: ", address)
         return transactions
 
     def get_balances(self, wallet, tokenList):
@@ -130,7 +140,10 @@ class TokenHolderScraper(Scraper):
                 tokenList
             ]
         }
-        token_balances = self.alchemy_API_call_iterate(payload, "tokenBalances", pagekey=1, counter=0, results=[])
+        try:
+            token_balances = self.alchemy_API_call_iterate(payload, "tokenBalances", pagekey=1, counter=0, results=[])
+        except:
+            logging.error("There has been an error getting information about the address: ", wallet)
         return token_balances
 
     def run(self):
