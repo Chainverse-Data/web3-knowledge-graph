@@ -48,6 +48,7 @@ class MultisigScraper(Scraper):
         skip = 0
         wallets = ["init"]
         transactions = ["init"]
+        retry = 0
         if DEBUG:
             req = 0
             max_req = 5
@@ -81,33 +82,40 @@ class MultisigScraper(Scraper):
                     }"""
             )
             result = self.call_the_graph_api(query, variables)
-            wallets = result["wallets"]
-            transactions = result["transactions"]
-            for wallet in wallets:
-                for owner in wallet["owners"]:
+            if result != None:
+                wallets = result["wallets"]
+                transactions = result["transactions"]
+                for wallet in wallets:
+                    for owner in wallet["owners"]:
+                        tmp = {
+                            "multisig": wallet["id"],
+                            "ownerAddress": owner,
+                            "threshold": int(wallet["threshold"]),
+                            "occurDt": int(wallet["stamp"]),
+                            "network": wallet["network"],
+                            "factory": wallet["factory"],
+                            "version": wallet["version"],
+                            "creator": wallet["creator"], 
+                            "timestamp": wallet["stamp"]
+                        }
+                        self.data["multisig"].append(tmp)
+                for transaction in transactions:
                     tmp = {
-                        "multisig": wallet["id"],
-                        "ownerAddress": owner,
-                        "threshold": int(wallet["threshold"]),
-                        "occurDt": int(wallet["stamp"]),
-                        "network": wallet["network"],
-                        "factory": wallet["factory"],
-                        "version": wallet["version"],
-                        "creator": wallet["creator"], 
-                        "timestamp": wallet["stamp"]
+                        "timestamp": transaction["stamp"],
+                        "block": transaction["block"],
+                        "from": transaction["wallet"]["id"],
+                        "to": transaction["destination"],
+                        "txHash": transaction["hash"]
                     }
-                    self.data["multisig"].append(tmp)
-            for transaction in transactions:
-                tmp = {
-                    "timestamp": transaction["stamp"],
-                    "block": transaction["block"],
-                    "from": transaction["wallet"]["id"],
-                    "to": transaction["destination"],
-                    "txHash": transaction["hash"]
-                }
-                self.data["transactions"].append(tmp)
-            skip += self.interval
-            logging.info(f"Query success, skip is at: {skip}")
+                    self.data["transactions"].append(tmp)
+                skip += self.interval
+                retry = 0
+                logging.info(f"Query success, skip is at: {skip}")
+            else:
+                retry += 1
+                if retry > 10:
+                    skip += self.interval
+                logging.error(f"Query unsuccessful, skip is at: {skip}")
         logging.info("Found {} multisig and {} transactions".format(
             len(self.data["multisig"]), len(self.data["transactions"])))
 
