@@ -5,7 +5,7 @@ from tqdm import tqdm
 from ..helpers import Scraper
 from .cyphers import TokenHoldersCypher
 import logging
-
+DEBUG = os.environ.get("DEBUG", False)
 # I have to add try except statements to this because the overall api calls from alchemy have a 1/20000 chance of SSL failure.
 # This is an issue as there are over a million wallets as of dec 2022
 # For the future, there should be a better way to do this.

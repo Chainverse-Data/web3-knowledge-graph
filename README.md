@@ -18,6 +18,7 @@ AWS_DEFAULT_REGION=[The targeted AWS Region]
 AWS_ACCESS_KEY_ID=[Your AWS ID]
 AWS_SECRET_ACCESS_KEY=[Your AWS Key]
 LOGLEVEL=[DEBUG|INFO|WARNING|ERROR] python logging library log level
+DEBUG=1 #Set the DEBUG flag to 1, this has a various amount of influences but mostly restricts scraping to small subset of the data. 
 ```
 
 # Docker image
@@ -47,9 +48,11 @@ The scrapping module can be either imported or ran as a package using the `pytho
 You can set the following environement variables that will apply to all scraper modules.
 ```
 ETHERSCAN_API_KEY=[Your Etherscan API Key]
+OPTIMISTIC_ETHERSCAN_API_KEY=[Your Optimism API Key]
 ALCHEMY_API_KEY=[Your Alchemy API Key]
 ALLOW_OVERRIDE=1 [Set to 1 if you want to allow overiding saved data on S3, else remove or set to 0]
 REINITIALIZE=1 [Set to 1 if you want to allow overiding saved data on S3, else remove or set to 0]
+GRAPH_API_KEY=[Your API key from TheGraph]
 ```
 
 ## The Scraper class

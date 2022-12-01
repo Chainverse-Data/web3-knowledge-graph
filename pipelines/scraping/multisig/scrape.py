@@ -8,7 +8,7 @@ import logging
 from gql.transport.aiohttp import AIOHTTPTransport, log as gql_log
 
 gql_log.setLevel(logging.WARNING)
-
+DEBUG = os.environ.get("DEBUG", False)
 
 class MultisigScraper(Scraper):
     def __init__(self):
@@ -30,18 +30,17 @@ class MultisigScraper(Scraper):
             return None
 
         transport = AIOHTTPTransport(url=self.graph_url)
-        client = gql.Client(transport=transport,
-                            fetch_schema_from_transport=True)
+        client = gql.Client(transport=transport, fetch_schema_from_transport=True)
         try:
             result = client.execute(query, variable_values=variables)
-            if not result.get("wallets", None):
-                logging.error("theGraph API did not return wallets", result, "counter:", counter)
+            if result.get("wallets", None) == None:
+                logging.error(f"theGraph API did not return wallets {result} counter: {counter}")
                 return self.call_the_graph_api(query, variables, counter=counter+1)
-            if not result.get("transactions", None):
-                logging.error("theGraph API did not return transactions", result, "counter:", counter)
+            if result.get("transactions", None) == None:
+                logging.error(f"theGraph API did not return transactions {result} counter: {counter}")
                 return self.call_the_graph_api(query, variables, counter=counter+1)
         except Exception as e:
-            logging.error("An exception occurred getting the graph API", e, "counter:", counter)
+            logging.error(f"An exception occurred getting the graph API {e} counter: {counter}")
             return self.call_the_graph_api(query, variables, counter=counter+1)
         return result
         
@@ -49,7 +48,14 @@ class MultisigScraper(Scraper):
         skip = 0
         wallets = ["init"]
         transactions = ["init"]
+        if DEBUG:
+            req = 0
+            max_req = 5
         while len(wallets) > 0 and len(transactions) > 0:
+            if DEBUG:
+                req += 1
+                if req > max_req:
+                    break
             variables = {"first": self.interval, "skip": skip, "cutoff": self.cutoff_timestamp}
             query = gql.gql(
                 """query($first: Int!, $skip: Int!, $cutoff: BigInt!) {
@@ -81,7 +87,7 @@ class MultisigScraper(Scraper):
                 for owner in wallet["owners"]:
                     tmp = {
                         "multisig": wallet["id"],
-                        "address": owner,
+                        "ownerAddress": owner,
                         "threshold": int(wallet["threshold"]),
                         "occurDt": int(wallet["stamp"]),
                         "network": wallet["network"],
@@ -101,16 +107,15 @@ class MultisigScraper(Scraper):
                 }
                 self.data["transactions"].append(tmp)
             skip += self.interval
-            logging.info("Query success, skip is at:", skip)
+            logging.info(f"Query success, skip is at: {skip}")
         logging.info("Found {} multisig and {} transactions".format(
-            len(self.data["multisig"])), len(self.data["transactions"]))
+            len(self.data["multisig"]), len(self.data["transactions"])))
 
     def run(self):
         self.get_multisig_and_transactions()
         self.metadata["last_timestamp"] = int(self.runtime.timestamp())
         self.save_metadata()
         self.save_data()
-
 
 if __name__ == "__main__":
     scraper = MultisigScraper()

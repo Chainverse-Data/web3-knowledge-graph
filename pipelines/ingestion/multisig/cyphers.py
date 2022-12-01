@@ -22,13 +22,17 @@ class MultisigCyphers(Cypher):
         return count
 
     @count_query_logging
-    def add_multisig_labels(self, urls):
+    def add_multisig_labels_data(self, urls):
         count = 0
         for url in urls:
             query = f"""
                     LOAD CSV WITH HEADERS FROM '{url}' AS wallets
                     MATCH (w:Wallet {{address: wallets.multisig}})
                     SET w:MultiSig,
+                        w.network = wallets.network,
+                        w.factory = wallets.factory,
+                        w.version = wallets.version,
+                        w.timestamp = wallets.timestamp,
                         w.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                         w.threshold = toInteger(wallets.threshold),
                         w.occurDt = datetime(apoc.date.toISO8601(toInteger(wallets.occurDt), 'ms'))
@@ -43,8 +47,21 @@ class MultisigCyphers(Cypher):
         for url in urls:
             query = f"""
                     LOAD CSV WITH HEADERS FROM '{url}' AS wallets
-                    MATCH (m:Wallet {{address: wallets.multisig}}), (s:Wallet {{address: wallets.address}})
+                    MATCH (m:Wallet {{address: wallets.multisig}}), (s:Wallet {{address: wallets.ownerAddress}})
                     MERGE (s)-[r:IS_SIGNER]->(m)
+                    return count(r)
+            """
+            count += self.query(query)[0].value()
+        return count
+
+    @count_query_logging
+    def link_multisig_creators(self, urls):
+        count = 0
+        for url in urls:
+            query = f"""
+                    LOAD CSV WITH HEADERS FROM '{url}' AS wallets
+                    MATCH (m:Wallet {{address: wallets.multisig}}), (s:Wallet {{address: wallets.creator}})
+                    MERGE (s)-[r:IS_CREATOR]->(m)
                     return count(r)
             """
             count += self.query(query)[0].value()
