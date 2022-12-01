@@ -14,8 +14,8 @@ import time
 
 
 class SnapshotScraper(Scraper):
-    def __init__(self):
-        super().__init__("snapshot")
+    def __init__(self, bucket_name="snapshot", allow_override=False):
+        super().__init__(bucket_name, allow_override=allow_override)
         self.snapshot_url = "https://hub.snapshot.org/graphql"
         self.space_limit = 100
         self.proposal_limit = 500

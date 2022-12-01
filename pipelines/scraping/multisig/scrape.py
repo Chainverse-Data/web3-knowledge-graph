@@ -11,18 +11,13 @@ gql_log.setLevel(logging.WARNING)
 DEBUG = os.environ.get("DEBUG", False)
 
 class MultisigScraper(Scraper):
-    def __init__(self):
-        super().__init__("multisig", allow_override=bool(os.environ["ALLOW_OVERRIDE"]))
-        self.graph_url = (
-            "https://gateway.thegraph.com/api/{}/subgraphs/id/3oPKQiPKyD1obYpi5zXBy6HoPdYoDgxXptKrZ8GC3N1N".format(
-                os.environ["GRAPH_API_KEY"]
-            )
-        )
+    def __init__(self, bucket_name="multisig", allow_override=False):
+        super().__init__(bucket_name, allow_override=allow_override)
+        self.graph_url = "https://gateway.thegraph.com/api/{}/subgraphs/id/3oPKQiPKyD1obYpi5zXBy6HoPdYoDgxXptKrZ8GC3N1N".format(os.environ["GRAPH_API_KEY"])
         self.cutoff_timestamp = self.metadata.get("cutoff_timestamp", 0)
         self.interval = 1000
         self.data["multisig"] = []
         self.data["transactions"] = []
-
 
     def call_the_graph_api(self, query, variables, counter=0):
         time.sleep(counter)

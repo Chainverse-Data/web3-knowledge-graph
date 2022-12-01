@@ -10,8 +10,8 @@ gql_log.setLevel(logging.WARNING)
 DEBUG = os.environ.get("DEBUG", False)
 
 class DAOHausScraper(Scraper):
-    def __init__(self):
-        super().__init__("daohaus", allow_override=False)
+    def __init__(self, bucket_name="daohaus", allow_override=False):
+        super().__init__(bucket_name, allow_override=allow_override)
         self.cutoff_timestamp = self.metadata.get("cutoff_timestamp", 0)
         self.interval = 1000
         self.graph_urls = {

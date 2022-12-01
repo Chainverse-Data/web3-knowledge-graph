@@ -8,11 +8,11 @@ import pandas as pd
 import web3
 import re
 from collections import Counter
-DEBUG = False
+DEBUG = os.environ.get("DEBUG", False)
 
 class MirrorScraper(Scraper):
-    def __init__(self):
-        super().__init__("mirror", allow_override=DEBUG)
+    def __init__(self, bucket_name="mirror", allow_override=False):
+        super().__init__(bucket_name, allow_override=allow_override)
         self.optimism_start_block = self.metadata.get("optimism_start_block", 8557803)
         content = self.get_request("https://api-optimistic.etherscan.io/api?module=proxy&action=eth_blockNumber&apikey=" + os.environ.get("OPTIMISTIC_ETHERSCAN_API_KEY", ""), decode=False, json=True)
         self.optimism_end_block = int(content["result"], 16)
