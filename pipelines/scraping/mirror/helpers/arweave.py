@@ -20,11 +20,13 @@ class MirrorScraperHelper():
         query = gql(query_string)
         try:
             results = client.execute(query)
-        except:
+        except Exception as e:
+            logging.error(f"An exception occured getting transactions, {e}")
             return self.get_transations(query_string, counter=counter+1)
-        if results:
+        if results != None:
             return results
-        return self.get_transations(query_string, counter=counter+1)
+        else:
+            return self.get_transations(query_string, counter=counter+1)
     
     def get_all_transactions(self, startBlock, step):
         stopBlock = startBlock + step
@@ -55,7 +57,10 @@ class MirrorScraperHelper():
         results = ["init"]
         while len(results) > 0:
             content = self.get_transations(query_string.format(cursor, startBlock, stopBlock))
-            results = content.get("transactions", {"edges": []})["edges"]
+            if content:
+                results = content.get("transactions", {"edges": []})["edges"]
+            else:
+                results = []
             all_results += results
             if len(results) > 0:
                 cursor = f'after: "{results[-1]["cursor"]}", '
