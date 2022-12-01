@@ -26,7 +26,7 @@ class MultisigScraper(Scraper):
 
     def call_the_graph_api(self, query, variables, counter=0):
         time.sleep(counter)
-        if counter > 10:
+        if counter > 20:
             return None
 
         transport = AIOHTTPTransport(url=self.graph_url)
@@ -40,7 +40,7 @@ class MultisigScraper(Scraper):
                 logging.error(f"theGraph API did not return transactions {result} counter: {counter}")
                 return self.call_the_graph_api(query, variables, counter=counter+1)
         except Exception as e:
-            logging.error(f"An exception occurred getting the graph API {e} counter: {counter}")
+            logging.error(f"An exception occurred getting the graph API {e.message} counter: {counter} client: {client}")
             return self.call_the_graph_api(query, variables, counter=counter+1)
         return result
         
