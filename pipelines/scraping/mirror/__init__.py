@@ -1,1 +1,1 @@
-__all__ = ["MirrorScrapper"]
+from .scrape import MirrorScraper

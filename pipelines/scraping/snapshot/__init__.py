@@ -1,1 +1,1 @@
-__all__ = ["SnapshotScraper"]
+from .scrape import SnapshotScraper

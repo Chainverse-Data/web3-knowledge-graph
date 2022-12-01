@@ -80,6 +80,7 @@ class Scraper:
 
     def read_metadata(self):
         "Access the S3 bucket to read the metadata and returns a dictionary that corresponds to the saved JSON object"
+        logging.info("Loading the metadata from S3 ...")
         if "REINITIALIZE" in os.environ and os.environ["REINITIALIZE"] == "1":
             return {}
         if self.s3.check_if_file_exists(self.bucket_name, self.metadata_filename):
@@ -89,8 +90,10 @@ class Scraper:
 
     def save_metadata(self):
         "Saves the current metadata to S3"
+        logging.info("Saving the metadata to S3 ...")
         self.s3.save_json(self.bucket_name, self.metadata_filename, self.metadata)
 
     def save_data(self):
         "Saves the current data to S3"
+        logging.info("Saving the results to S3 ...")
         self.s3.save_json(self.bucket_name, self.data_filename, self.data)

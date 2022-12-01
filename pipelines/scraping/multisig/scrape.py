@@ -18,7 +18,7 @@ class MultisigScraper(Scraper):
                 os.environ["GRAPH_API_KEY"]
             )
         )
-        self.cutoff_timestamp = self.metadata.get("last_timestamp", 0)
+        self.cutoff_timestamp = self.metadata.get("cutoff_timestamp", 0)
         self.interval = 1000
         self.data["multisig"] = []
         self.data["transactions"] = []
@@ -52,7 +52,7 @@ class MultisigScraper(Scraper):
         if DEBUG:
             req = 0
             max_req = 5
-        while len(wallets) > 0 and len(transactions) > 0:
+        while len(wallets) > 0 or len(transactions) > 0:
             if DEBUG:
                 req += 1
                 if req > max_req:
@@ -121,7 +121,7 @@ class MultisigScraper(Scraper):
 
     def run(self):
         self.get_multisig_and_transactions()
-        self.metadata["last_timestamp"] = int(self.runtime.timestamp())
+        self.metadata["cutoff_timestamp"] = int(self.runtime.timestamp())
         self.save_metadata()
         self.save_data()
 

@@ -1,1 +1,1 @@
-__all__ = ["GitCoinScrapper"]
+from .scrape import GitCoinScraper
