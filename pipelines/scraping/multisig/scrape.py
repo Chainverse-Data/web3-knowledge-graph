@@ -40,7 +40,7 @@ class MultisigScraper(Scraper):
                 logging.error(f"theGraph API did not return transactions {result} counter: {counter}")
                 return self.call_the_graph_api(query, variables, counter=counter+1)
         except Exception as e:
-            logging.error(f"An exception occurred getting the graph API {e.message} counter: {counter} client: {client}")
+            logging.error(f"An exception occurred getting the graph API {e} counter: {counter} client: {client}")
             return self.call_the_graph_api(query, variables, counter=counter+1)
         return result
         
