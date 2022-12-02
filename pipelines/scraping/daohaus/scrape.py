@@ -37,7 +37,7 @@ class DAOHausScraper(Scraper):
             logging.error(f"An exception occurred getting the graph API {e} counter: {counter} client: {client}")
             return self.call_the_graph_api(query, variables, expectations, chain, counter=counter+1)
         return result
-        
+    
     def fetch_daoHaus_data(self):
         for chain in self.graph_urls.keys():
             logging.info(f"Fetching information for chain: {chain}")
@@ -52,6 +52,7 @@ class DAOHausScraper(Scraper):
             result = {key:["init"] for key in self.data[chain]}
             skip = 0
             retry = 0
+            cutoff = self.cutoff_timestamp
             if DEBUG:
                 req = 0
                 max_req = 5
@@ -193,7 +194,7 @@ class DAOHausScraper(Scraper):
                     if req > max_req:
                         break
                     req += 1
-                variables = {"first": self.interval, "skip": skip, "cutoff": str(self.cutoff_timestamp)}
+                variables = {"first": self.interval, "skip": skip, "cutoff": str(cutoff)}
                 result = self.call_the_graph_api(query, variables, self.data[chain].keys(), chain)
                 if result != None:
                     for key in self.data[chain]:

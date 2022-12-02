@@ -99,9 +99,10 @@ class TokenHolderScraper(Scraper):
         try:
             transactions = self.alchemy_API_call_iterate(
                 payload, "transfers", pagekey=1, counter=0, results=[])
+            return transactions
         except:
             logging.error("There has been an error getting information about the address: ", address)
-        return transactions
+            return []
 
     def get_received_transactions(self, address, start_block):
         payload = {
@@ -124,9 +125,10 @@ class TokenHolderScraper(Scraper):
         try:
             transactions = self.alchemy_API_call_iterate(
                 payload, "transfers", pagekey=1, counter=0, results=[])
+            return transactions
         except:
             logging.error("There has been an error getting information about the address: ", address)
-        return transactions
+            return []
 
     def get_balances(self, wallet, tokenList):
         if len(tokenList) == 0:
@@ -142,9 +144,10 @@ class TokenHolderScraper(Scraper):
         }
         try:
             token_balances = self.alchemy_API_call_iterate(payload, "tokenBalances", pagekey=1, counter=0, results=[])
+            return token_balances
         except:
             logging.error("There has been an error getting information about the address: ", wallet)
-        return token_balances
+            return {"wallet": [], "tokenList": []}
 
     def run(self):
         self.get_all_wallets_in_db()
