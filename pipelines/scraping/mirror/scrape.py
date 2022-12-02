@@ -192,28 +192,31 @@ class MirrorScraper(Scraper):
         for transaction in tqdm(filtered_transactions.to_dict('records')):
             print(transaction)
             data = self.get_article(transaction["transaction_id"])
-            article = {
-                "original_content_digest": transaction["original_content_digest"],
-                "current_content_digest": transaction["content_digest"],
-                "arweaveTx": transaction["transaction_id"],
-                "body": data["content"]["body"],
-                "title": data["content"]["title"],
-                "timestamp": data["content"]["timestamp"],
-                "author": transaction["author"],
-                # "ens": self.reverse_ens[transaction["author"]],
-            }
-            articles_cleaned.append(article)
-            if "wnft" in data:
-                nft = {
-                    "original_content_digest": transaction["original-content-digest"],
-                    "chain_id": data["chainId"],
-                    "funding_recipient": data["fundingRecipient"],
-                    "owner": data["owner"],
-                    "address": data["proxyAddress"],
-                    "supply": data["supply"],
-                    "symbol": data["symbol"]
+            if data:
+                article = {
+                    "original_content_digest": transaction["original_content_digest"],
+                    "current_content_digest": transaction["content_digest"],
+                    "arweaveTx": transaction["transaction_id"],
+                    "body": data["content"]["body"],
+                    "title": data["content"]["title"],
+                    "timestamp": data["content"]["timestamp"],
+                    "author": transaction["author"],
+                    # "ens": self.reverse_ens[transaction["author"]],
                 }
-                NFTs_cleaned.append(nft)
+                articles_cleaned.append(article)
+                if "wnft" in data:
+                    nft = {
+                        "original_content_digest": transaction["original-content-digest"],
+                        "chain_id": data["chainId"],
+                        "funding_recipient": data["fundingRecipient"],
+                        "owner": data["owner"],
+                        "address": data["proxyAddress"],
+                        "supply": data["supply"],
+                        "symbol": data["symbol"]
+                    }
+                    NFTs_cleaned.append(nft)
+            else:
+                logging.error("An error occured retriving articles")
         logging.info(f"Retrieved {len(articles_cleaned)} articles")
 
         self.data["arweave_transactions"] = transactions_cleaned
