@@ -20,14 +20,13 @@ class Scraper:
 
         if not bucket_name:
             raise ValueError("bucket_name is not defined!")
-        self.bucket_name = os.environ["AWS_BUCKET_PREFIX"] + bucket_name
+        self.bucket_name = bucket_name ## changed this
 
         if not allow_override and "ALLOW_OVERRIDE" in os.environ and os.environ["ALLOW_OVERRIDE"] == "1":
             allow_override = True
 
         self.s3 = S3Utils()
         self.bucket = self.s3.create_or_get_bucket(self.bucket_name)
-
         self.data = {}
         self.data_filename = "data_{}-{}-{}.json".format(self.runtime.year, self.runtime.month, self.runtime.day)
         if not allow_override and self.s3.check_if_file_exists(self.bucket_name, self.data_filename):
