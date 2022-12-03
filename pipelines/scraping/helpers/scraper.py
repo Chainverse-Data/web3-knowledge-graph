@@ -25,7 +25,7 @@ class Scraper:
 
         if not bucket_name:
             raise ValueError("bucket_name is not defined!")
-        self.bucket_name = os.environ["AWS_BUCKET_PREFIX"] + bucket_name
+        self.bucket_name = bucket_name ## changed this
 
         if not allow_override and "ALLOW_OVERRIDE" in os.environ and os.environ["ALLOW_OVERRIDE"] == "1":
             allow_override = True
