@@ -44,7 +44,6 @@ class MirrorScraper(Scraper):
 
     def get_article(self, arweaveHash):
         url = self.arweave_url.format(arweaveHash)
-        print(url)
         content = self.get_request(url, decode=False, json=True)
         return content
 
@@ -56,9 +55,7 @@ class MirrorScraper(Scraper):
         while page:
             logging.info(f"Scrapping ... currently got {len(NFT_addresses)} NFTs from Optimism...")
             url = self.etherescan_API_url.format(self.mirror_NFT_factory_address, self.optimism_start_block, self.optimism_end_block, page, offset)
-            print(url)
             transactions = self.get_request(url, decode=False, json=True)
-            print(transactions)
             if transactions["status"] == '1':
                 for transaction in transactions["result"]:
                     if transaction["type"] in ["create2", "create"]:
@@ -90,17 +87,11 @@ class MirrorScraper(Scraper):
             try:
                 contract = self.w3.eth.contract(address=self.w3.toChecksumAddress(address), abi=abi)
                 mirror_url = contract.functions.description().call()
-                print(mirror_url)
                 funding_recipient = contract.functions.fundingRecipient().call()
-                print(funding_recipient)
                 supply = contract.functions.limit().call()
-                print(supply)
                 owner = contract.functions.owner().call()
-                print(owner)
                 symbol = contract.functions.symbol().call()
-                print(symbol)
                 req = requests.get(mirror_url, verify=False)
-                print(req.url)
                 digest = req.url.split("/")[-1]
 
                 nft = {
@@ -112,15 +103,12 @@ class MirrorScraper(Scraper):
                     "supply": supply,
                     "symbol": symbol,
                 }
-                print(nft)
                 missing_NFTs.append(nft)
 
                 if digest not in articles and digest != address:
                     arweave_hash = contract.functions.contentURI().call()
-                    print("hash", arweave_hash)
                     if (arweave_hash.strip()):
                         data = self.get_article(arweave_hash)
-                        print("data", data)
                         # if data["authorship"]["contributor"] not in self.reverse_ens:
                         #     ens = self.ENSsearch(data["authorship"]["contributor"])
                         # else:
@@ -153,7 +141,6 @@ class MirrorScraper(Scraper):
         done = set()
         logging.info(f"Getting all new transactions")
         for transaction in tqdm(transactions):
-            print(transaction)
             author, content_digest, original_content_digest = None, None, None
             for tag in transaction["node"]["tags"]:
                 if tag["name"] == "Contributor":
@@ -190,7 +177,6 @@ class MirrorScraper(Scraper):
         filtered_transactions = transaction_df.sort_values("block").groupby("original_content_digest", as_index=False).head(1)
         logging.info(f"Getting all the articles content")
         for transaction in tqdm(filtered_transactions.to_dict('records')):
-            print(transaction)
             data = self.get_article(transaction["transaction_id"])
             if data:
                 article = {
