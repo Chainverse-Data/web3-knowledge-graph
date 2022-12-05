@@ -32,17 +32,18 @@ class LockScraper(Scraper):
         client = gql.Client(transport=transport, fetch_schema_from_transport=True)
         
         try: 
-            logging.info(f" here  are the variables {variables}")
+            logging.info(f"here  are the variables {variables}")
             logging.info(f"here is the query: {query}")
             result = client.execute(query, variables)
             countLocks = len(result['locks'])
+            countKeys = len(result['keys'])
             logging.info(f"the graph API returned this many locks: {countLocks}")
+            logging.info(f"the graph API returned this many locks: {countKeys}")
             if result.get('locks', None) == None: 
                 logging.error(f"The Graph API did not return locks, counter: {counter}")
                 return self.call_the_graph_api(query, variables, counter=counter+1)
-            if result.get('keys', None) == None: 
-                logging.error(f"The Graph API did not return  keys counter: {counter}")
-                return self.call_the_graph_api(query, variables, counter=counter+1)
+            elif result.get('locks', None) == None: 
+                logging.info(f"Not receiving any more results, ending scrape: here are the results {result['locks']}")
         except Exception as e:
             logging.error(f'An exception occured getting The Graph API {e} counter: {counter} client: {client}')
         return(result)
@@ -53,10 +54,10 @@ class LockScraper(Scraper):
         retry = 0
         req = 0 
         max_req = 5
+        locks_before = len(self.data['locks'])
         
         while len(self.data['locks']) > 0:
-            locks_before = len(self.data['locks'])
-            keys_before = len(self.data['keys'])
+            
             variables = {
                 "first": self.interval, 
                 "skip": skip, 
@@ -83,40 +84,43 @@ class LockScraper(Scraper):
             }
             """)
             result = self.call_the_graph_api(query, variables)
+            time.sleep(2) ## need to add actual logic here for when to sleep 
             locks = result['locks']
-            for lock in locks:
-                tmp = {
-                    'address': lock['address'].lower(),
-                    'name': lock['name'],
-                    'blockNumber': lock['createdAtBlock'],
-                    'price': lock['price'],
-                    'expirationDuration': lock['expirationDuration'],
-                    'lockManagers': lock['lockManagers']
-                }
-                self.data['locks'].append(tmp)
-                skip += self.interval
-                logging.info(f"Query success, skip is at: {skip}")
-            for lock in locks:
-                lockAddress = lock['address'].lower()
-                for key in lock['keys']:
+            if len(locks) > 0:
+                for lock in locks:
                     tmp = {
-                        'lock': lockAddress,
-                        'key': key['tokenAddress'].lower(),
-                        'tokenId': key['id'],
-                        'owner': key['owner'],
-                        'expiration': key['expiration'],
-                        'tokenUri': key['tokenUri']
+                        'address': lock['address'].lower(),
+                        'name': lock['name'],
+                        'blockNumber': lock['createdAtBlock'],
+                        'price': lock['price'],
+                        'expirationDuration': lock['expirationDuration'],
+                        'lockManagers': lock['lockManagers'],
+                        'keys': lock['keys']
                     }
-                    self.data['keys'].append(tmp)
-                retry = 0 
-            logging.info(f"Query success, skip is at: {skip}")
-                    
-        else:
-            retry += 1
-            if retry > 10:
+                    self.data['locks'].append(tmp)
+                    print(tmp)
+                for lock in locks:
+                    address = lock['address'].lower()
+                    for key in lock['keys']:
+                        tmp = {
+                            'lockAddress': address,
+                            'keyId': key['id'],
+                            'owner': key['owner'],
+                            'expiration': key['expiration'],
+                            'tokenURI': key['tokenURI']
+                        }
+                        self.data['keys'].append(tmp)
                 skip += self.interval
-                logging.error(f"Query success, skip is at: {skip}")
-        
+                logging.info(f"Query success, skip is at: {skip}")                    
+            else: ## changing
+                retry += 1
+                if retry > 5:
+                    skip += self.interval
+                    break ## trying to break if we don't get results
+
+    ## def get_key_transactions(self): 
+        ## skip = 0 ###
+
             
     def run(self):
         self.get_locks()
