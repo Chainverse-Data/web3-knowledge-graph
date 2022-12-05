@@ -60,6 +60,28 @@ class Ingestor:
             return self.s3.load_json(self.bucket_name, self.metadata_filename)
         else:
             return {}
+    
+    def save_df_as_csv(self, df, bucket_name, file_name, ACL="public-read"):
+        """Function to save a Pandas DataFrame to a CSV file in S3.
+        This functions takes care of splitting the dataframe if the resulting CSV is more than 10Mb.
+        parameters:
+        - df: the dataframe to be saved.
+        - bucket_name: The bucket name.
+        - file_name: The file name (without .csv at the end).
+        - ACL: (Optional) defaults to public-read for neo4J ingestion."""
+        chunks = [df]
+        # Check if the dataframe is bigger than the max allowed size of Neo4J (10Mb)
+        if df.memory_usage(index=False).sum() > 10000000:
+            chunks = self.split_dataframe(df)
+
+        urls = []
+        for chunk, chunk_id in zip(chunks, range(len(chunks))):
+            chunk.to_csv(f"s3://{bucket_name}/{file_name}--{chunk_id}.csv", index=False)
+            self.s3_resource.ObjectAcl(bucket_name, f"{file_name}--{chunk_id}.csv").put(ACL=ACL)
+            location = self.s3_client.get_bucket_location(Bucket=bucket_name)["LocationConstraint"]
+            urls.append("https://s3-%s.amazonaws.com/%s/%s" % (location, bucket_name, f"{file_name}--{chunk_id}.csv"))
+        return urls
+
 
     def save_metadata(self):
         "Saves the current metadata to S3"
