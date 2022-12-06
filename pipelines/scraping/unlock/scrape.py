@@ -17,13 +17,25 @@ graph_api_key = os.getenv('GRAPH_API_KEY')
 class LockScraper(Scraper):
     def __init__(self, bucket_name='unlock-test', allow_override=True):
         super().__init__(bucket_name, allow_override=allow_override)
+
+        ## graph urls
         self.mainnet_url = f"https://gateway.thegraph.com/api/{graph_api_key}/subgraphs/id/8u7KcVRxjtTDRgEJup3UuPJk6YoRDTHNpSMk5BEpdw42" ## what is this pattern
+        self.mainnet_url_updated = f"https://gateway.thegraph.com/api/{graph_api_key}/subgraphs/id/QmRiwYpBoPESYDf3UhneJc1veUWp1JHUc1rVuT8RWdndCW" ## what is this pattern
+        self.polygon_url = f"https://gateway.thegraph.com/api/{graph_api_key}/subgraphs/id/QmSdGt5e3nymtWY6EhMxfkHCjF9Asr4vvjmtaiKuy6qwAi"
+        self.xdai_url = f"https://gateway.thegraph.com/{graph_api_key}/subgraphs/id/QmUa26Qj9MZn2fmD67SzegPiHSHvFfgYytjFAmxK7au6MY"
+        self.optimism_url = f"https://gateway.thegraph.com/{graph_api_key}/subgraphs/id/QmYWbG6fFM9uaq5zYLwJABSnycGU6s9D9FuqHLDREXhCWP"
+
         self.metadata['cutoff_block'] = self.metadata.get("cutoff_block", 9227851) ## doublecheck this
         self.interval = 1000 ## default for The Graph
         self.data['locks'] = ['init'] ## lock data
         self.data['keys'] = ['init'] ## key data
         self.mainnet_url
-         
+        
+        ## strategy
+        ### the non mainnet locks have a slightly different ontology. 
+        ### so i can extend `call_the_graph_api` to take a url as an argument and then just call it with the appropriate url, and then rewrite ingestors
+        ### orrr i can extend `call_the_graph_api` to get the new data, and rewrite other functions for the other networks. 
+        ### probably should rewrite everything. but i guess this will work in the meantime
     
     def call_the_graph_api(self, query, variables, counter=0):
         time.sleep(counter)
