@@ -46,16 +46,27 @@ class UnlockIngestor(Ingestor):
         }
 
     def ingest_wallets(self): 
-        logging.info("Ingesting locks and keys....")
-
+        logging.info("Ingesting wallets...")
+        
         unlockData = self.prepare_unlock_data()
         allWalletsUnique = unlockData['allWalletsUnique'] 
-        urls = self.s3.save_df_as_csv(allWalletsUnique, self.bucket_name, f"ingestor_wallets_{self.asOf}", ACL=None)
+        urls = self.s3.save_df_as_csv(allWalletsUnique, self.bucket_name, f"ingestor_wallets_{self.asOf}", ACL='public-read')
         self.cyphers.create_wallets(urls)
+        logging.info(f"successfully ingested wallets. good job dev!")
+    
+    def ingest_lock_metadata(self):
+        logging.info("Ingesting lock metadata...")
+
+        unlockData = self.prepare_unlock_data()
+        lockMetadata = unlockData['lockMetadata']
+        urls = self.s3.save_df_as_csv(lockMetadata, self.bucket_name, f"ingestor_locks_{self.asOf}", ACL='public-read') 
+        self.cyphers.create_locks(urls)
+        logging.info("successfully ingested locks. good job dev!")
 
     def run(self):
         self.prepare_unlock_data()
         self.ingest_wallets()
+        self.ingest_lock_metadata()
 
 if __name__ == "__main__":
     ingestor = UnlockIngestor()
