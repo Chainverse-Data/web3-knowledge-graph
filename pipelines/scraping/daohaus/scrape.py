@@ -12,35 +12,19 @@ DEBUG = os.environ.get("DEBUG", False)
 class DAOHausScraper(Scraper):
     def __init__(self, bucket_name="daohaus", allow_override=False):
         super().__init__(bucket_name, allow_override=allow_override)
-        self.cutoff_timestamp = self.metadata.get("cutoff_timestamp", 0)
+
         self.interval = 1000
+        if DEBUG:
+            self.interval = 10
+
         self.graph_urls = {
             "mainnet":"https://api.thegraph.com/subgraphs/name/odyssy-automaton/daohaus",
             "xdai":"https://api.thegraph.com/subgraphs/name/odyssy-automaton/daohaus-xdai",
             "optimism":"https://api.thegraph.com/subgraphs/name/odyssy-automaton/daohaus-optimism",
         }
+        self.last_cutoffs = {}
 
-    def call_the_graph_api(self, query, variables, expectations, chain, counter=0):
-        time.sleep(counter)
-        if counter > 20:
-            return None
-
-        transport = AIOHTTPTransport(url=self.graph_urls[chain])
-        client = gql.Client(transport=transport, fetch_schema_from_transport=True)
-        try:
-            result = client.execute(query, variable_values=variables)
-            for key in expectations:
-                if result.get(key, None) == None:
-                    logging.error(f"theGraph API did not return {key}: {result} | counter: {counter}")
-                    return self.call_the_graph_api(query, variables, expectations, chain, counter=counter+1)
-        except Exception as e:
-            logging.error(f"An exception occurred getting the graph API {e} counter: {counter} client: {client}")
-            return self.call_the_graph_api(query, variables, expectations, chain, counter=counter+1)
-        return result
-    
-    def fetch_daoHaus_data(self):
         for chain in self.graph_urls.keys():
-            logging.info(f"Fetching information for chain: {chain}")
             self.data[chain] = {
                 "daoMetas": [],
                 "moloches": [],
@@ -49,16 +33,35 @@ class DAOHausScraper(Scraper):
                 "members": [],
                 "proposals": []
             }
-            result = {key:["init"] for key in self.data[chain]}
-            skip = 0
-            retry = 0
-            cutoff = self.cutoff_timestamp
-            if DEBUG:
-                req = 0
-                max_req = 5
-            query = gql.gql("""
-                query($first: Int!, $skip: Int!, $cutoff: String!) {
-                    daoMetas(first: $first, skip: $skip) 
+            self.last_cutoffs[chain] = {}
+            for key in self.data[chain]:
+                if key in ["daoMetas", "tokenBalances"]:
+                    self.last_cutoffs[chain][key] = self.metadata.get("last_cutoffs", {chain: {key: ""}})[chain][key]
+                else:
+                    self.last_cutoffs[chain][key] = self.metadata.get("last_cutoffs", {chain: {key: "0"}})[chain][key]
+
+    def call_the_graph_api(self, query, variables, key, chain, counter=0):
+        time.sleep(counter)
+        if counter > 20:
+            return None
+
+        transport = AIOHTTPTransport(url=self.graph_urls[chain])
+        client = gql.Client(transport=transport, fetch_schema_from_transport=True)
+        try:
+            result = client.execute(query, variable_values=variables)
+            if result.get(key, None) == None:
+                logging.error(f"theGraph API did not return {key}: {result} | counter: {counter}")
+                return self.call_the_graph_api(query, variables, key, chain, counter=counter+1)
+        except Exception as e:
+            logging.error(f"An exception occurred getting the graph API {e} counter: {counter} client: {client}")
+            return self.call_the_graph_api(query, variables, key, chain, counter=counter+1)
+        return result
+    
+    def fetch_dao_meta(self):
+        logging.info(f"Fetching daoMetas information")
+        query = gql.gql("""
+                query($first: Int!, $cutoff: ID!) {
+                    daoMetas(first: $first, orderBy: id, orderDirection:desc, where:{id_gt: $cutoff}) 
                     {
                         id
                         title
@@ -66,37 +69,53 @@ class DAOHausScraper(Scraper):
                         newContract
                         http
                     }
-                    moloches(first: $first, skip: $skip, orderBy: createdAt, orderDirection:desc, where:{createdAt_gt: $cutoff}) {
-                        id
-                        version
-                        summoner
-                        newContract
-                        summoningTime
-                        createdAt
-                        periodDuration
-                        votingPeriodLength
-                        gracePeriodLength
-                        proposalDeposit
-                        approvedTokens {
+                }
+                """)
+        self.fetch_data(query, "daoMetas", "id")
+
+    def fetch_moloches(self):
+        logging.info(f"Fetching moloches information")
+        query = gql.gql("""
+                    query($first: Int!, $cutoff: String!) {
+                        moloches(first: $first, orderBy: createdAt, orderDirection:desc, where:{createdAt_gt: $cutoff}) {
                             id
-                            tokenAddress
-                            whitelisted
-                            symbol
-                            decimals
+                            version
+                            summoner
+                            newContract
+                            summoningTime
+                            createdAt
+                            periodDuration
+                            votingPeriodLength
+                            gracePeriodLength
+                            proposalDeposit
+                            approvedTokens {
+                                id
+                                tokenAddress
+                                whitelisted
+                                symbol
+                                decimals
+                            }
+                            guildBankAddress
+                            guildBankBalanceV1
+                            tokens {
+                                id
+                                tokenAddress
+                                whitelisted
+                                symbol
+                                decimals
+                            }
+                            totalLoot
+                            totalShares
                         }
-                        guildBankAddress
-                        guildBankBalanceV1
-                        tokens {
-                            id
-                            tokenAddress
-                            whitelisted
-                            symbol
-                            decimals
-                        }
-                        totalLoot
-                        totalShares
                     }
-                    tokenBalances(first: $first, skip: $skip) 
+                    """)
+        self.fetch_data(query, "moloches", "createdAt")
+
+    def fetch_token_balances(self):
+        logging.info(f"Fetching token balances information")
+        query = gql.gql("""
+                query($first: Int!, $cutoff: ID!) {
+                    tokenBalances(first: $first, orderBy: id, orderDirection:desc, where:{id_gt: $cutoff}) 
                     {
                         id
                         moloch {
@@ -107,7 +126,15 @@ class DAOHausScraper(Scraper):
                         }
                         tokenBalance
                     }
-                    votes(first: $first, skip: $skip, orderBy: createdAt, orderDirection:desc, where:{createdAt_gt: $cutoff}) 
+                }
+                """)
+        self.fetch_data(query, "tokenBalances", "id")
+
+    def fetch_votes(self):
+        logging.info(f"Fetching votes information")
+        query = gql.gql("""
+                query($first: Int!, $cutoff: String!) {
+                    votes(first: $first, orderBy: createdAt, orderDirection:desc, where:{createdAt_gt: $cutoff}) 
                     {
                         id
                         createdAt
@@ -121,7 +148,15 @@ class DAOHausScraper(Scraper):
                         proposalIndex
                         memberPower
                     }
-                    members(first: $first, skip: $skip, orderBy: createdAt, orderDirection:desc, where:{createdAt_gt: $cutoff}) 
+                }
+                """)
+        self.fetch_data(query, "votes", "createdAt")
+
+    def fetch_members(self):
+        logging.info(f"Fetching members information")
+        query = gql.gql("""
+                query($first: Int!, $cutoff: String!) {
+                    members(first: $first, orderBy: createdAt, orderDirection:desc, where:{createdAt_gt: $cutoff}) 
                     {
                         id
                         createdAt
@@ -136,7 +171,15 @@ class DAOHausScraper(Scraper):
                         kicked
                         jailed
                     }
-                    proposals(first: $first, skip: $skip, orderBy: createdAt, orderDirection:desc, where:{createdAt_gt: $cutoff}) {
+                }
+                """)
+        self.fetch_data(query, "members", "createdAt")
+
+    def fetch_proposals(self):
+        logging.info(f"Fetching proposals information")
+        query = gql.gql("""
+                query($first: Int!, $cutoff: String!) {
+                    proposals(first: $first, orderBy: createdAt, orderDirection:desc, where:{createdAt_gt: $cutoff}) {
                         createdAt
                         createdBy
                         proposalIndex
@@ -188,30 +231,50 @@ class DAOHausScraper(Scraper):
                             createdAt
                         }
                     }
-                }""")
+                }
+                """)
+        self.fetch_data(query, "proposals", "createdAt")
+
+    def fetch_data(self, query, key, cutoff_key):
+        for chain in self.graph_urls.keys():
+            logging.info(f"Fetching information for chain: {chain}. \nQuery: {query} \nParams: {key} | {self.last_cutoffs[chain][key]} | {cutoff_key}")
+            result = {key:["init"]}
+            retry = 0
+            variables = {"first": self.interval, "cutoff": self.last_cutoffs[chain][key]}
+            if DEBUG:
+                req = 0
+                max_req = 6
             while sum([len(result.get(key, [])) for key in result]) > 0:
                 if DEBUG:
                     if req > max_req:
                         break
                     req += 1
-                variables = {"first": self.interval, "skip": skip, "cutoff": str(cutoff)}
-                result = self.call_the_graph_api(query, variables, self.data[chain].keys(), chain)
+                result = self.call_the_graph_api(query, variables, key, chain)
                 if result != None:
-                    for key in self.data[chain]:
-                        self.data[chain][key] += result.get(key, [])
-                    skip += self.interval
+                    data = result.get(key, [])
+                    self.data[chain][key] += data
+                    if len(data) > 0:
+                        cutoff = data[-1][cutoff_key]
+                        variables["cutoff"] = cutoff
                     retry = 0
-                    logging.info(f"Query success, skip is at: {skip}")
+                    logging.info(f"Query success, cutoff is at: {cutoff}")
                 else:
                     retry += 1
-                    if retry > 10:
-                        skip += self.interval
-                    logging.error(f"Query unsuccessful, skip is at: {skip}")
+                    if retry > 5:
+                        result = {key:[]}
+                        logging.error(f"Query unsuccessful. Giving up on it.")
+                    logging.error(f"Query unsuccessful. Retrying! cutoff is at: {cutoff}")
+            self.last_cutoffs[chain][key] = cutoff
 
     def run(self):
-        self.fetch_daoHaus_data()
+        self.fetch_dao_meta()
+        self.fetch_moloches()
+        self.fetch_token_balances()
+        self.fetch_votes()
+        self.fetch_members()
+        self.fetch_proposals()
         self.save_data()
-        self.metadata["cutoff_timestamp"] = int(self.runtime.timestamp())
+        self.metadata["last_cutoffs"] = self.last_cutoffs
         self.save_metadata()
 
 if __name__ == "__main__":
