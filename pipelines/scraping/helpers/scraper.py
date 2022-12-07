@@ -52,29 +52,38 @@ class Scraper:
         time.sleep(counter * 10)
         if counter > 10:
             return None
-        r = requests.get(url, params=params, headers=headers,
-                         allow_redirects=allow_redirects, verify=False)
-        if r.status_code != 200:
-            logging.error(f"Status code not 200: {r.status_code} Retrying in {counter*10}s (counter = {counter})...")
+        try:
+            r = requests.get(url, params=params, headers=headers,
+                            allow_redirects=allow_redirects, verify=False)
+            if r.status_code != 200:
+                logging.error(f"Status code not 200: {r.status_code} Retrying in {counter*10}s (counter = {counter})...")
+                return self.get_request(url, params=params, headers=headers, allow_redirects=allow_redirects, counter=counter + 1)
+            if "403 Forbidden" in r.content.decode("UTF-8"):
+                logging.error(f"Status code not 200: {r.status_code} Retrying in {counter*10}s (counter = {counter})...")
+                return self.get_request(url, params=params, headers=headers, allow_redirects=allow_redirects, counter=counter + 1)
+            if decode:
+                return r.content.decode("UTF-8")
+            if json:
+                return r.json()
+            return r
+        except Exception as e:
+            logging.error(f"An unrecoverable exception occurred: {e}")
             return self.get_request(url, params=params, headers=headers, allow_redirects=allow_redirects, counter=counter + 1)
-        if "403 Forbidden" in r.content.decode("UTF-8"):
-            logging.error(f"Status code not 200: {r.status_code} Retrying in {counter*10}s (counter = {counter})...")
-            return self.get_request(url, params=params, headers=headers, allow_redirects=allow_redirects, counter=counter + 1)
-        if decode:
-            return r.content.decode("UTF-8")
-        if json:
-            return r.json()
-        return r
 
     def post_request(self, url, data=None, json=None, headers=None, counter=0):
         time.sleep(counter * 10)
         if counter > 10:
             return None
-        r = requests.post(url, data=data, json=json, headers=headers, verify=False)
-        if r.status_code <= 200 and r.status_code > 300:
-            logging.error(f"Status code not 200: {r.status_code} Retrying {counter*10}s (counter = {counter})...")
+        try:
+            r = requests.post(url, data=data, json=json, headers=headers, verify=False)
+            if r.status_code <= 200 and r.status_code > 300:
+                logging.error(f"Status code not 200: {r.status_code} Retrying {counter*10}s (counter = {counter})...")
+                return self.post_request(url, data=data, json=json, headers=headers, counter=counter + 1)
+            return r.content.decode("UTF-8")
+        except Exception as e:
+            logging.error(f"An unrecoverable exception occurred: {e}")
             return self.post_request(url, data=data, json=json, headers=headers, counter=counter + 1)
-        return r.content.decode("UTF-8")
+
 
     # This section contains functions to deal with S3 storage.
 
