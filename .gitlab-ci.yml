@@ -62,7 +62,6 @@ publish-aws:
     - apk add --no-cache curl jq python3 py3-pip
     - pip install awscli
     - aws ecr-public get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin public.ecr.aws/t7w5a8x9
-    #- aws ecr get-login-password | docker login --username AWS --password-stdin $DOCKER_REGISTRY
     - aws --version
     - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
   script:
