@@ -95,8 +95,8 @@ class UnlockIngestor(Ingestor):
 
     def run(self):
         unlockData = self.prepare_unlock_data()
-        self.ingest_wallets(data=unlockData)
-        self.ingest_lock_metadata(data=unlockData)
+        #self.ingest_wallets(data=unlockData)
+       # self.ingest_lock_metadata(data=unlockData)
         self.ingest_key_metadata(data=unlockData)
         self.ingest_lock_managers(data=unlockData)
         self.ingest_key_holders(data=unlockData)
