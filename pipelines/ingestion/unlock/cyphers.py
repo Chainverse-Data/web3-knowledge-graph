@@ -96,7 +96,7 @@ class UnlockCyphers(Cypher):
             WITH 
                 w,
                 t,
-                datetime(apoc.date.toISO8601(toInteger(keys.occurDt), 'ms')) as ts
+                datetime(apoc.date.toISO8601(toInteger(lockManagers.occurDt), 'ms')) as ts
             MERGE
                 (w)-[r:HAS_TOKEN]->(t)
             set 
@@ -147,7 +147,7 @@ class UnlockCyphers(Cypher):
             self.query(query)
             count += 1
         logging.info(f"Nice I ran {count} queries to connect locks and keys")
-        
+
         ## this is fucked up and needs to be fixed
         checkQuery = f"""
         LOAD CSV WITH HEADERS FROM '{url}' as lockKeys
