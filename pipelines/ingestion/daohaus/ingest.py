@@ -80,7 +80,7 @@ class DaoHausIngestor(Ingestor):
             for proposal in tqdm(self.scraper_data[chain]["proposals"], position=1):
                 tmp = proposal
                 tmp["id"] = f"{proposal['molochAddress']}-proposal-{proposal['proposalId']}"
-                
+                del tmp["minionExecuteActionTx"]
                 if proposal["tributeTokenDecimals"]:
                     tmp["tributeAmount"] = int(proposal["tributeOffered"])/float(proposal["tributeTokenDecimals"])
                 else:
