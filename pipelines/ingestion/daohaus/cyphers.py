@@ -133,7 +133,7 @@ class DaoHausCyphers(Cypher):
 
     @count_query_logging
     def create_or_merge_wallets(self, urls):
-        self.queries.create_wallets(urls)
+        return self.queries.create_wallets(urls)
 
     @count_query_logging
     def create_or_merge_tokens(self, urls):
@@ -145,13 +145,14 @@ class DaoHausCyphers(Cypher):
         for url in urls:
             query = f"""
                         LOAD CSV WITH HEADERS FROM '{url}' AS votes
-                        MATCH (proposal:DaoHaus:Proposal {{id: votes.proposalId}}), (voter:Wallet {{address: toLower(votes.voterAddress)}})
+                        MATCH (proposal:DaoHaus:Proposal {{id: votes.proposalId}}), (voter:Wallet {{address: toLower(votes.memberAddress)}})
                         WITH proposal, voter, votes
                         MERGE (voter)-[edge:VOTED]->(proposal)
                         ON CREATE set edge.uuid = apoc.create.uuid(),
-                            edge.votedAt = votes.votedAt,
+                            edge.votedAt = votes.createdAt,
+                            edge.uintVote = votes.uintVote,
                             edge.vote = votes.vote,
-                            edge.shares = votes.shares,
+                            edge.shares = toInteger(votes.memberPower),
                             edge.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                             edge.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                             edge.ingestedBy = "{self.CREATED_ID}"
@@ -168,14 +169,16 @@ class DaoHausCyphers(Cypher):
         for url in urls:
             query = f"""
                         LOAD CSV WITH HEADERS FROM '{url}' AS votes
-                        MATCH (dao:DaoHaus:Dao {{id: votes.daoId}}), (voter:Wallet {{address: toLower(votes.voterAddress)}})
+                        MATCH (dao:DaoHaus:Dao {{id: votes.molochAddress}}), (voter:Wallet {{address: toLower(votes.memberAddress)}})
                         WITH dao, voter, votes
                         MERGE (voter)-[edge:IS_VOTER]->(dao)
                         ON CREATE set edge.uuid = apoc.create.uuid(),
+                            edge.shares = toInteger(votes.memberPower),
                             edge.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                             edge.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                             edge.ingestedBy = "{self.CREATED_ID}"
                         ON MATCH set edge.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
+                            edge.shares = toInteger(votes.memberPower),
                             edge.ingestedBy = "{self.UPDATED_ID}"
                         return count(edge)
                 """
@@ -188,7 +191,7 @@ class DaoHausCyphers(Cypher):
         for url in urls:
             query = f"""
                         LOAD CSV WITH HEADERS FROM '{url}' AS summoners
-                        MATCH (dao:DaoHaus:Dao {{id: summoners.daoId}}), (summoner:Wallet {{address: toLower(summoners.summoner)}})
+                        MATCH (dao:DaoHaus:Dao {{id: summoners.daoId}}), (summoner:Wallet {{address: toLower(summoners.address)}})
                         WITH dao, summoner, summoners
                         MERGE (summoner)-[edge:SUMMONER]->(dao)
                         ON CREATE set edge.uuid = apoc.create.uuid(),
@@ -223,14 +226,14 @@ class DaoHausCyphers(Cypher):
         return count
     
     @count_query_logging
-    def link_or_merge_executors(self, urls):
+    def link_or_merge_processors(self, urls):
         count = 0
         for url in urls:
             query = f"""
-                        LOAD CSV WITH HEADERS FROM '{url}' AS executors
-                        MATCH (proposal:DaoHaus:Proposal {{id: executors.id}}), (executor:Wallet {{address: toLower(executors.processor)}})
-                        WITH proposal, executor, executors
-                        MERGE (executor)-[edge:EXECUTED]->(proposal)
+                        LOAD CSV WITH HEADERS FROM '{url}' AS processors
+                        MATCH (proposal:DaoHaus:Proposal {{id: processors.id}}), (processor:Wallet {{address: toLower(processors.processor)}})
+                        WITH proposal, processor, processors
+                        MERGE (processor)-[edge:EXECUTED]->(proposal)
                         ON CREATE set edge.uuid = apoc.create.uuid(),
                             edge.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                             edge.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
@@ -288,12 +291,13 @@ class DaoHausCyphers(Cypher):
         for url in urls:
             query = f"""
                         LOAD CSV WITH HEADERS FROM '{url}' AS payments
-                        MATCH (proposal:DaoHaus:Proposal {{id: payments.id}}), (applicant:Wallet {{address: toLower(payments.applicantAddress)}})
+                        MATCH (proposal:DaoHaus:Proposal {{id: payments.id}}), (applicant:Wallet {{address: toLower(payments.applicant)}})
                         WITH proposal, applicant, payments
                         MERGE (proposal)-[edge:IS_PAYING]->(applicant)
                         ON CREATE set edge.uuid = apoc.create.uuid(),
-                            edge.token = payments.token,
-                            edge.amount = payments.amount,
+                            edge.token = payments.paymentToken,
+                            edge.amount = payments.paymentRequested,
+                            edge.amountNumber = payments.payementAmount,
                             edge.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                             edge.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                             edge.ingestedBy = "{self.CREATED_ID}"
@@ -310,12 +314,13 @@ class DaoHausCyphers(Cypher):
         for url in urls:
             query = f"""
                         LOAD CSV WITH HEADERS FROM '{url}' AS tributes
-                        MATCH (proposal:DaoHaus:Proposal {{id: tributes.id}}), (applicant:Wallet {{address: toLower(tributes.applicantAddress)}})
+                        MATCH (proposal:DaoHaus:Proposal {{id: tributes.id}}), (applicant:Wallet {{address: toLower(tributes.applicant)}})
                         WITH proposal, applicant, tributes
                         MERGE (applicant)-[edge:IS_TRIBUTING]->(proposal)
                         ON CREATE set edge.uuid = apoc.create.uuid(),
-                            edge.token = tributes.token,
-                            edge.amount = tributes.amount,
+                            edge.token = tributes.tributeToken,
+                            edge.amount = tributes.tributeOffered,
+                            edge.amountNumber = tributes.tributeAmount,
                             edge.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                             edge.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                             edge.ingestedBy = "{self.CREATED_ID}"
@@ -332,7 +337,7 @@ class DaoHausCyphers(Cypher):
         for url in urls:
             query = f"""
                         LOAD CSV WITH HEADERS FROM '{url}' AS members
-                        MATCH (dao:DaoHaus:Dao {{id: members.daoId}}), (member:Wallet {{address: toLower(members.memberAddress)}})
+                        MATCH (dao:DaoHaus:Dao {{id: members.molochAddress}}), (member:Wallet {{address: toLower(members.memberAddress)}})
                         WITH dao, member, members
                         MERGE (member)-[edge:IS_MEMBER]->(dao)
                         ON CREATE set edge.uuid = apoc.create.uuid(),
@@ -366,7 +371,7 @@ class DaoHausCyphers(Cypher):
         for url in urls:
             query = f"""
                         LOAD CSV WITH HEADERS FROM '{url}' AS tokens
-                        MATCH (dao:DaoHaus:Dao {{id: tokens.daoId}}), (token:Token {{address: toLower(tokens.tokenAddress)}})
+                        MATCH (dao:DaoHaus:Dao {{id: tokens.daoId}}), (token:Token {{address: toLower(tokens.contractAddress)}})
                         WITH dao, token, tokens
                         MERGE (dao)-[edge:HAS_TOKEN]->(token)
                         ON CREATE set edge.uuid = apoc.create.uuid(),
@@ -387,7 +392,7 @@ class DaoHausCyphers(Cypher):
         for url in urls:
             query = f"""
                         LOAD CSV WITH HEADERS FROM '{url}' AS proposals
-                        MATCH (dao:DaoHaus:Dao {{id: proposals.daoId}}), (proposal:DaoHaus:Proposal {{id: proposals.id)}})
+                        MATCH (dao:DaoHaus:Dao {{id: proposals.molochAddress}}), (proposal:DaoHaus:Proposal {{id: proposals.id}})
                         WITH dao, proposal, proposals
                         MERGE (dao)-[edge:HAS_PROPOSAL]->(proposal)
                         ON CREATE set edge.uuid = apoc.create.uuid(),

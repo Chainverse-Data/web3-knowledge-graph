@@ -68,9 +68,9 @@ class Indexes(Cypher):
         self.query(query)
 
     def daohaus_dao(self):
-        query = """CREATE INDEX UniqueDaoID IF NOT EXISTS FOR (a:DaoHaus:Dao) ON a.daohausId"""
+        query = """CREATE INDEX UniqueDaoID IF NOT EXISTS FOR (a:Dao) ON a.daohausId"""
         self.query(query)
     
     def daohaus_proposal(self):
-        query = """CREATE INDEX UniqueProposalID IF NOT EXISTS FOR (a:DaoHaus:Proposal) ON a.proposalId"""
+        query = """CREATE INDEX UniqueProposalID IF NOT EXISTS FOR (a:Proposal) ON a.proposalId"""
         self.query(query)

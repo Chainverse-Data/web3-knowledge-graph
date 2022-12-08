@@ -1,5 +1,5 @@
 from .cypher import Cypher
-from . import count_query_logging
+from .decorators import count_query_logging
 # This file is for universal queries only, any queries that generate new nodes or edges must be in its own cyphers.py file in the service folder
 
 

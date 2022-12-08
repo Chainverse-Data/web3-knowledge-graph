@@ -69,10 +69,10 @@ class Constraints(Cypher):
         self.query(query)
 
     def daohaus_dao(self):
-        query = """CREATE CONSTRAINT UniqueDaoID IF NOT EXISTS FOR (a:DaoHaus:Dao) REQUIRE a.id IS UNIQUE"""
+        query = """CREATE CONSTRAINT UniqueDaoID IF NOT EXISTS FOR (a:Dao) REQUIRE a.id IS UNIQUE"""
         self.query(query)
     
     def daohaus_proposal(self):
-        query = """CREATE CONSTRAINT UniqueProposalID IF NOT EXISTS FOR (a:DaoHaus:Proposal) REQUIRE a.id IS UNIQUE"""
+        query = """CREATE CONSTRAINT UniqueProposalID IF NOT EXISTS FOR (a:Proposal) REQUIRE a.id IS UNIQUE"""
         self.query(query)
     

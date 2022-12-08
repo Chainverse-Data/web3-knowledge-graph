@@ -1,2 +1,2 @@
-from .ingest import DAOHausIngestor
-from .cyphers import DAOHausCyphers
+from .ingest import DaoHausIngestor
+from .cyphers import DaoHausCyphers
