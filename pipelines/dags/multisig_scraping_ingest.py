@@ -43,11 +43,20 @@ env_vars = [
     {"name": "AWS_ACCESS_KEY_ID", "value": Variable.get("AWS_ACCESS_KEY_ID")},
     {"name": "AWS_SECRET_ACCESS_KEY", "value": Variable.get("AWS_SECRET_ACCESS_KEY")},
     {"name": "LOGLEVEL", "value": Variable.get("LOGLEVEL")},
+    {"name": "GRAPH_API_KEY", "value": Variable.get("GRAPH_API_KEY")},
     {"name": "NEO_USERNAME", "value": Variable.get("NEO_USERNAME")},
     {"name": "NEO_URI", "value": Variable.get("NEO_URI")},
     {"name": "NEO_PASSWORD", "value": Variable.get("NEO_PASSWORD")},
 ]
-    
+
+network_configuration={
+    "awsvpcConfiguration": {
+        "securityGroups": ecs_security_group.split(","),
+        "subnets": ecs_subnets.split(","),
+        "assignPublicIp": "ENABLED"
+    },
+}
+
 # Run Docker container via ECS operator
 # There are two fields set here:
 # task_id to give it a name
@@ -69,12 +78,7 @@ multisig_scrape_task = ECSOperator(
             },
         ],
     },
-    network_configuration={
-        "awsvpcConfiguration": {
-            "securityGroups": [ecs_security_group],
-            "subnets": ecs_subnets.split(","),
-        },
-    },
+    network_configuration=network_configuration,
     awslogs_group=ecs_awslogs_group,
     awslogs_stream_prefix=ecs_awslogs_stream_prefix
 )
@@ -96,12 +100,7 @@ multisig_ingest_task = ECSOperator(
             },
         ],
     },
-    network_configuration={
-        "awsvpcConfiguration": {
-            "securityGroups": [ecs_security_group],
-            "subnets": ecs_subnets.split(","),
-        },
-    },
+    network_configuration=network_configuration,
     awslogs_group=ecs_awslogs_group,
     awslogs_stream_prefix=ecs_awslogs_stream_prefix
 )

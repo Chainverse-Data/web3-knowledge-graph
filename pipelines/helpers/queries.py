@@ -1,5 +1,5 @@
 from .cypher import Cypher
-
+from . import count_query_logging
 # This file is for universal queries only, any queries that generate new nodes or edges must be in its own cyphers.py file in the service folder
 
 
@@ -15,6 +15,7 @@ class Queries(Cypher):
     def create_indexes(self):
         pass
 
+    @count_query_logging
     def create_wallets(self, urls):
         """csv is: address"""
         count = 0
@@ -33,19 +34,21 @@ class Queries(Cypher):
             count += self.query(query)[0].value()
         return count
 
-    def create_or_merge_tokens(self, urls):
-        count = 0
-        for url in urls:
-            query = f"""
-                    LOAD CSV WITH HEADERS FROM '{url}' AS tokens
-                    MERGE(t:Token {{address: toLower(tokens.address)}})
-                    ON CREATE set t = tokens,
-                        t.uuid = apoc.create.uuid()
-                    return count(t)
-            """
-            count += self.query(query)[0].value()
-        return count
+    # @count_query_logging
+    # def create_or_merge_tokens(self, urls):
+    #     count = 0
+    #     for url in urls:
+    #         query = f"""
+    #                 LOAD CSV WITH HEADERS FROM '{url}' AS tokens
+    #                 MERGE(t:Token {{address: toLower(tokens.address)}})
+    #                 ON CREATE set t = tokens,
+    #                     t.uuid = apoc.create.uuid()
+    #                 return count(t)
+    #         """
+    #         count += self.query(query)[0].value()
+    #     return count
 
+    @count_query_logging
     def create_or_merge_twitter(self, urls):
         count = 0
         for url in urls:
@@ -65,6 +68,7 @@ class Queries(Cypher):
             count += self.query(query)[0].value()
         return count
 
+    @count_query_logging
     def create_or_merge_alias(self, urls):
         count = 0
         for url in urls:
@@ -80,6 +84,7 @@ class Queries(Cypher):
             count += self.query(query)[0].value()
         return count
 
+    @count_query_logging
     def create_or_merge_ens_nft(self, urls):
         count = 0
         for url in urls:
@@ -95,6 +100,7 @@ class Queries(Cypher):
             count += self.query(query)[0].value()
         return count
 
+    @count_query_logging
     def create_or_merge_transaction(self, urls):
         count = 0
         for url in urls:
@@ -110,6 +116,7 @@ class Queries(Cypher):
             count += self.query(query)[0].value()
         return count
 
+    @count_query_logging
     def link_wallet_alias(self, urls):
         count = 0
         for url in urls:
@@ -124,6 +131,7 @@ class Queries(Cypher):
             count += self.query(query)[0].value()
         return count
 
+    @count_query_logging
     def link_wallet_transaction_ens(self, urls):
         count = 0
         for url in urls:
@@ -138,6 +146,7 @@ class Queries(Cypher):
             count += self.query(query)[0].value()
         return count
 
+    @count_query_logging
     def link_ens_transaction(self, urls):
         count = 0
         for url in urls:
@@ -151,6 +160,7 @@ class Queries(Cypher):
 
             count += self.query(query)[0].value()
 
+    @count_query_logging
     def link_ens_alias(self, urls):
         count = 0
         for url in urls:
@@ -165,6 +175,7 @@ class Queries(Cypher):
             count += self.query(query)[0].value()
         return count
 
+    @count_query_logging
     def create_or_merge_partitions(self, urls, label):
         count = 0
         for url in urls:
@@ -193,6 +204,7 @@ class Queries(Cypher):
             count += self.query(query)[0].value()
         return count
 
+    @count_query_logging
     def link_partitions(self, urls, partitionTarget, targetField, label):
         count = 0
         for url in urls:
@@ -211,5 +223,27 @@ class Queries(Cypher):
                 RETURN count(link)
             """
             print(query)
+            count += self.query(query)[0].value()
+        return count
+
+    @count_query_logging
+    def create_or_merge_tokens(self, urls, token_type):
+        "CSV Must have the columns: [contractAddress, symbol, decimal]"
+        count = 0
+        for url in urls:
+            query = f"""
+                LOAD CSV WITH HEADERS FROM '{url}' AS tokens
+                MERGE(token:Token {{address: toLower(tokens.contractAddress)}})
+                ON CREATE set token.uuid = apoc.create.uuid(),
+                    token.symbol = tokens.id, 
+                    token.decimal = tokens.id, 
+                    token.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
+                    token.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
+                    token.ingestedBy = "{self.CREATED_ID}",
+                    token:{token_type}
+                ON MATCH set token.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
+                    token.ingestedBy = "{self.UPDATED_ID}"
+                return count(token)
+            """
             count += self.query(query)[0].value()
         return count

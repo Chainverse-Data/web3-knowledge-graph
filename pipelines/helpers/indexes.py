@@ -66,3 +66,11 @@ class Indexes(Cypher):
     def mirror_articles(self):
         query = """CREATE INDEX UniqueArticleID IF NOT EXISTS FOR (a:Mirror) ON a.originalContentDigest"""
         self.query(query)
+
+    def daohaus_dao(self):
+        query = """CREATE INDEX UniqueDaoID IF NOT EXISTS FOR (a:DaoHaus:Dao) ON a.daohausId"""
+        self.query(query)
+    
+    def daohaus_proposal(self):
+        query = """CREATE INDEX UniqueProposalID IF NOT EXISTS FOR (a:DaoHaus:Proposal) ON a.proposalId"""
+        self.query(query)

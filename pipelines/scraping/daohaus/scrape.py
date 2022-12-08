@@ -180,6 +180,7 @@ class DAOHausScraper(Scraper):
         query = gql.gql("""
                 query($first: Int!, $cutoff: String!) {
                     proposals(first: $first, orderBy: createdAt, orderDirection:desc, where:{createdAt_gt: $cutoff}) {
+                        id
                         createdAt
                         createdBy
                         proposalIndex

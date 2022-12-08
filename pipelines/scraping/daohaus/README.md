@@ -19,14 +19,21 @@ No unique flags created
 
 # Data
 
+`networkName` can be: `mainnet`, `xdai`, `optimism`
+
 ```json
 {
-    "daoMetas": [<daoMetas Object>],
-    "moloches": [<moloches Object>],
-    "tokenBalances": [<tokenBalances Object>],
-    "votes": [<votes Object>],
-    "members": [<members Object>],
-    "proposals": [<proposals Object>]
+    "networkName":
+    {
+        "daoMetas": [<daoMetas Object>],
+        "moloches": [<moloches Object>],
+        "tokenBalances": [<tokenBalances Object>],
+        "votes": [<votes Object>],
+        "members": [<members Object>],
+        "proposals": [<proposals Object>]
+    },
+    "networkName": 
+    ...
 }
 ```
 

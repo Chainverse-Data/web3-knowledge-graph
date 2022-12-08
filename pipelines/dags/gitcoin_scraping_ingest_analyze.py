@@ -47,7 +47,14 @@ env_vars = [
     {"name": "NEO_URI", "value": Variable.get("NEO_URI")},
     {"name": "NEO_PASSWORD", "value": Variable.get("NEO_PASSWORD")},
 ]
-    
+
+network_configuration={
+    "awsvpcConfiguration": {
+        "securityGroups": ecs_security_group.split(","),
+        "subnets": ecs_subnets.split(","),
+        "assignPublicIp": "ENABLED"
+    },
+}
 
 # Run Docker container via ECS operator
 # There are two fields set here:
@@ -70,12 +77,7 @@ gitcoin_scrape_task = ECSOperator(
             },
         ],
     },
-    network_configuration={
-        "awsvpcConfiguration": {
-            "securityGroups": [ecs_security_group],
-            "subnets": ecs_subnets.split(","),
-        },
-    },
+    network_configuration=network_configuration,
     awslogs_group=ecs_awslogs_group,
     awslogs_stream_prefix=ecs_awslogs_stream_prefix
 )
@@ -97,12 +99,7 @@ gitcoin_ingest_task = ECSOperator(
             },
         ],
     },
-    network_configuration={
-        "awsvpcConfiguration": {
-            "securityGroups": [ecs_security_group],
-            "subnets": ecs_subnets.split(","),
-        },
-    },
+    network_configuration=network_configuration,
     awslogs_group=ecs_awslogs_group,
     awslogs_stream_prefix=ecs_awslogs_stream_prefix
 )
@@ -124,12 +121,7 @@ gitcoin_community_analytics_task = ECSOperator(
             },
         ],
     },
-    network_configuration={
-        "awsvpcConfiguration": {
-            "securityGroups": [ecs_security_group],
-            "subnets": ecs_subnets.split(","),
-        },
-    },
+    network_configuration=network_configuration,
     awslogs_group=ecs_awslogs_group,
     awslogs_stream_prefix=ecs_awslogs_stream_prefix
 )

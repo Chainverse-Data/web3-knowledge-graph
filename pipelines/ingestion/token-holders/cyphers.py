@@ -1,40 +1,25 @@
 from ...helpers import Cypher
-from ...helpers import constraints
-from ...helpers import indexes
+from ...helpers import Constraints
+from ...helpers import Indexes
+from ...helpers import Queries
 from ...helpers import count_query_logging
 
 class TokenHoldersCyphers(Cypher):
     def __init__(self, database=None):
         super().__init__(database)
+        self.queries = Queries()
 
     def create_constraints(self):
-        # unique ERC20
-        return super().create_constraints()
+        constraints = Constraints()
+        constraints.tokens()
 
     def create_indexes(self):
-        return super().create_indexes()
+        indexes = Indexes()
+        indexes.tokens()
     
-    @count_query_logging
     def create_or_merge_tokens(self, urls, token_type):
         "CSV Must have the columns: [contractAddress, symbol, decimal]"
-        count = 0
-        for url in urls:
-            query = f"""
-                LOAD CSV WITH HEADERS FROM '{url}' AS tokens
-                MERGE(token:Token {{address: toLower(tokens.contractAddress)}})
-                ON CREATE set token.uuid = apoc.create.uuid(),
-                    token.symbol = tokens.id, 
-                    token.decimal = tokens.id, 
-                    token.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
-                    token.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
-                    token.ingestedBy = "{self.CREATED_ID}",
-                    token:{token_type}
-                ON MATCH set token.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
-                    token.ingestedBy = "{self.UPDATED_ID}"
-                return count(token)
-            """
-            count += self.query(query)[0].value()
-        return count
+        self.queries.create_or_merge_tokens(urls, token_type)
 
     @count_query_logging
     def link_wallet_tokens(self, urls):
