@@ -21,9 +21,10 @@ class TokenHolderScraper(Scraper):
         self.wallets_last_block = self.metadata.get("wallets_last_block", {})
         self.alchemy_api_url = "https://eth-mainnet.g.alchemy.com/v2/{}".format(os.environ["ALCHEMY_API_KEY"])
         self.get_current_block()
-        self.max_thread = 100
+        self.max_thread = 50
         if DEBUG:
             self.max_thread = 10
+        os.environ["NUMEXPR_MAX_THREADS"] = self.max_thread
 
     def get_current_block(self):
         headers = {"Content-Type": "application/json"}
@@ -38,8 +39,6 @@ class TokenHolderScraper(Scraper):
 
     def get_all_wallets_in_db(self):
         self.wallet_list  = self.cyphers.get_all_wallets()
-        if DEBUG:
-            self.wallet_list = self.wallet_list[:1000]
 
     def job_get_transactions(self, wallet):
         assets = set()
@@ -70,8 +69,8 @@ class TokenHolderScraper(Scraper):
 #         balances = {}
 #         assets = {}
 #         tokens = {}
-#         with tqdm_joblib(tqdm.tqdm(desc="Getting ENS Data", total=len(self.data["owner_addresses"]))) as progress_bar:
-#             ens_list = joblib.Parallel(n_jobs=multiprocessing.cpu_count() - 1, backend="threading")
+#         with tqdm_joblib(tqdm(desc="Getting ENS Data", total=len(self.data["owner_addresses"]))) as progress_bar:
+#             ens_list = joblib.Parallel(n_jobs=self.max_data = joblib.Parallel(n_jobs=self.max_thread, backend="threading")
 #             (
 #                 joblib.delayed(self.get_ens_info)(address) for address in self.data["owner_addresses"]
 #             )
@@ -106,8 +105,8 @@ class TokenHolderScraper(Scraper):
         self.data["assets"] = {}
         self.data["tokens"] = {}
         logging.info("Multithreaded scraping launching!")
-        with tqdm_joblib(tqdm.tqdm(desc="Getting transactions data", total=len(self.wallet_list))) as progress_bar:
-            data = joblib.Parallel(n_jobs=multiprocessing.cpu_count() - 1, backend="threading")(joblib.delayed(self.job_get_transactions)(wallet) for wallet in self.wallet_list)
+        with tqdm_joblib(tqdm(desc="Getting transactions data", total=len(self.wallet_list))) as progress_bar:
+            data = joblib.Parallel(n_jobs=self.max_thread, backend="threading")(joblib.delayed(self.job_get_transactions)(wallet) for wallet in self.wallet_list)
         for item in tqdm(data):
             wallet, assets, transactions, tokens = item
             self.data["assets"][wallet] = assets
@@ -116,8 +115,8 @@ class TokenHolderScraper(Scraper):
                 if token not in self.data["tokens"]:
                     self.data["tokens"][token] = tokens[token]
         
-        with tqdm_joblib(tqdm.tqdm(desc="Getting balances data", total=len(self.wallet_list))) as progress_bar:
-            data = joblib.Parallel(n_jobs=multiprocessing.cpu_count() - 1, backend="threading")(joblib.delayed(self.job_get_balances)(wallet) for wallet in self.wallet_list)
+        with tqdm_joblib(tqdm(desc="Getting balances data", total=len(self.wallet_list))) as progress_bar:
+            data = joblib.Parallel(n_jobs=self.max_thread, backend="threading")(joblib.delayed(self.job_get_balances)(wallet) for wallet in self.wallet_list)
         for item in tqdm(data):
             wallet, balances = item
             self.data["balances"][wallet] = balances

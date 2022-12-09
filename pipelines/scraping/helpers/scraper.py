@@ -4,6 +4,8 @@ import logging
 import os
 from ...helpers import S3Utils
 import time
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # This class is the base class for all scrapers.
 # Every scraper must inherit this class and define its own run function
