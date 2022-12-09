@@ -1,3 +1,4 @@
+import sys
 import requests
 from datetime import datetime
 import logging
@@ -34,7 +35,7 @@ class Scraper:
         self.data_filename = "data_{}-{}-{}.json".format(self.runtime.year, self.runtime.month, self.runtime.day)
         if not allow_override and self.s3.check_if_file_exists(self.bucket_name, self.data_filename):
             logging.error("The data file for this day has already been created!")
-            raise Exception("The data file for this day has already been created!")
+            sys.exit(0)
 
         self.metadata_filename = "scraper_metadata.json"
         self.metadata = self.read_metadata()
