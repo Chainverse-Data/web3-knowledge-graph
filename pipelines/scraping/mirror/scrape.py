@@ -191,16 +191,19 @@ class MirrorScraper(Scraper):
                 }
                 articles_cleaned.append(article)
                 if "wnft" in data:
-                    nft = {
-                        "original_content_digest": transaction["original-content-digest"],
-                        "chain_id": data["chainId"],
-                        "funding_recipient": data["fundingRecipient"],
-                        "owner": data["owner"],
-                        "address": data["proxyAddress"],
-                        "supply": data["supply"],
-                        "symbol": data["symbol"]
-                    }
-                    NFTs_cleaned.append(nft)
+                    if "original_content_digest" in transaction:
+                        nft = {
+                            "original_content_digest": transaction["original-content-digest"],
+                            "chain_id": data["chainId"],
+                            "funding_recipient": data["fundingRecipient"],
+                            "owner": data["owner"],
+                            "address": data["proxyAddress"],
+                            "supply": data["supply"],
+                            "symbol": data["symbol"]
+                        }
+                        NFTs_cleaned.append(nft)
+                    else:
+                        logging.error("original_content_digest is missing from the transaction, can't resolve article")
             else:
                 logging.error("An error occured retriving articles")
         logging.info(f"Retrieved {len(articles_cleaned)} articles")
