@@ -74,7 +74,7 @@ daohaus_scrape_task = ECSOperator(
         "containerOverrides": [
             {
                 "name": "data-pipelines",
-                "command": ["python3", "-m", "pipelines.scraping.daohaaus.scrape"],
+                "command": ["python3", "-m", "pipelines.scraping.daohaus.scrape"],
                 "environment": env_vars
             },
         ],

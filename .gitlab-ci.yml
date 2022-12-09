@@ -10,8 +10,8 @@
 # for the default branch and all other (MR) branches.
 
 variables:
-  DOCKER_REGISTRY: public.ecr.aws/t7w5a8x9
-  APP_NAME: data-pipelines
+  DOCKER_REGISTRY: 823557601923.dkr.ecr.us-east-2.amazonaws.com
+  APP_NAME: chainverse/pipelines
   DOCKER_HOST: tcp://docker:2375
   DOCKER_DRIVER: overlay2
   DOCKER_TLS_CERTDIR: ""
