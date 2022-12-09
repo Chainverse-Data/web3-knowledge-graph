@@ -81,12 +81,6 @@ class DaoHausIngestor(Ingestor):
             for proposal in tqdm(self.scraper_data[chain]["proposals"], position=1):
                 tmp = proposal
                 tmp["id"] = f"{proposal['molochAddress']}-proposal-{proposal['proposalId']}"
-                try:
-                    details = json.loads(tmp["details"])
-                    for key in details:
-                        tmp[key] = details[key]
-                except:
-                    details = tmp["details"].replace('"', '')
                 del tmp["details"]
                 del tmp["minionExecuteActionTx"]
                 if proposal["tributeTokenDecimals"]:

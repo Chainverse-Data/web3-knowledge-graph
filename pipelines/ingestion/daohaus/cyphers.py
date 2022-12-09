@@ -99,7 +99,6 @@ class DaoHausCyphers(Cypher):
                         proposal.guildkick = proposals.guildkick,
                         proposal.newMember = proposals.newMember,
                         proposal.trade = proposals.trade,
-                        proposal.details = proposals.details,
                         proposal.votingPeriodStarts = proposals.votingPeriodStarts,
                         proposal.votingPeriodEnds = proposals.votingPeriodEnds,
                         proposal.gracePeriodEnds = proposals.gracePeriodEnds,
