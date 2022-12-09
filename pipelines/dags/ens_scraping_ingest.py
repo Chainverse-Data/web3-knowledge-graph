@@ -16,7 +16,6 @@ dag = DAG(
         "retries": 3        
     },
     max_active_runs=1,
-    retries=3,
     dagrun_timeout=timedelta(minutes=10080)
 )
 
