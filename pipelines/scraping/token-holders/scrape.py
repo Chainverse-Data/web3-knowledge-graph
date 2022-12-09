@@ -24,7 +24,7 @@ class TokenHolderScraper(Scraper):
         self.max_thread = 50
         if DEBUG:
             self.max_thread = 10
-        os.environ["NUMEXPR_MAX_THREADS"] = self.max_thread
+        os.environ["NUMEXPR_MAX_THREADS"] = str(self.max_thread)
 
     def get_current_block(self):
         headers = {"Content-Type": "application/json"}
