@@ -21,6 +21,7 @@ class DAOHausScraper(Scraper):
             "mainnet":"https://api.thegraph.com/subgraphs/name/odyssy-automaton/daohaus",
             "xdai":"https://api.thegraph.com/subgraphs/name/odyssy-automaton/daohaus-xdai",
             "optimism":"https://api.thegraph.com/subgraphs/name/odyssy-automaton/daohaus-optimism",
+            "polygon": "https://api.thegraph.com/subgraphs/name/odyssy-automaton/daohaus-matic"
         }
         self.last_cutoffs = {}
 
