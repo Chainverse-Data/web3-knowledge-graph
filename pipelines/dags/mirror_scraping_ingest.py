@@ -12,7 +12,8 @@ dag = DAG(
         "start_date": days_ago(2),
         "owner": "Leo Blondel",
         "email": ["leo@blondel.ninja"],
-        "schedule_interval": "@daily"
+        "schedule_interval": "@daily",
+        "retries": 3
     },
     max_active_runs=1,
     retries=3,
@@ -29,7 +30,7 @@ ecs_security_group = Variable.get("MWAA_VPC_SECURITY_GROUPS") # str(ssm.get_para
 # pipelines-medium: 1CPU 8Gb RAM
 # pipelines-large: 2CPU 16Gb RAM
 # pipelines-xl: 8CPU 32Gb RAM
-ecs_task_definition = "pipelines-medium"
+ecs_task_definition = "pipelines-huge"
 ecs_task_image = "data-pipelines"
 ecs_awslogs_group = f"/ecs/{ecs_task_definition}"
 ecs_awslogs_stream_prefix = f"ecs/{ecs_task_image}"

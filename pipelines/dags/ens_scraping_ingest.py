@@ -12,7 +12,8 @@ dag = DAG(
         "start_date": days_ago(2),
         "owner": "Leo Blondel",
         "email": ["leo@blondel.ninja"],
-        "schedule_interval": "@daily"
+        "schedule_interval": "@daily",
+        "retries": 3        
     },
     max_active_runs=1,
     retries=3,

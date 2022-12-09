@@ -21,9 +21,9 @@ class TokenHolderScraper(Scraper):
         self.wallets_last_block = self.metadata.get("wallets_last_block", {})
         self.alchemy_api_url = "https://eth-mainnet.g.alchemy.com/v2/{}".format(os.environ["ALCHEMY_API_KEY"])
         self.get_current_block()
-        self.max_thread = 50
+        self.max_thread = multiprocessing.cpu_count() * 2
         if DEBUG:
-            self.max_thread = 10
+            self.max_thread = multiprocessing.cpu_count() - 1
         os.environ["NUMEXPR_MAX_THREADS"] = str(self.max_thread)
 
     def get_current_block(self):
@@ -62,41 +62,6 @@ class TokenHolderScraper(Scraper):
     def job_get_balances(self, wallet):
         balances = self.get_balances(wallet, self.data["assets"][wallet])
         return (wallet, balances)
-
-#  def get_transactions_assets_balances(self):
-#         logging.info("Getting all transactions assets and balances")
-#         transactions = {}
-#         balances = {}
-#         assets = {}
-#         tokens = {}
-#         with tqdm_joblib(tqdm(desc="Getting ENS Data", total=len(self.data["owner_addresses"]))) as progress_bar:
-#             ens_list = joblib.Parallel(n_jobs=self.max_data = joblib.Parallel(n_jobs=self.max_thread, backend="threading")
-#             (
-#                 joblib.delayed(self.get_ens_info)(address) for address in self.data["owner_addresses"]
-#             )
-#         for wallet in tqdm(self.wallet_list):
-#             assets[wallet] = set()
-#             transactions[wallet] = {}
-#             transactions[wallet]["received"] = self.get_received_transactions(wallet, self.wallets_last_block.get(wallet, 0))
-#             transactions[wallet]["sent"] = self.get_sent_transactions(wallet, self.wallets_last_block.get(wallet, 0))
-#             for transaction in transactions[wallet]["received"] + transactions[wallet]["sent"]:
-#                 if transaction["category"] in ["erc20", "erc721", "erc1155"]:
-#                     contractAddress = transaction["rawContract"]["address"]
-#                     if contractAddress not in tokens:
-#                         tokens[contractAddress] = {
-#                             "contractType": transaction["category"],
-#                             "symbol": transaction["asset"],
-#                             "decimal": transaction["rawContract"]["decimal"],
-#                         }
-#                     assets[wallet].add(contractAddress)
-#             assets[wallet] = list(assets[wallet])
-
-#             balances[wallet] = self.get_balances(wallet, assets[wallet])
-#             self.wallets_last_block[wallet] = self.current_block
-#         self.data["transactions"] = transactions
-#         self.data["balances"] = balances
-#         self.data["assets"] = assets
-#         self.data["tokens"] = tokens
 
     def get_transactions_assets_balances(self):
         logging.info("Getting all transactions assets and balances")

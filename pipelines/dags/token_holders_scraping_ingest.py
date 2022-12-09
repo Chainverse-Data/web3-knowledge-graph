@@ -12,7 +12,8 @@ dag = DAG(
         "start_date": days_ago(2),
         "owner": "Leo Blondel",
         "email": ["leo@blondel.ninja"],
-        "schedule_interval": "@daily"
+        "schedule_interval": "@daily",
+        "retries": 3
     },
     max_active_runs=1,
     retries=3,
@@ -29,9 +30,13 @@ ecs_security_group = Variable.get("MWAA_VPC_SECURITY_GROUPS") # str(ssm.get_para
 # pipelines-medium: 1CPU 8Gb RAM
 # pipelines-large: 2CPU 16Gb RAM
 # pipelines-xl: 8CPU 32Gb RAM
-ecs_task_definition = "pipelines-medium"
+ecs_task_definition_scraping = "pipelines-huge"
+ecs_awslogs_group_scraping = f"/ecs/{ecs_task_definition_scraping}"
+
+ecs_task_definition_ingest = "pipelines-xl"
+ecs_awslogs_group_ingest = f"/ecs/{ecs_task_definition_ingest}"
+
 ecs_task_image = "data-pipelines"
-ecs_awslogs_group = f"/ecs/{ecs_task_definition}"
 ecs_awslogs_stream_prefix = f"ecs/{ecs_task_image}"
 
 # Get the container's ENV vars from Airflow Variables
@@ -66,7 +71,7 @@ token_holdings_scrape_task = ECSOperator(
     dag=dag,
     aws_conn_id="aws_ecs",
     cluster=ecs_cluster,
-    task_definition=ecs_task_definition,
+    task_definition=ecs_task_definition_scraping,
     region_name="us-east-2",
     launch_type="FARGATE",
     overrides={
@@ -79,7 +84,7 @@ token_holdings_scrape_task = ECSOperator(
         ],
     },
     network_configuration=network_configuration,
-    awslogs_group=ecs_awslogs_group,
+    awslogs_group=ecs_awslogs_group_scraping,
     awslogs_stream_prefix=ecs_awslogs_stream_prefix
 )
 
@@ -88,7 +93,7 @@ token_holdings_ingest_task = ECSOperator(
     dag=dag,
     aws_conn_id="aws_ecs",
     cluster=ecs_cluster,
-    task_definition=ecs_task_definition,
+    task_definition=ecs_task_definition_ingest,
     region_name="us-east-2",
     launch_type="FARGATE",
     overrides={
@@ -101,7 +106,7 @@ token_holdings_ingest_task = ECSOperator(
         ],
     },
     network_configuration=network_configuration,
-    awslogs_group=ecs_awslogs_group,
+    awslogs_group=ecs_awslogs_group_ingest,
     awslogs_stream_prefix=ecs_awslogs_stream_prefix
 )
 
