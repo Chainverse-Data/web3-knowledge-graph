@@ -42,11 +42,13 @@ class UnlockCyphers(Cypher):
             MERGE (t:Token {{address: locks.address}})  // this needs to change lol
             ON MATCH SET
                 t:Nft,
+                t:Lock,
                 t:UnlockTestStage,
                 t.lastUpdateDt = datetime(apoc.date.toISO8601(toInteger(locks.occurDt), 'ms')),
                 t.price = locks.price
             ON CREATE SET
                 t:Nft,
+                t:Lock,
                 t.uuid = apoc.create.uuid(),
                 t:UnlockTestStage,
                 t.lastUpdateDt = datetime(apoc.date.toISO8601(toInteger(locks.occurDt), 'ms')),
@@ -66,6 +68,7 @@ class UnlockCyphers(Cypher):
             MERGE (t:Token:Nft {{tokenId: keys.keyId, tokenContract: keys.lockAddress}})
             ON MATCH SET
                 t:UnlockTestStage,
+                t:Key,
                 t:Instance, // should discuss with Xqua w/r/t what this means for NFT ontology
                 t.lastUpdateDt = datetime(apoc.date.toISO8601(toInteger(keys.occurDt), 'ms')),
                 t.expiration = keys.expiration,
@@ -73,6 +76,7 @@ class UnlockCyphers(Cypher):
                 t.tokenContract = keys.lockAddress
             ON CREATE SET
                 t:UnlockTestStage,
+                t:Key,
                 t.uuid = apoc.create.uuid(),
                 t.lastUpdateDt = datetime(apoc.date.toISO8601(toInteger(keys.occurDt), 'ms')),
                 t.createdDt = datetime(apoc.date.toISO8601(toInteger(keys.occurDt), 'ms')),
