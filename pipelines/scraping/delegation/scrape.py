@@ -60,18 +60,18 @@ class DelegationScraper(Scraper):
                 "skip": skip, 
                 "cutoff_block": self.metadata['cutoff_block']
             }
-            query = """
-                query getDelegationEvents($first: Int!, $skip: Int!, $cutoff_block: Int!) {
-                delegationEvents(first: $first, skip: $skip, orderByDirection: "desc", where: {blockNumber_gt: $cutoff_block}) {
+            query = gql.gql("""
+            query delegateChanges($first: Int!, $skip: Int!, $cutoff_block: Int!) {
+                delegateChanges(first: $first, skip: $skip, orderBy: {field: "blockNumber", direction: "desc"}, where: {blockNumber_gt: $cutoff_block}) {
                     id
                     blockNumber
                     timestamp
                     delegate
                     delegator
                     amount
-                    }
                 }
-            """
+            }      
+            """)
             result = self.call_the_graph_api(query, variables)
             time.sleep(2)
             self.data['delegationEvents'] = result['delegationEvents']
