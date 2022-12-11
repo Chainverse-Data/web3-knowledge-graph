@@ -45,15 +45,15 @@ class LockScraper(Scraper):
         try: 
             logging.info(f"here  are the variables {variables}")
             logging.info(f"here is the query: {query}")
-            result = client.execute(query, variables)
+            result = client.execute(query, variable_values=variables)
             countLocks = len(result['locks'])
             countKeys = len(result['keys'])
             logging.info(f"the graph API returned this many locks: {countLocks}")
-            logging.info(f"the graph API returned this many locks: {countKeys}")
+            logging.info(f"the graph API returned this many keys: {countKeys}")
             if result.get('locks', None) == None: 
                 logging.error(f"The Graph API did not return locks, counter: {counter}")
                 return self.call_the_graph_api(query, variables, counter=counter+1)
-            elif result.get('locks', None) == None: 
+            elif result.get('keys', None) == None: 
                 logging.info(f"Not receiving any more results, ending scrape: here are the results {result['locks']}")
         except Exception as e:
             logging.error(f'An exception occured getting The Graph API {e} counter: {counter} client: {client}')

@@ -15,90 +15,86 @@ gql_log.setLevel(logging.WARNING)
 class DelegationScraper(Scraper):
     def __init__(self, bucket_name='gitcoin-delegation-test', allow_override=True):
         super().__init__(bucket_name, allow_override=allow_override)
-        self.gitcoin_url =   f'https://gateway.thegraph.com/api/{GRAPH_API_KEY}/subgraphs/id/QmQXuWMr5zgDWwHtc4MzzJkkWZinTZQjGEQe5ES9BtQ5Bf'
-        self.metadata['cutoff_block'] = self.metadata.get("cutoff_block", 13018595)
-        self.data['delegationValues'] = ['init']
-        self.data['delegationEvents'] = ['init']
-        self.data['delegates'] = ['init']
-        self.data['tokenHolders'] = ['init']
+        self.gitcoin_url =   "https://api.thegraph.com/subgraphs/name/messari/gitcoin-governance"
+        self.metadata['cutoff_timestamp'] = self.metadata.get("cutoff_timestamp", 1620718124)
+        self.data['delegateChanges'] = ['init']
         self.interval = 1000
     
-    def call_the_graph_api(self, query, variables, counter=0):
+    def call_the_graph_api(self, query, variables, counter=1):
         time.sleep(counter)
         transport = AIOHTTPTransport(url = self.gitcoin_url)
         client = gql.Client(transport=transport, fetch_schema_from_transport=True)
 
         try: 
             logging.info(f"here are the variables {variables}")
-            logging.info(f"here is the query {query}")
-            logging.info(f"self.gitcoin_url {self.gitcoin_url}")
-            result = client.execute(query, variables)
-            countDelegations = len(result['delegateValues'])
-            if result.get('delegationEvents', None) == None: 
-                logging.error(f"The Graph API did not return delegationEvents, counter {counter}")
+            result =  client.execute(query, variable_values=variables)
+            countDelegations = len(result['delegateChanges'])
+            if result.get('delegateChanges', None) == None: 
+                logging.error(f"The Graph API did not return delegateChanges, counter {counter}")
                 return self.call_the_graph_api(query, variables, counter=counter+1)
-            elif result.get('delegationEvents', None) == None: 
-                logging.info(f"Did not receive any results, ending scrape, here are the results {result['delegationEvents']}")
+            elif result.get('delegateChanges', None) == None: 
+                logging.info(f"Did not receive any results, ending scrape, here are the results {result['delegateChanges']}")
                 return self.call_the_graph_api(query, variables, counter=counter+1)
         except Exception as e:
             str_exc = str(e)
             logging.error(f'An exception occured querying The Graph API {e} counter: {counter} client: {client}')
-            logging.error(f"Here is the exception: {str_exc}")
+            logging.error(f"Here is the exception: {str_exc}") 
             return self.call_the_graph_api(query, variables, counter=counter+1)
         return result 
     
     def get_delegation_events(self):
         skip = 0 
-        cutoff_block = self.metadata['cutoff_block']
+        cutoff_timestamp = self.metadata['cutoff_timestamp']
         retry = 0
         req = 0 
-        max_req = 20
-        delegationEventsBefore = len(self.data['delegationEvents'])
-        while len(self.data['delegationEvents']) > 0:
+        max_req = 5
+        delegationEventsBefore = len(self.data['delegateChanges'])
+        while len(self.data['delegateChanges']) > 0:
             variables = {
                 "first": self.interval, 
-                "skip": skip, 
-                "cutoff_block": self.metadata['cutoff_block']
+                "skip": skip,
+                "cutoff_timestamp": cutoff_timestamp
             }
             query = gql.gql("""
-            query delegateChanges($first: Int!, $skip: Int!, $cutoff_block: Int!) {
-                delegateChanges(first: $first, skip: $skip, orderBy: {field: "blockNumber", direction: "desc"}, where: {blockNumber_gt: $cutoff_block}) {
+             query($first: Int!, $skip: Int!, $cutoff_timestamp: BigInt!) {
+                delegateChanges(first: $first, skip: $skip, orderBy: blockTimestamp, orderDirection: desc, where: {blockTimestamp_gt: $cutoff_timestamp}) {
                     id
+                    blockTimestamp
                     blockNumber
-                    timestamp
                     delegate
                     delegator
-                    amount
                 }
             }      
             """)
-            result = self.call_the_graph_api(query, variables)
+            result = self.call_the_graph_api(query, variables=variables)
+            records = len(result['delegateChanges'])
             time.sleep(2)
-            self.data['delegationEvents'] = result['delegationEvents']
             skip += self.interval
             req += 1
-            delegationEventsAfter = len(self.data['delegationEvents'])
+            delegationEventsAfter = len(self.data['delegateChanges'])
+            logging.info(f"there are {delegationEventsAfter} delegationEvents events")
+            logging.info(f"there are {records} delegationEvents identified")
             if req > max_req:
                 break
-            delegationEvents = result['delegationEvents']
+            delegationEvents = result['delegateChanges']
             if len(delegationEvents) > 0:
+                logging.info("logging delegation events")
+                lilCounter = 0
                 for delEvent in delegationEvents: 
+                    logging.info(f"logging delegation event {lilCounter}")
                     tmp = {
                         'id': delEvent['id'],
-                        'blockNumber': delEvent['blockNumber'],
-                        'timestamp': delEvent['timestamp'],
+                        'blockTimestamp': delEvent['blockTimestamp'],
                         'delegate': delEvent['delegate'],
                         'delegator': delEvent['delegator'],
-                        'amount': delEvent['amount'],
-                        'type': delEvent['type']
                     }
-                    self.data['delegationEvents'].append(tmp)
+                    lilCounter += 1
+                    self.data['delegateChanges'].append(tmp)
                 skip += self.interval
                 logging.info(f"Query success, skip is at {skip}.")
             else:
                 retry += 1
                 if retry >= 5:
-                    skip += self.interval
                     break 
     def run(self):
         self.get_delegation_events()

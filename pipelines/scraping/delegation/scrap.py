@@ -116,10 +116,7 @@ class DelegationScraper(Scraper):
       retry += 1
       if retry > 10:
         skip += self.interval
-        logging.error(f"Query unsuccessful, skip is at: {skip}")
-        logging.error(f"Query unsuccessful, skip is at: {skip}")
-        logging.info("Found {} delegations".format(
-        len(self.data["delegations"])))
+
 
   def run(self):
     self.get_delegations()

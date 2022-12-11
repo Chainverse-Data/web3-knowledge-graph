@@ -1,1 +1,1 @@
-from .scrape import DelegationScraper
+from .scrap import DelegationScraper
