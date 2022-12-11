@@ -8,81 +8,77 @@ import logging
 class DelegationIngestor(Ingestor):
     def __init__(self):
         self.cyphers = DelegationCyphers()
-        super().__init__('delegation-test')
-class UnlockIngestor(Ingestor):
-    def __init__(self):
-        self.cyphers = DelegationCyphers()
-        super().__init__('unlock-test')
+        super().__init__('gitcoin-delegation-test')
+    
     def prepare_delegation_data(self):
-        delegateChangesDf = pd.read_csv(self.scraper_data['delegateChanges'][1:])
-        delegateVotingPowerChanges = pd.read_csv(self.scraper_data['delegateVotingPowerChanges'][1:])
-        delegatesDf = pd.read_csv(self.scraper_data['delegates'][1:])
-        tokenHoldersDf = pd.read_csv(self.scraper_data['tokenHolders'][1:])
-        logging.info("""
-        Ingested data... there are {lenDelegateChanges} delegate changes, 
-        {lenDelegateVotingPowerChanges} delegate voting power changes,
-        {lenDelegates} delegates, and {lenTokenHolders} token holders
-        Let's get it!
-        LETS FUCKING GO
-        """).format(
-            lenDelegateChanges = len(delegateChangesDf),
-            lenDelegateVotingPowerChanges = len(delegateVotingPowerChanges),
-            lenDelegates = len(delegatesDf),
-            lenTokenHolders = len(tokenHoldersDf)
-        )
+        logging.info("Preparing data...")
+        delegateChangesDf = pd.DataFrame(self.scraper_data['delegateChanges'][1:])
+        logging.info(f"Ingested delegate changes DF")
+        delegateVotingPowerChanges = pd.DataFrame(self.scraper_data['delegateVotingPowerChanges'][1:])
+        logging.info("Ingested delegate voting power changes")
+        delegatesDf = pd.DataFrame(self.scraper_data['delegates'][1:])
+        logging.info("Ingested delegates")
+        tokenHoldersDf = pd.DataFrame(self.scraper_data['tokenHolders'][1:])
         ## make wallet list
         delegateWallets = list(delegateChangesDf['delegate'])
         delegatorWallets = list(delegateChangesDf['delegator'])
-        tokenHoldersDf = list(tokenHoldersDf['tokenHolderAddress'])
-        allWallets = list(set(list(delegateWallets + delegatorWallets + tokenHoldersDf)))
+        tokenHolderWallets = list(tokenHoldersDf['tokenHolderAddress'])
+        allWallets = delegateWallets + delegatorWallets + tokenHolderWallets
         allWalletsDf = pd.DataFrame()
         allWalletsDf['address'] = allWallets
-
-        ## make delegation events
-        delegationEventsDf = pd.DataFrame()
-
-
-        
-
-
-
-
-        logging.info("Ingested data... there are {lockRows} and {keyRows}".format(
-
-
-        ### object metadata
-        lockMetadata = locksDf.drop(columns=['keys', 'lockManagers'])
-        keyMetadata = keysDf.filter(['lockAddress', 'keyId', 'expiration', 'tokenURI'])
-
-        ### relationships
-        lockManagers = locksDf.filter(['address', 'lockManagers'])
-        lockManagers = lockManagers.explode('lockManagers')
-        lockManagers = lockManagers.rename(columns={'lockManagers':'lockManager', 'address': 'lockAddress'})
-        keyHolders = keysDf.filter(['owner', 'lockAddress', 'keyId'])
-        keyHolders['tokenId'] = keyHolders['keyId'].apply(lambda x: x.split('-')[1])
-
-        ### wallets
-        lockManagerWallets = list(lockManagers['lockManager'])
-        keyHolderWallets = list(keyHolders['owner'])
-        allWallets = lockManagerWallets + keyHolderWallets
-        allWalletsUnique = list(set(allWallets))
-        allWalletsUnique = pd.DataFrame()
-        allWalletsUnique['address'] = allWallets
-        
-
-        ## tokens
-        tokensUnique = list(set(locksDf.filter(['lockAddress'])))
-        allTokensUnique = pd.DataFrame(data=tokensUnique, columns=['address'])
-
-
         return {
-            'lockMetadata':lockMetadata, 'keyMetadata':keyMetadata, 'lockManagers':lockManagers, 'keyHolders': keyHolders,
-            'allWalletsUnique': allWalletsUnique, 'allTokensUnique': allTokensUnique
-        } 
+            'delegateChangesDf': delegateChangesDf,
+            'allWalletsDf': allWalletsDf,
+            'delegateVotingPowerChanges': delegateVotingPowerChanges
+        }
 
-    def ingest_wallets(self, data=None): 
+    def ingest_wallets(self, data=None):
         logging.info("Ingesting wallets...")
-        allWalletsUnique = data['allWalletsUnique'] 
-        urls = self.s3.save_df_as_csv(allWalletsUnique, self.bucket_name, f"ingestor_wallets_{self.asOf}", ACL='public-read')
-        self.cyphers.create_wallets(urls)
+        allWalletsDf = data['allWalletsDf']
+        urls = self.s3.save_df_as_csv(allWalletsDf, self.bucket_name, f"ingestor_wallets_{self.asOf}", ACL='public-read')
+        self.cyphers.create_or_merge_wallets(urls)
         logging.info(f"successfully ingested wallets. good job dev!")
+    
+    def ingest_delegate_changes(self, data=None):
+        logging.info("Ingesting delegate changes...")
+        delegateChangesDf = data['delegateChangesDf']
+        urls = self.s3.save_df_as_csv(delegateChangesDf, self.bucket_name, f"ingestor_delegate_changes_{self.asOf}", ACL='public-read')
+        self.cyphers.create_delegation_events(urls)
+        logging.info(f"successfully ingested delegate changes. good job dev!")
+    
+    def ingest_delegate_connections(self, data=None):
+        logging.info("Ingesting delegate connections...")
+        delegateConnectionsDf = data['delegateChangesDf']
+        urls = self.s3.save_df_as_csv(delegateConnectionsDf, self.bucket_name, f"ingestor_delegate_connections_{self.asOf}", ACL='public-read')
+        self.cyphers.connect_delegate_events(urls)
+        logging.info(f"successfully ingested delegate connections. good job dev!")
+
+    def enrich_delegate_events(self, data=None):
+        logging.info("Enriching delegate events...")
+        delegateVotingPowerChanges = data['delegateVotingPowerChanges']
+        urls = self.s3.save_df_as_csv(delegateVotingPowerChanges, self.bucket_name, f"ingestor_delegate_voting_power_changes_{self.asOf}", ACL='public-read')
+        self.cyphers.enrich_delegation_events(urls)
+        logging.info(f"successfully enriched delegate events. good job dev!"
+
+    
+    def run(self):
+        delegationData = self.prepare_delegation_data()
+       #self.ingest_wallets(data=delegationData)
+        #self.ingest_delegate_changes(data=delegationData)
+        self.ingest_delegate_connections(data=delegationData)
+        self.enrich_delegate_events(data=delegationData)
+        
+
+if __name__== '__main__':
+    ingestor = DelegationIngestor()
+    ingestor.run()
+
+
+
+
+
+
+        
+
+
+
