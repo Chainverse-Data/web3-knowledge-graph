@@ -83,5 +83,26 @@ class DelegationCyphers(Cypher):
             count += self.query(query)[0].value()
         return count
 
+    @count_query_logging
+    def enrich_delegation_events(self, urls):
+        count = 0
+        for url in urls: 
+            query = f"""
+            LOAD CSV WITH HEADERS FROM '{url}' AS delegations
+            MATCH (d:Delegation:Transaction {{txHash: delegations.txnHash}})
+            SET d.previousBalance = tofloat(delegations.previousBalance)
+            SET d.newBalance = tofloat(delegations.newBalance)
+            SET d.tokenAddress = delegations.tokenAddress
+            RETURN 
+                COUNT(d)
+                """
+            count += self.query(query)[0].value()
+        return count
+
+            
+            
+            
+
+
             
             

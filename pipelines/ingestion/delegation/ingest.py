@@ -58,14 +58,14 @@ class DelegationIngestor(Ingestor):
         delegateVotingPowerChanges = data['delegateVotingPowerChanges']
         urls = self.s3.save_df_as_csv(delegateVotingPowerChanges, self.bucket_name, f"ingestor_delegate_voting_power_changes_{self.asOf}", ACL='public-read')
         self.cyphers.enrich_delegation_events(urls)
-        logging.info(f"successfully enriched delegate events. good job dev!"
+        logging.info(f"successfully enriched delegate events. good job dev!")
 
     
     def run(self):
         delegationData = self.prepare_delegation_data()
        #self.ingest_wallets(data=delegationData)
         #self.ingest_delegate_changes(data=delegationData)
-        self.ingest_delegate_connections(data=delegationData)
+        #self.ingest_delegate_connections(data=delegationData)
         self.enrich_delegate_events(data=delegationData)
         
 

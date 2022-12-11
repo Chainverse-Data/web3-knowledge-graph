@@ -220,6 +220,7 @@ class DelegationScraper(Scraper):
 
 
 
+
     def get_token_holders(self):
         skip = 0
         cutoff_timestamp = self.metadata['cutoff_timestamp']
