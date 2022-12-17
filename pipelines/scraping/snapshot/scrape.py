@@ -84,7 +84,8 @@ class SnapshotScraper(Scraper):
             query = proposals_query.format(self.proposal_limit, offset)
             data = self.make_api_call(query)
             results = data["proposals"]
-            raw_proposals.extend(results)
+            if (results):
+                raw_proposals.extend(results)
             offset += self.proposal_limit
 
         proposals = [proposal for proposal in raw_proposals if proposal]

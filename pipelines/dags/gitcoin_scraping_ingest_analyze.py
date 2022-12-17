@@ -29,10 +29,10 @@ ecs_security_group = Variable.get("MWAA_VPC_SECURITY_GROUPS") # str(ssm.get_para
 # pipelines-medium: 1CPU 8Gb RAM
 # pipelines-large: 2CPU 16Gb RAM
 # pipelines-xl: 8CPU 32Gb RAM
-ecs_task_definition = "pipelines-medium"
 ecs_task_image = "data-pipelines"
-ecs_awslogs_group = f"/ecs/{ecs_task_definition}"
 ecs_awslogs_stream_prefix = f"ecs/{ecs_task_image}"
+ecs_task_definition = "pipelines-medium"
+ecs_awslogs_group = f"/ecs/{ecs_task_definition}"
 
 # Get the container's ENV vars from Airflow Variables
 env_vars = [
@@ -105,12 +105,16 @@ gitcoin_ingest_task = ECSOperator(
     awslogs_stream_prefix=ecs_awslogs_stream_prefix
 )
 
+#Redfining the task definition for the analytics to XL
+ecs_task_definition = "pipelines-xl"
+ecs_awslogs_group = f"/ecs/{ecs_task_definition}"
+
 gitcoin_community_analytics_task = ECSOperator(
     task_id="gitcoin_analyze_communities",
     dag=dag,
     aws_conn_id="aws_ecs",
     cluster=ecs_cluster,
-    task_definition="pipelines-xl",
+    task_definition=ecs_task_definition,
     region_name="us-east-2",
     launch_type="FARGATE",
     overrides={
