@@ -100,7 +100,7 @@ class SnapshotCyphers(Cypher):
 
     @count_query_logging
     def create_or_merge_space_tokens(self, urls):
-        count = self.queries.create_or_merge_tokens(urls)
+        count = self.queries.create_or_merge_tokens(urls, "ERC20")
         return count
 
     @count_query_logging
