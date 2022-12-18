@@ -52,7 +52,7 @@ class DaoHausIngestor(Ingestor):
                         "balance": token_balances.get(dao["id"], {token["tokenAddress"]: None})[token["tokenAddress"]],
                     }
                     if tmp["balance"] and token["decimals"]:
-                        if token["decimals"] != 0:
+                        if float(token["decimals"]) != 0:
                             tmp["balanceNumber"] = float(token_balances[dao["id"]][token["tokenAddress"]])/float(token["decimals"])
                         else:
                             tmp["balanceNumber"] = float(token_balances[dao["id"]][token["tokenAddress"]])
@@ -88,12 +88,18 @@ class DaoHausIngestor(Ingestor):
                 del tmp["details"]
                 del tmp["minionExecuteActionTx"]
                 if proposal["tributeTokenDecimals"]:
-                    tmp["tributeAmount"] = int(proposal["tributeOffered"])/float(proposal["tributeTokenDecimals"])
+                    if float(proposal["tributeTokenDecimals"]):
+                        tmp["tributeAmount"] = int(proposal["tributeOffered"])/float(proposal["tributeTokenDecimals"])
+                    else:
+                        tmp["tributeAmount"] = int(proposal["tributeOffered"])
                 else:
                     tmp["tributeAmount"] = None
 
                 if proposal["paymentTokenDecimals"]:
-                    tmp["payementAmount"] = int(proposal["paymentRequested"])/float(proposal["paymentTokenDecimals"])
+                    if float(proposal["paymentTokenDecimals"]) != 0:
+                        tmp["payementAmount"] = int(proposal["paymentRequested"])/float(proposal["paymentTokenDecimals"])
+                    else:
+                        tmp["payementAmount"] = int(proposal["paymentRequested"])
                 else:
                     tmp["payementAmount"] = None
                 
