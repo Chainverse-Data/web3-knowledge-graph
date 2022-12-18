@@ -1,8 +1,8 @@
 import logging
-from gql.transport.requests import log as requests_logger
-requests_logger.setLevel(logging.WARNING)
 from gql import gql, Client
-from gql.transport.aiohttp import AIOHTTPTransport
+from gql.transport.aiohttp import AIOHTTPTransport, log as gql_log
+gql_log.setLevel(logging.WARNING)
+
 import re
 from newspaper import Article
 import json

@@ -1,8 +1,6 @@
 import time
 from ..helpers import Scraper
-from ..helpers import str2bool
 import os
-import argparse
 import gql
 import logging
 from gql.transport.aiohttp import AIOHTTPTransport, log as gql_log
