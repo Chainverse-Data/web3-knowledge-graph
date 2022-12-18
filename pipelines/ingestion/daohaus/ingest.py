@@ -13,7 +13,8 @@ class DaoHausIngestor(Ingestor):
         self.chainIds = {
             "mainnet": 1,
             "xdai": 100,
-            "optimism":10
+            "optimism":10,
+            "polygon":137
         }
 
     def prepare_daos_and_tokens_data(self):
