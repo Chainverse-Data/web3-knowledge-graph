@@ -165,15 +165,6 @@ class MirrorScraper(Scraper):
         transaction_df = pd.DataFrame.from_dict(transactions_cleaned)
         logging.info(f"Retrieved {len(transaction_df)} transactions")
 
-        logging.info(f"Reverse authors lookup")
-        unique_authors = transaction_df["author"].unique()
-        # for author in tqdm(unique_authors):
-        #     ens = self.ENSsearch(author)
-        #     if ens:
-        #         self.reverse_ens[author] = ens
-        #     else:
-        #         self.reverse_ens[author] = ""
-
         filtered_transactions = transaction_df.sort_values("block").groupby("original_content_digest", as_index=False).head(1)
         logging.info(f"Getting all the articles content")
         for transaction in tqdm(filtered_transactions.to_dict('records')):
