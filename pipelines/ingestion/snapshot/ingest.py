@@ -161,7 +161,7 @@ class SnapshotIngestor(Ingestor):
                 if params == "":
                     continue
                 address = params.get("address", "")
-                if address == "" or not isinstance(address, str):
+                if not address or type(address) != str or address == "":
                     continue
                 token_dict["address"] = address.lower()
                 token_dict["symbol"] = params.get("symbol", "")
