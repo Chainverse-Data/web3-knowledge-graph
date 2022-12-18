@@ -1,3 +1,4 @@
+import re
 from ..helpers import Ingestor
 from .cyphers import SnapshotCyphers
 import json
@@ -150,16 +151,16 @@ class SnapshotIngestor(Ingestor):
             params = entry.get("params", None)
             address = params.get("address", None)
 
-            if space and address:
+            isAddress = re.compile("^0x[a-fA-F0-9]{40}$")
+            if space and address and isAddress.match(address):
                 tmp = {
                 "space": space,
                 "token": address.lower()
                 }
                 space_data["strategy_relationships"].append(current_dict)
             
-            if address:
                 tmp = {
-                    "address": address.lower(),
+                    "contractAddress": address.lower(),
                     "symbol": params.get("symbol", ""),
                     "decimals": params.get("decimals", -1),
                 }
