@@ -106,7 +106,7 @@ gitcoin_ingest_task = ECSOperator(
 )
 
 #Redfining the task definition for the analytics to XL
-ecs_task_definition = "pipelines-xl"
+ecs_task_definition = "pipelines-huge"
 ecs_awslogs_group = f"/ecs/{ecs_task_definition}"
 
 gitcoin_community_analytics_task = ECSOperator(

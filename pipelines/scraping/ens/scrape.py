@@ -75,6 +75,7 @@ class EnsScraper(Scraper):
         logging.info("Getting all owner addresses...")
         self.data["owner_addresses"] = []
         url = "https://eth-mainnet.g.alchemy.com/nft/v2/{}/getOwnersForCollection?contractAddress=0x57f1887a8BF19b14fC0dF6Fd9B2acc9Af147eA85&withTokenBalances=false".format(os.environ["ALCHEMY_API_KEY"])
+        print(url)
         page_key = 0
         new_url = url
         while page_key is not None:
