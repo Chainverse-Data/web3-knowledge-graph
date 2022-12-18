@@ -50,7 +50,7 @@ class TwitterPostProcess(Processor):
             end_time = head["x-rate-limit-reset"]
             epoch_time = int(time.time())
             time_to_wait = int(end_time) - epoch_time
-            print(f"Rate limit exceeded. Waiting {time_to_wait} seconds.")
+            logging.warning(f"Rate limit exceeded. Waiting {time_to_wait} seconds.")
             time.sleep(time_to_wait)
             return self.get_user_response(batch, retries=retries + 1)
 
@@ -58,7 +58,7 @@ class TwitterPostProcess(Processor):
 
     def get_twitter_nodes_data(self):
         twitter_handles = self.cyphers.get_recent_twitter(self.cutoff)
-        print(f"Found {len(twitter_handles)} twitter handles")
+        logging.info(f"Found {len(twitter_handles)} twitter handles")
 
         user_list = []
         for idx in range(0, len(twitter_handles), self.batch_size):
@@ -66,7 +66,7 @@ class TwitterPostProcess(Processor):
             batch = self.filter_batch(twitter_handles_batch)
             set_items = set(twitter_handles_batch)
             resp = self.get_user_response(batch)
-            print(f"Got {len(resp['data'])} users")
+            logging.info(f"Got {len(resp['data'])} users from the API")
             for user in resp["data"]:
                 tmp = {
                     "name": user["name"],
@@ -76,14 +76,13 @@ class TwitterPostProcess(Processor):
                     "userId": user["id"],
                     "followerCount": user["public_metrics"]["followers_count"],
                     "profileImageUrl": user["profile_image_url"],
-                    "website": user["url"]
+                    "website": user.get("url", "")
                 }
                 set_items.remove(tmp["handle"])
                 user_list.append(tmp)
             self.bad_handles.update(set_items)
 
-        logging.info(
-            f"Grabbed the data of {len(user_list)} users from the API")
+        logging.info(f"Grabbed the data of {len(user_list)} users from the API")
         node_info_urls = self.s3.save_json_as_csv(
             user_list, self.bucket_name, f"processor_twitter_data_{self.asOf}")
         self.cyphers.add_twitter_node_info(node_info_urls)
