@@ -8,7 +8,6 @@ from newspaper import Article
 import json
 import time
 
-
 class MirrorScraperHelper():
     
     def get_transations(self, query_string, counter=0):

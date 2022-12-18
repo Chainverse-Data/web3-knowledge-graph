@@ -145,33 +145,26 @@ class SnapshotIngestor(Ingestor):
         space_data["ens"] = pandas.DataFrame(space_data["ens"]).drop_duplicates(["name"]).to_dict("records")
 
         for item in space_data["strategy_list"]:
-            current_dict = {}
-            space = item.get("space", "")
-            if space == "":
-                continue
-            current_dict["space"] = space
+            space = item.get("space", None)
+            entry = item.get("strategy", None)
+            params = entry.get("params", None)
+            address = params.get("address", None)
 
-            entry = item.get("strategy", "")
-            if entry == "":
-                continue
-
-            try:
-                token_dict = {}
-                params = entry.get("params", "")
-                if params == "":
-                    continue
-                address = params.get("address", "")
-                if not address or type(address) != str or address == "":
-                    continue
-                token_dict["address"] = address.lower()
-                token_dict["symbol"] = params.get("symbol", "")
-                token_dict["decimals"] = params.get("decimals", -1)
-                current_dict["token"] = token_dict["address"]
-                space_data["tokens"].append(token_dict)
+            if space and address:
+                tmp = {
+                "space": space,
+                "token": address.lower()
+                }
                 space_data["strategy_relationships"].append(current_dict)
-            except:
-                continue
-
+            
+            if address:
+                tmp = {
+                    "address": address.lower(),
+                    "symbol": params.get("symbol", ""),
+                    "decimals": params.get("decimals", -1),
+                }
+                space_data["tokens"].append(tmp)
+        
         return space_data
 
     def process_proposals(self) -> Dict[str, List[Dict[str, Any]]]:
