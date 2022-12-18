@@ -52,7 +52,10 @@ class DaoHausIngestor(Ingestor):
                         "balance": token_balances.get(dao["id"], {token["tokenAddress"]: None})[token["tokenAddress"]],
                     }
                     if tmp["balance"] and token["decimals"]:
-                        tmp["balanceNumber"] = float(token_balances[dao["id"]][token["tokenAddress"]])/float(token["decimals"])
+                        if token["decimals"] != 0:
+                            tmp["balanceNumber"] = float(token_balances[dao["id"]][token["tokenAddress"]])/float(token["decimals"])
+                        else:
+                            tmp["balanceNumber"] = float(token_balances[dao["id"]][token["tokenAddress"]])
                     else:
                         tmp["balanceNumber"] = None
 
