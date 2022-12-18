@@ -102,8 +102,9 @@ class SnapshotScraper(Scraper):
             data = self.make_api_call(query)
             results = data["votes"]
             if type(results) != list:
-                raise Exception("Something went wrong while getting the data that was not caught correctly!")
-            raw_votes.extend(results)
+                logging.error("Something went wrong while getting the data that was not caught correctly!")
+            if results:
+                raw_votes.extend(results)
         return raw_votes
 
     def get_votes(self):
@@ -124,8 +125,9 @@ class SnapshotScraper(Scraper):
             query = proposal_status_query.format(proposal_id)
             data = self.make_api_call(query)
             if len(data["proposals"]) == 0:
-                raise Exception(f"Something unexpected happened with proposal id: {proposal_id}")
-            proposal_statuses += data["proposals"]
+                logging.error(f"Something unexpected happened with proposal id: {proposal_id}")
+            if data["proposals"]:
+                proposal_statuses += data["proposals"]
         open_proposals = [proposal["id"] for proposal in proposal_statuses if proposal["state"] != "closed"]
         open_proposals += [proposal["id"] for proposal in self.data["proposals"] if proposal["state"] != "closed"]
         self.open_proposals = list(set(open_proposals))
