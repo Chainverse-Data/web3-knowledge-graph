@@ -178,7 +178,7 @@ class MirrorScraper(Scraper):
         logging.info(f"Getting all the articles content")
         for transaction in tqdm(filtered_transactions.to_dict('records')):
             data = self.get_article(transaction["transaction_id"])
-            if data:
+            if data and type(data) == dict and "content" in data:
                 article = {
                     "original_content_digest": transaction["original_content_digest"],
                     "current_content_digest": transaction["content_digest"],
