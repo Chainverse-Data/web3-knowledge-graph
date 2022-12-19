@@ -22,17 +22,14 @@ class EnsScraper(Scraper):
     def get_all_ens(self):
         logging.info("Getting all ENS...")
         self.data["ens"] = []
-        with tqdm_joblib(tqdm.tqdm(desc="Getting ENS Data", total=len(self.data["owner_addresses"]))) as progress_bar:
+        with tqdm_joblib(tqdm.tqdm(desc="Getting ENS Data", total=len(self.data["owner_addresses"]))):
             ens_list = joblib.Parallel(n_jobs=self.max_threads, backend="threading")(
                 joblib.delayed(self.get_ens_info)(address) for address in self.data["owner_addresses"]
             )
 
         self.data["ens"] = [item for sublist in ens_list for item in sublist]
 
-        with tqdm_joblib(
-            tqdm.tqdm(desc="Getting Primary Names", total=len(
-                self.data["owner_addresses"]))
-        ) as progress_bar:
+        with tqdm_joblib(tqdm.tqdm(desc="Getting Primary Names", total=len(self.data["owner_addresses"]))):
             primary_list = joblib.Parallel(n_jobs=self.max_threads, backend="threading")(
                 joblib.delayed(self.get_primary_info)(address) for address in self.data["owner_addresses"]
             )
@@ -77,7 +74,6 @@ class EnsScraper(Scraper):
         logging.info("Getting all owner addresses...")
         self.data["owner_addresses"] = []
         url = "https://eth-mainnet.g.alchemy.com/nft/v2/{}/getOwnersForCollection?contractAddress=0x57f1887a8BF19b14fC0dF6Fd9B2acc9Af147eA85&withTokenBalances=false".format(os.environ["ALCHEMY_API_KEY"])
-        print(url)
         page_key = 0
         new_url = url
         while page_key is not None:
