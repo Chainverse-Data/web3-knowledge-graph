@@ -93,12 +93,9 @@ class EnsScraper(Scraper):
     def run(self):
         self.get_all_owner_addresses()
         self.get_all_ens()
-
         self.save_data()
         self.save_metadata()
 
-
 if __name__ == "__main__":
-
     scraper = EnsScraper()
     scraper.run()

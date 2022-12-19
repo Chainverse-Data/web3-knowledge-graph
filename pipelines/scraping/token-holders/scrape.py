@@ -57,7 +57,7 @@ class TokenHolderScraper(Scraper):
                     }
                 assets.add(contractAddress)
         assets = list(assets)
-        return (wallet, assets, transactions, tokens)
+        return (wallet, assets, tokens)
 
     def job_get_balances(self, wallet):
         balances = self.get_balances(wallet, self.data["assets"][wallet])
@@ -65,22 +65,22 @@ class TokenHolderScraper(Scraper):
 
     def get_transactions_assets_balances(self):
         logging.info("Getting all transactions assets and balances")
-        self.data["transactions"] = {}
+        # self.data["transactions"] = {}
         self.data["balances"] = {}
         self.data["assets"] = {}
         self.data["tokens"] = {}
         logging.info("Multithreaded scraping launching!")
-        with tqdm_joblib(tqdm(desc="Getting transactions data", total=len(self.wallet_list))) as progress_bar:
+        with tqdm_joblib(tqdm(desc="Getting transactions data", total=len(self.wallet_list))):
             data = joblib.Parallel(n_jobs=self.max_thread, backend="threading")(joblib.delayed(self.job_get_transactions)(wallet) for wallet in self.wallet_list)
         for item in tqdm(data):
-            wallet, assets, transactions, tokens = item
+            wallet, assets, tokens = item
             self.data["assets"][wallet] = assets
-            self.data["transactions"][wallet] = transactions
+            # self.data["transactions"][wallet] = transactions
             for token in tokens:
                 if token not in self.data["tokens"]:
                     self.data["tokens"][token] = tokens[token]
         
-        with tqdm_joblib(tqdm(desc="Getting balances data", total=len(self.wallet_list))) as progress_bar:
+        with tqdm_joblib(tqdm(desc="Getting balances data", total=len(self.wallet_list))):
             data = joblib.Parallel(n_jobs=self.max_thread, backend="threading")(joblib.delayed(self.job_get_balances)(wallet) for wallet in self.wallet_list)
         for item in tqdm(data):
             wallet, balances = item
