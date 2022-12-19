@@ -42,9 +42,12 @@ class EnsScraper(Scraper):
     def get_primary_info(self, address):
         warnings.filterwarnings("ignore")
         x = ns.fromWeb3(web3.Web3(web3.Web3.HTTPProvider(self.provider)))
-        name = x.name(web3.Web3.toChecksumAddress(address))
-        if name is not None:
-            return {"name": name, "address": address.lower()}
+        try:
+            name = x.name(web3.Web3.toChecksumAddress(address))
+            if name is not None:
+                return {"name": name, "address": address.lower()}
+        except:
+            logging.error("An exception occured getting the name")
         return None
 
     def get_ens_info(self, address):
