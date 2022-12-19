@@ -44,22 +44,23 @@ class DaoHausIngestor(Ingestor):
                 data["daos"].append(tmp)
                 data["summoners"].append({"daoId": dao["id"], "address": dao["summoner"]})
                 for token in dao["tokens"]:
-                    tmp = {
-                        "daoId": dao["id"],
-                        "contractAddress": token["tokenAddress"],
-                        "symbol": token["symbol"],
-                        "decimal": token["decimals"],
-                        "balance": token_balances.get(dao["id"], {token["tokenAddress"]: None})[token["tokenAddress"]],
-                    }
-                    if tmp["balance"] and token["decimals"]:
-                        if float(token["decimals"]) != 0:
-                            tmp["balanceNumber"] = float(token_balances[dao["id"]][token["tokenAddress"]])/float(token["decimals"])
+                    if "tokenAddress" in token:
+                        tmp = {
+                            "daoId": dao["id"],
+                            "contractAddress": token["tokenAddress"],
+                            "symbol": token["symbol"],
+                            "decimal": token["decimals"],
+                            "balance": token_balances.get(dao["id"], {token["tokenAddress"]: None})[token["tokenAddress"]],
+                        }
+                        if tmp["balance"] and token["decimals"]:
+                            if float(token["decimals"]) != 0:
+                                tmp["balanceNumber"] = float(token_balances[dao["id"]][token["tokenAddress"]])/float(token["decimals"])
+                            else:
+                                tmp["balanceNumber"] = float(token_balances[dao["id"]][token["tokenAddress"]])
                         else:
-                            tmp["balanceNumber"] = float(token_balances[dao["id"]][token["tokenAddress"]])
-                    else:
-                        tmp["balanceNumber"] = None
+                            tmp["balanceNumber"] = None
 
-                    data["tokens"].append(tmp)
+                        data["tokens"].append(tmp)
         daos_df = pd.DataFrame().from_dict(data["daos"])
         tokens_df = pd.DataFrame().from_dict(data["tokens"])
         summoners_df = pd.DataFrame().from_dict(data["summoners"])
