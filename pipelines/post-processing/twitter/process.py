@@ -41,7 +41,7 @@ class TwitterPostProcess(Processor):
 
         twitter_handles_batch = ",".join(batch)
         x = requests.get(
-            f"https://api.twitter.com/2/users/by?usernames={twitter_handles_batch}&user.fields=description,id,name,public_metrics,verified,profile_image_url,url",
+            f"https://api.twitter.com/2/users/by?usernames={twitter_handles_batch}&user.fields=description,id,location,name,public_metrics,verified,profile_image_url,url&expansions=pinned_tweet_id&tweet.fields=geo,lang",
             headers=self.headers,
         )
         resp = json.loads(x.text)
@@ -61,13 +61,14 @@ class TwitterPostProcess(Processor):
         logging.info(f"Found {len(twitter_handles)} twitter handles")
 
         user_list = []
+        id_dict = {}
         for idx in range(0, len(twitter_handles), self.batch_size):
             twitter_handles_batch = twitter_handles[idx: idx + self.batch_size]
             batch = self.filter_batch(twitter_handles_batch)
             set_items = set(twitter_handles_batch)
             resp = self.get_user_response(batch)
             logging.info(f"Got {len(resp['data'])} users from the API")
-            for user in resp["data"]:
+            for idx, user in enumerate(resp["data"]):
                 tmp = {
                     "name": user["name"],
                     "handle": user["username"].lower(),
@@ -76,10 +77,17 @@ class TwitterPostProcess(Processor):
                     "userId": user["id"],
                     "followerCount": user["public_metrics"]["followers_count"],
                     "profileImageUrl": user["profile_image_url"],
-                    "website": user.get("url", "")
+                    "website": user.get("url", ""),
+                    "location": user.get("location", ""),
+                    "language": user.get("language", "")
                 }
                 set_items.remove(tmp["handle"])
                 user_list.append(tmp)
+                pinned_id = user.get('pinned_tweet_id', -1)
+                if pinned_id != -1:
+                    id_dict[pinned_id] = idx
+            for idx, entry in enumerate(resp['includes']['tweets']):
+                user_list[id_dict[entry['id']]]['language'] = entry['lang']
             self.bad_handles.update(set_items)
 
         logging.info(f"Grabbed the data of {len(user_list)} users from the API")
