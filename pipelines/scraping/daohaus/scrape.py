@@ -243,7 +243,8 @@ class DAOHausScraper(Scraper):
             logging.info(f"Fetching information for chain: {chain}. \nQuery: {query} \nParams: {key} | {self.last_cutoffs[chain][key]} | {cutoff_key}")
             result = {key:["init"]}
             retry = 0
-            variables = {"first": self.interval, "cutoff": self.last_cutoffs[chain][key]}
+            cutoff = self.last_cutoffs[chain][key]
+            variables = {"first": self.interval, "cutoff": cutoff}
             if DEBUG:
                 req = 0
                 max_req = 6
