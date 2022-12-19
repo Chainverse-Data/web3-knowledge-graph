@@ -1,3 +1,5 @@
+import multiprocessing
+import joblib
 import requests
 import os
 from tqdm import tqdm
@@ -8,6 +10,7 @@ import pandas as pd
 import web3
 import re
 from collections import Counter
+from ..helpers import tqdm_joblib
 DEBUG = os.environ.get("DEBUG", False)
 
 class MirrorScraper(Scraper):
@@ -34,6 +37,11 @@ class MirrorScraper(Scraper):
         self.etherescan_ABI_API_url = "https://api-optimistic.etherscan.io/api?module=contract&action=getabi&address={}&apikey=" + os.environ.get("OPTIMISTIC_ETHERSCAN_API_KEY", "")
         self.alchemy_optimism_rpc = f"https://opt-mainnet.g.alchemy.com/v2/{os.environ['ALCHEMY_API_KEY']}"
         self.w3 = web3.Web3(web3.HTTPProvider(self.alchemy_optimism_rpc))
+        self.max_threads = multiprocessing.cpu_count() * 2
+        if DEBUG:
+            self.max_thread = multiprocessing.cpu_count() - 1
+        os.environ["NUMEXPR_MAX_THREADS"] = str(self.max_threads)
+
 
     def ENSsearch(self, address):
         url = self.ensSearchURL.format(os.environ["ALCHEMY_API_KEY"], address)
@@ -136,8 +144,6 @@ class MirrorScraper(Scraper):
         transactions = self.arweaveHelpers.getArweaveTxs(self.start_block, self.end_block, 400)
 
         transactions_cleaned = []
-        articles_cleaned = []
-        NFTs_cleaned = []
         done = set()
         logging.info(f"Getting all new transactions")
         for transaction in tqdm(transactions):
@@ -167,41 +173,50 @@ class MirrorScraper(Scraper):
 
         filtered_transactions = transaction_df.sort_values("block").groupby("original_content_digest", as_index=False).head(1)
         logging.info(f"Getting all the articles content")
-        for transaction in tqdm(filtered_transactions.to_dict('records')):
-            data = self.get_article(transaction["transaction_id"])
-            if data and type(data) == dict and "content" in data:
-                article = {
-                    "original_content_digest": transaction["original_content_digest"],
-                    "current_content_digest": transaction["content_digest"],
-                    "arweaveTx": transaction["transaction_id"],
-                    "body": data["content"]["body"],
-                    "title": data["content"]["title"],
-                    "timestamp": data["content"]["timestamp"],
-                    "author": transaction["author"],
-                    # "ens": self.reverse_ens[transaction["author"]],
-                }
-                articles_cleaned.append(article)
-                if "wnft" in data:
-                    if "original_content_digest" in transaction:
-                        nft = {
-                            "original_content_digest": transaction["original-content-digest"],
-                            "chain_id": data["chainId"],
-                            "funding_recipient": data["fundingRecipient"],
-                            "owner": data["owner"],
-                            "address": data["proxyAddress"],
-                            "supply": data["supply"],
-                            "symbol": data["symbol"]
-                        }
-                        NFTs_cleaned.append(nft)
-                    else:
-                        logging.error("original_content_digest is missing from the transaction, can't resolve article")
-            else:
-                logging.error("An error occured retriving articles")
+        
+        with tqdm_joblib(tqdm(desc="Getting Mirror article content and NFTs", total=len(filtered_transactions.to_dict('records')))):
+            articles_content = joblib.Parallel(n_jobs=self.max_threads, backend="threading")(
+                joblib.delayed(self.get_article_content)(transaction) for transaction in filtered_transactions.to_dict('records')
+            )
+        articles_cleaned = [element[0] for element in articles_content if element[0]]
+        NFTs_cleaned = [element[1] for element in articles_content if element[1]]
+
         logging.info(f"Retrieved {len(articles_cleaned)} articles")
 
         self.data["arweave_transactions"] = transactions_cleaned
         self.data["arweave_articles"] = articles_cleaned
         self.data["arweave_nfts"] = NFTs_cleaned
+
+    def get_article_content(self, transaction):
+        data = self.get_article(transaction["transaction_id"])
+        article = None
+        nft = None
+        if data and type(data) == dict and "content" in data:
+            article = {
+                "original_content_digest": transaction["original_content_digest"],
+                "current_content_digest": transaction["content_digest"],
+                "arweaveTx": transaction["transaction_id"],
+                "body": data["content"]["body"],
+                "title": data["content"]["title"],
+                "timestamp": data["content"]["timestamp"],
+                "author": transaction["author"],
+            }
+            if "wnft" in data:
+                if "original_content_digest" in transaction:
+                    nft = {
+                        "original_content_digest": transaction["original-content-digest"],
+                        "chain_id": data["chainId"],
+                        "funding_recipient": data["fundingRecipient"],
+                        "owner": data["owner"],
+                        "address": data["proxyAddress"],
+                        "supply": data["supply"],
+                        "symbol": data["symbol"]
+                    }
+                else:
+                    logging.error("original_content_digest is missing from the transaction, can't resolve article")
+        else:
+            logging.error("An error occured retriving articles")
+        return (article, nft)
 
     def get_twitter_accounts(self):
         twitter_accounts = []
