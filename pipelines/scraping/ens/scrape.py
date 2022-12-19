@@ -16,12 +16,14 @@ class EnsScraper(Scraper):
         super().__init__(bucket_name, allow_override=allow_override)
         self.provider = "https://eth-mainnet.alchemyapi.io/v2/{}".format(os.environ["ALCHEMY_API_KEY"])
         self.headers = {"accept": "application/json"}
+        self.max_threads = multiprocessing.cpu_count() * 2
+        os.environ["NUMEXPR_MAX_THREADS"] = str(self.max_threads)
 
     def get_all_ens(self):
         logging.info("Getting all ENS...")
         self.data["ens"] = []
         with tqdm_joblib(tqdm.tqdm(desc="Getting ENS Data", total=len(self.data["owner_addresses"]))) as progress_bar:
-            ens_list = joblib.Parallel(n_jobs=multiprocessing.cpu_count() - 1, backend="threading")(
+            ens_list = joblib.Parallel(n_jobs=self.max_threads, backend="threading")(
                 joblib.delayed(self.get_ens_info)(address) for address in self.data["owner_addresses"]
             )
 
@@ -31,7 +33,7 @@ class EnsScraper(Scraper):
             tqdm.tqdm(desc="Getting Primary Names", total=len(
                 self.data["owner_addresses"]))
         ) as progress_bar:
-            primary_list = joblib.Parallel(n_jobs=multiprocessing.cpu_count() - 1, backend="threading")(
+            primary_list = joblib.Parallel(n_jobs=self.max_threads, backend="threading")(
                 joblib.delayed(self.get_primary_info)(address) for address in self.data["owner_addresses"]
             )
         primary_list = [item for item in primary_list if item is not None]
