@@ -40,6 +40,7 @@ class DAOHausScraper(Scraper):
                     self.last_cutoffs[chain][key] = self.metadata.get("last_cutoffs", {chain: {key: ""}})[chain][key]
                 else:
                     self.last_cutoffs[chain][key] = self.metadata.get("last_cutoffs", {chain: {key: "0"}})[chain][key]
+            logging.info(f"Last Cutoffs are: {self.last_cutoffs}")
 
     def call_the_graph_api(self, query, variables, key, chain, counter=0):
         time.sleep(counter)
