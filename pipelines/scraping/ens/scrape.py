@@ -85,7 +85,8 @@ class EnsScraper(Scraper):
             logging.info(f"{len(self.data['owner_addresses'])} current owners")
             page_key = data.get("pageKey", None)
             new_url = url + "&pageKey={}".format(page_key)
-
+        if len(self.data["owner_addresses"]) == 0:
+            raise Exception("Something went wrong getting the ENS Owners ...")
         self.data["owner_addresses"] = list(set(self.data["owner_addresses"]))
         logging.info("Found {} owner addresses".format(len(self.data["owner_addresses"])))
 
