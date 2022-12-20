@@ -192,28 +192,28 @@ class MirrorScraper(Scraper):
         article = None
         nft = None
         if data and type(data) == dict and "content" in data:
-            article = {
-                "original_content_digest": transaction["original_content_digest"],
-                "current_content_digest": transaction["content_digest"],
-                "arweaveTx": transaction["transaction_id"],
-                "body": data["content"]["body"],
-                "title": data["content"]["title"],
-                "timestamp": data["content"]["timestamp"],
-                "author": transaction["author"],
-            }
-            if "wnft" in data:
-                if "original_content_digest" in transaction:
-                    nft = {
-                        "original_content_digest": transaction["original-content-digest"],
-                        "chain_id": data["chainId"],
-                        "funding_recipient": data["fundingRecipient"],
-                        "owner": data["owner"],
-                        "address": data["proxyAddress"],
-                        "supply": data["supply"],
-                        "symbol": data["symbol"]
-                    }
-                else:
-                    logging.error("original_content_digest is missing from the transaction, can't resolve article")
+            if "original_content_digest" in transaction:
+                article = {
+                    "original_content_digest": transaction["original_content_digest"],
+                    "current_content_digest": transaction["content_digest"],
+                    "arweaveTx": transaction["transaction_id"],
+                    "body": data["content"]["body"],
+                    "title": data["content"]["title"],
+                    "timestamp": data["content"]["timestamp"],
+                    "author": transaction["author"],
+                }
+                if "wnft" in data:
+                        nft = {
+                            "original_content_digest": transaction["original_content_digest"],
+                            "chain_id": data["chainId"],
+                            "funding_recipient": data["fundingRecipient"],
+                            "owner": data["owner"],
+                            "address": data["proxyAddress"],
+                            "supply": data["supply"],
+                            "symbol": data["symbol"]
+                        }
+            else:
+                logging.error("original_content_digest is missing from the transaction, can't resolve article")
         else:
             logging.error("An error occured retriving articles")
         return (article, nft)
