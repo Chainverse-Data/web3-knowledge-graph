@@ -23,7 +23,7 @@ class MirrorScraperHelper():
         os.environ["NUMEXPR_MAX_THREADS"] = str(self.max_thread)
     
     def get_transations(self, query_string, counter=0):
-        time.sleep(counter)
+        time.sleep(counter * 10)
         if counter > 10:
             return None
         transport = AIOHTTPTransport(url="https://arweave.net/graphql")
@@ -32,7 +32,7 @@ class MirrorScraperHelper():
         try:
             results = client.execute(query)
         except Exception as e:
-            logging.error(f"An exception occured getting transactions, {e}")
+            logging.error(f"An exception occured getting transactions, {e}, sleeping for {counter}")
             return self.get_transations(query_string, counter=counter+1)
         if results != None:
             return results
