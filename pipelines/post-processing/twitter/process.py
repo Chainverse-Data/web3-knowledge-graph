@@ -8,12 +8,15 @@ import requests
 import json
 import time
 
+
 class TwitterPostProcess(Processor):
     """This class reads from the Neo4J instance for Twitter nodes to call the Twitter API and retreive extra infos"""
+
     def __init__(self):
         self.cyphers = TwitterCyphers()
         super().__init__("twitter")
         self.cutoff = datetime.now() - timedelta(days=20)
+        self.full_job = os.environ.get("FULL_TWITTER_JOB", False)
 
         self.batch_size = 100
         self.split_size = 10000
@@ -57,13 +60,16 @@ class TwitterPostProcess(Processor):
         return resp
 
     def get_twitter_nodes_data(self):
-        twitter_handles = self.cyphers.get_recent_twitter(self.cutoff)
+        if self.full_job:
+            twitter_handles = self.cyphers.get_all_twitter()
+        else:
+            twitter_handles = self.cyphers.get_recent_empty_twitter(self.cutoff)
         logging.info(f"Found {len(twitter_handles)} twitter handles")
 
         users = []
         twitter_ids = {}
         for idx in range(0, len(twitter_handles), self.batch_size):
-            twitter_handles_batch = twitter_handles[idx: idx + self.batch_size]
+            twitter_handles_batch = twitter_handles[idx : idx + self.batch_size]
             batch = self.filter_batch(twitter_handles_batch)
             set_items = set(twitter_handles_batch)
             resp = self.get_user_response(batch)
@@ -79,7 +85,7 @@ class TwitterPostProcess(Processor):
                     "profileImageUrl": user["profile_image_url"],
                     "website": user.get("url", ""),
                     "location": user.get("location", ""),
-                    "language": user.get("language", "")
+                    "language": user.get("language", ""),
                 }
                 set_items.remove(tmp["handle"])
                 users.append(tmp)
@@ -108,6 +114,7 @@ class TwitterPostProcess(Processor):
         self.clean_twitter_nodes()
         self.get_twitter_nodes_data()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     processor = TwitterPostProcess()
     processor.run()
