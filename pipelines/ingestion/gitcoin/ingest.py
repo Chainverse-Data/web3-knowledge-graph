@@ -23,8 +23,10 @@ class GitCoinIngestor(Ingestor):
         self.cyphers.create_or_merge_grants(urls)
         self.cyphers.set_grant_round(grants_data["grants"])
 
-        urls = self.s3.save_json_as_csv(grants_data["grants_tags"], self.bucket_name, f"ingestor_grants_tags_{self.asOf}")
+        urls = self.s3.save_json_as_csv(grants_data["tags"], self.bucket_name, f"ingestor_tags_{self.asOf}")
         self.cyphers.create_or_merge_grants_tags(urls)
+        
+        urls = self.s3.save_json_as_csv(grants_data["grants_tags"], self.bucket_name, f"ingestor_grants_tags_{self.asOf}")
         self.cyphers.link_grants_tag(urls)
 
         urls = self.s3.save_json_as_csv(grants_data["team_members"], self.bucket_name, f"ingestor_team_members_{self.asOf}")
@@ -44,6 +46,7 @@ class GitCoinIngestor(Ingestor):
         grants_data = {
             "grants": [],
             "grants_tags": [],
+            "tags": [],
             "team_members": [],
             "admin_wallets": [],
             "twitter_accounts": [],
@@ -106,6 +109,7 @@ class GitCoinIngestor(Ingestor):
                         "profileUrl": f"https://twitter.com/{grant['twitter_handle_2']}"
                     }
                     grants_data["twitter_accounts"].append(tmp)
+        grants_data["tags"] = [{"label": tag} for tag in set([el["label"] for el in grants_data["grant_tags"]])]
         return grants_data
 
     def ingest_donations(self):

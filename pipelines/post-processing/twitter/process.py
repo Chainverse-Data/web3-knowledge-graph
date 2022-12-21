@@ -66,8 +66,8 @@ class TwitterPostProcess(Processor):
             twitter_handles = self.cyphers.get_recent_empty_twitter(self.cutoff)
         logging.info(f"Found {len(twitter_handles)} twitter handles")
 
-        user_list = []
-        id_dict = {}
+        users = []
+        twitter_ids = {}
         for idx in range(0, len(twitter_handles), self.batch_size):
             twitter_handles_batch = twitter_handles[idx : idx + self.batch_size]
             batch = self.filter_batch(twitter_handles_batch)
@@ -88,24 +88,22 @@ class TwitterPostProcess(Processor):
                     "language": user.get("language", ""),
                 }
                 set_items.remove(tmp["handle"])
-                user_list.append(tmp)
-                pinned_id = user.get("pinned_tweet_id", -1)
+                users.append(tmp)
+                pinned_id = user.get('pinned_tweet_id', -1)
                 if pinned_id != -1:
-                    id_dict[pinned_id] = idx
-            for idx, entry in enumerate(resp["includes"]["tweets"]):
-                user_list[id_dict[entry["id"]]]["language"] = entry["lang"]
+                    twitter_ids[pinned_id] = idx
+            for idx, entry in enumerate(resp['includes']['tweets']):
+                users[twitter_ids[entry['id']]]['language'] = entry['lang']
             self.bad_handles.update(set_items)
 
-        logging.info(f"Grabbed the data of {len(user_list)} users from the API")
-        node_info_urls = self.s3.save_json_as_csv(user_list, self.bucket_name, f"processor_twitter_data_{self.asOf}")
+        logging.info(f"Grabbed the data of {len(users)} users from the API")
+        node_info_urls = self.s3.save_json_as_csv(users, self.bucket_name, f"processor_twitter_data_{self.asOf}")
         self.cyphers.add_twitter_node_info(node_info_urls)
 
         # add trash labels to bad handle nodes
-        bad_handles_dict = [{"handle": x} for x in self.bad_handles]
-        logging.info(f"Found {len(bad_handles_dict)} bad handles")
-        trash_info_urls = self.s3.save_json_as_csv(
-            bad_handles_dict, self.bucket_name, f"processor_twitter_trash_{self.asOf}"
-        )
+        bad_handles = [{"handle": x} for x in self.bad_handles]
+        logging.info(f"Found {len(bad_handles)} bad handles")
+        trash_info_urls = self.s3.save_json_as_csv(bad_handles, self.bucket_name, f"processor_twitter_trash_{self.asOf}")
         self.cyphers.add_trash_labels(trash_info_urls)
 
     def clean_twitter_nodes(self):

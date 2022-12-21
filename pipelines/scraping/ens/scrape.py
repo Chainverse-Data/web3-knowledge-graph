@@ -16,22 +16,21 @@ class EnsScraper(Scraper):
         super().__init__(bucket_name, allow_override=allow_override)
         self.provider = "https://eth-mainnet.alchemyapi.io/v2/{}".format(os.environ["ALCHEMY_API_KEY"])
         self.headers = {"accept": "application/json"}
+        self.max_threads = multiprocessing.cpu_count() * 2
+        os.environ["NUMEXPR_MAX_THREADS"] = str(self.max_threads)
 
     def get_all_ens(self):
         logging.info("Getting all ENS...")
         self.data["ens"] = []
-        with tqdm_joblib(tqdm.tqdm(desc="Getting ENS Data", total=len(self.data["owner_addresses"]))) as progress_bar:
-            ens_list = joblib.Parallel(n_jobs=multiprocessing.cpu_count() - 1, backend="threading")(
+        with tqdm_joblib(tqdm.tqdm(desc="Getting ENS Data", total=len(self.data["owner_addresses"]))):
+            ens_list = joblib.Parallel(n_jobs=self.max_threads, backend="threading")(
                 joblib.delayed(self.get_ens_info)(address) for address in self.data["owner_addresses"]
             )
 
         self.data["ens"] = [item for sublist in ens_list for item in sublist]
 
-        with tqdm_joblib(
-            tqdm.tqdm(desc="Getting Primary Names", total=len(
-                self.data["owner_addresses"]))
-        ) as progress_bar:
-            primary_list = joblib.Parallel(n_jobs=multiprocessing.cpu_count() - 1, backend="threading")(
+        with tqdm_joblib(tqdm.tqdm(desc="Getting Primary Names", total=len(self.data["owner_addresses"]))):
+            primary_list = joblib.Parallel(n_jobs=self.max_threads, backend="threading")(
                 joblib.delayed(self.get_primary_info)(address) for address in self.data["owner_addresses"]
             )
         primary_list = [item for item in primary_list if item is not None]
@@ -43,9 +42,12 @@ class EnsScraper(Scraper):
     def get_primary_info(self, address):
         warnings.filterwarnings("ignore")
         x = ns.fromWeb3(web3.Web3(web3.Web3.HTTPProvider(self.provider)))
-        name = x.name(web3.Web3.toChecksumAddress(address))
-        if name is not None:
-            return {"name": name, "address": address.lower()}
+        try:
+            name = x.name(web3.Web3.toChecksumAddress(address))
+            if name is not None:
+                return {"name": name, "address": address.lower()}
+        except:
+            logging.error("An exception occured getting the name")
         return None
 
     def get_ens_info(self, address):
@@ -75,7 +77,6 @@ class EnsScraper(Scraper):
         logging.info("Getting all owner addresses...")
         self.data["owner_addresses"] = []
         url = "https://eth-mainnet.g.alchemy.com/nft/v2/{}/getOwnersForCollection?contractAddress=0x57f1887a8BF19b14fC0dF6Fd9B2acc9Af147eA85&withTokenBalances=false".format(os.environ["ALCHEMY_API_KEY"])
-        print(url)
         page_key = 0
         new_url = url
         while page_key is not None:
@@ -87,19 +88,17 @@ class EnsScraper(Scraper):
             logging.info(f"{len(self.data['owner_addresses'])} current owners")
             page_key = data.get("pageKey", None)
             new_url = url + "&pageKey={}".format(page_key)
-
+        if len(self.data["owner_addresses"]) == 0:
+            raise Exception("Something went wrong getting the ENS Owners ...")
         self.data["owner_addresses"] = list(set(self.data["owner_addresses"]))
         logging.info("Found {} owner addresses".format(len(self.data["owner_addresses"])))
 
     def run(self):
         self.get_all_owner_addresses()
         self.get_all_ens()
-
         self.save_data()
         self.save_metadata()
 
-
 if __name__ == "__main__":
-
     scraper = EnsScraper()
     scraper.run()

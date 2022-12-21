@@ -44,12 +44,17 @@ class DaoHausIngestor(Ingestor):
                 data["daos"].append(tmp)
                 data["summoners"].append({"daoId": dao["id"], "address": dao["summoner"]})
                 for token in dao["tokens"]:
+                    balance = token_balances.get(dao["id"], {token["tokenAddress"]: None})
+                    if token["tokenAddress"] in balance:
+                        balance = balance[token["tokenAddress"]]
+                    else:
+                        balance = None
                     tmp = {
                         "daoId": dao["id"],
                         "contractAddress": token["tokenAddress"],
                         "symbol": token["symbol"],
                         "decimal": token["decimals"],
-                        "balance": token_balances.get(dao["id"], {token["tokenAddress"]: None})[token["tokenAddress"]],
+                        "balance": balance,
                     }
                     if tmp["balance"] and token["decimals"]:
                         if float(token["decimals"]) != 0:
