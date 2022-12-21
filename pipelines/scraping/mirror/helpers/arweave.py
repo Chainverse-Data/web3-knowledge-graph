@@ -23,7 +23,7 @@ class MirrorScraperHelper():
         os.environ["NUMEXPR_MAX_THREADS"] = str(self.max_thread)
     
     def get_transations(self, query_string, counter=0):
-        time.sleep(counter * 10)
+        time.sleep(counter * 60)
         if counter > 20:
             raise Exception(f"Too many exceptions on getting transactions...")
         transport = AIOHTTPTransport(url="https://arweave.net/graphql")
