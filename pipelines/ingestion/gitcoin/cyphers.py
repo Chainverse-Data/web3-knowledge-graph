@@ -100,7 +100,7 @@ class GitcoinCyphers(Cypher):
             query = f"""
                         LOAD CSV WITH HEADERS FROM '{url}' AS grant_tags
                         MATCH (grant:GitcoinGrant {{id: grant_tags.grantId}}), (tag:Tag {{label: toLower(grant_tags.label)}})
-                        WITH grant, tag
+                        WITH grant, tag, grant_tags
                         MERGE (grant)-[edge:HAS_TAG]->(tag)
                         ON CREATE set edge.uuid = apoc.create.uuid(),
                             edge.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
