@@ -40,6 +40,8 @@ class TokenHoldersIngestor(Ingestor):
                         decimal = int(decimal, 16)
                     elif type(decimal) == str:
                         decimal = int(decimal)
+                    if balance["tokenBalance"] == "0x":
+                        balance["tokenBalance"] = "0x0"
                     if self.scraper_data["tokens"][contractAddress]["contractType"] == "erc20" and decimal:
                         numericBalance = int(balance["tokenBalance"], 16) / 10**decimal
                     else:
