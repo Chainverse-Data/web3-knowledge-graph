@@ -28,7 +28,8 @@ class MirrorScraper(Scraper):
             self.start_block = 595567
             self.end_block = 599567
         self.arweave_url = "https://arweave.net/{}"
-        self.arweaveHelpers = MirrorScraperHelper()
+        self.blockStep = 400
+        self.arweaveHelpers = MirrorScraperHelper(self.blockStep)
         self.ensSearchURL = "https://eth-mainnet.g.alchemy.com/nft/v2/{}/getNFTs?owner={}&contractAddresses[]=0x57f1887a8BF19b14fC0dF6Fd9B2acc9Af147eA85&withMetadata=true"
         self.reverse_ens = {}
         self.mirror_NFT_factory_address = "0x302f746eE2fDC10DDff63188f71639094717a766"
@@ -141,7 +142,7 @@ class MirrorScraper(Scraper):
     def get_mirror_articles(self):
         logging.info(f"Getting data from blocks: {self.start_block} to {self.end_block}")
 
-        transactions = self.arweaveHelpers.getArweaveTxs(self.start_block, self.end_block, 400)
+        transactions = self.arweaveHelpers.getArweaveTxs(self.start_block, self.end_block)
 
         transactions_cleaned = []
         done = set()

@@ -1,14 +1,26 @@
 import logging
+import multiprocessing
+import os
 from gql import gql, Client
 from gql.transport.aiohttp import AIOHTTPTransport, log as gql_log
+import joblib
+from tqdm import tqdm
 gql_log.setLevel(logging.WARNING)
 
 import re
 from newspaper import Article
 import json
 import time
-
+from ...helpers import tqdm_joblib
+DEBUG = os.environ.get("DEBUG", False)
+    
 class MirrorScraperHelper():
+    def __init__(self, step = 400):
+        self.step = step
+        self.max_thread = multiprocessing.cpu_count() * 2
+        if DEBUG:
+            self.max_thread = multiprocessing.cpu_count() - 1
+        os.environ["NUMEXPR_MAX_THREADS"] = str(self.max_thread)
     
     def get_transations(self, query_string, counter=0):
         time.sleep(counter)
@@ -27,8 +39,8 @@ class MirrorScraperHelper():
         else:
             return self.get_transations(query_string, counter=counter+1)
     
-    def get_all_transactions(self, startBlock, step):
-        stopBlock = startBlock + step
+    def get_all_transactions(self, startBlock):
+        stopBlock = startBlock + self.step
         cursor = ""
         all_results = []
 
@@ -65,26 +77,17 @@ class MirrorScraperHelper():
                 cursor = f'after: "{results[-1]["cursor"]}", '
         return all_results
 
-    def getArweaveTxs(self, startBlock, endBlock, initialStep):
-        step = initialStep
+    def getArweaveTxs(self, startBlock, endBlock):
+        blockRange = range(startBlock, endBlock, self.step)
+        with tqdm_joblib(tqdm(desc="Getting transactions data", total=len(blockRange))):
+            data = joblib.Parallel(n_jobs=self.max_thread, backend="threading")(joblib.delayed(self.get_all_transactions)(startBlock) for startBlock in blockRange)
+
         results = []
-
-        currentBlock = startBlock
-        while currentBlock < endBlock:
-            returned = self.get_all_transactions(currentBlock, step)
-            logging.info(f"==========> Retrieved {len(returned)} transactions from block {currentBlock} to block {currentBlock+step}")
-            if len(returned) == 100 and step != 1:
-                step = step // 10
-                currentBlock -= step
-            elif len(returned) < 10 and step < initialStep:
-                step = step * 10
-                currentBlock -= step
-            else:
-                results += returned
-            currentBlock += step
-
+        for element in data:
+            # returned = self.get_all_transactions(currentBlock)
+            # logging.info(f"==========> Retrieved {len(returned)} transactions from block {currentBlock} to block {currentBlock+step}")
+            results += element
         return results
-
 
     def get_urls(self, text):
         URL_REGEX = r"""((?:(?:https|ftp|http)?:(?:/{1,3}|[a-z0-9%])|[a-z0-9.\-]+[.](?:com|org|uk)/)(?:[^\s()<>{}\[\]]+|\([^\s()]*?\([^\s()]+\)[^\s()]*?\)|\([^\s]+?\))+(?:\([^\s()]*?\([^\s()]+\)[^\s()]*?\)|\([^\s]+?\)|[^\s`!()\[\]{};:'".,<>?«»“”‘’])|(?:(?<!@)[a-z0-9]+(?:[.\-][a-z0-9]+)*[.](?:com|uk|ac)\b/?(?!@)))"""
