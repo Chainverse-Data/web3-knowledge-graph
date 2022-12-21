@@ -44,7 +44,7 @@ class S3Utils:
         - ACL: (Optional) defaults to public-read for neo4J ingestion."""
         chunks = [df]
         # Check if the dataframe is bigger than the max allowed size of Neo4J (10Mb)
-        if df.memory_usage(index=False).sum() > 10000000:
+        if df.memory_usage(index=False).sum() > 10000000 or len(df) > 10000:
             chunks = self.split_dataframe(df)
 
         urls = []
@@ -66,7 +66,7 @@ class S3Utils:
         df = pd.DataFrame.from_dict(data)
         chunks = [df]
         # Check if the dataframe is bigger than the max allowed size of Neo4J (10Mb)
-        if df.memory_usage(index=False).sum() > 10000000:
+        if df.memory_usage(index=False).sum() > 10000000 or len(df) > 10000:
             chunks = self.split_dataframe(df)
 
         urls = []
