@@ -24,8 +24,8 @@ class MirrorScraperHelper():
     
     def get_transations(self, query_string, counter=0):
         time.sleep(counter * 10)
-        if counter > 10:
-            return None
+        if counter > 20:
+            raise Exception(f"Too many exceptions on getting transactions...")
         transport = AIOHTTPTransport(url="https://arweave.net/graphql")
         client = Client(transport=transport, fetch_schema_from_transport=True)
         query = gql(query_string)
