@@ -18,17 +18,14 @@ class TwitterCyphers(Cypher):
         return count
 
     @get_query_logging
-    def get_all_twitter(self, cutoff: datetime, interval=2000):
-        month = cutoff.month
-        day = cutoff.day
-        year = cutoff.year
+    def get_all_twitter(self, interval=2000):
         offset = 0
         results = []
 
         while True:
             query = f"""
                         MATCH (t:Twitter) 
-                        WHERE t.createdDt >= datetime({{year: {year}, month: {month}, day: {day}}}) AND NOT t:Trash
+                        WHERE NOT t:Trash
                         return t.handle
                         SKIP {offset} LIMIT {interval}
                     """

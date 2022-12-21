@@ -61,7 +61,7 @@ class TwitterPostProcess(Processor):
 
     def get_twitter_nodes_data(self):
         if self.full_job:
-            twitter_handles = self.cyphers.get_all_twitter(self.cutoff)
+            twitter_handles = self.cyphers.get_all_twitter()
         else:
             twitter_handles = self.cyphers.get_recent_empty_twitter(self.cutoff)
         logging.info(f"Found {len(twitter_handles)} twitter handles")
