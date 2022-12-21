@@ -44,6 +44,8 @@ A lot of configuration needs to happen for this to work though. If you need to h
 
 The only thing you need to setup is the `ecs_task_definition` according to the defintions above.
 
+What you might need to setup is adding custom ENV vars for a particular DAG, like the twitter-postprocessing FULL_TWITTER_JOB which triggers between recent and all twitter nodes. Look at the bottom of the document for the required list of ENV vars to setup.
+
 ```python 
 # This is the task definition name, see above for the list of available ones.
 # THIS IS THE ONLY THING YOU SHOULD TOUCH NORMALLY
@@ -227,3 +229,24 @@ task_1 >> task_2
 When the code is pushed to GitLab, the dags are automatically pushed to production. Make sure to add your file with git add!
 
 Finally, once a DAG is uploaded, you need to activate it. Go to the AirFlow interface, and activate it in the DAGs page by clicking the "switch" icon to the left of the DAG.
+
+# Environment Variables
+
+Every DAG needs to include at least the following ENV vars n the ENV definitions:
+
+- ETHERSCAN_API_KEY
+- ALCHEMY_API_KEY
+- ALLOW_OVERRIDE
+- AWS_BUCKET_PREFIX
+- AWS_DEFAULT_REGION
+- AWS_ACCESS_KEY_ID
+- AWS_SECRET_ACCESS_KEY
+- LOGLEVEL
+- REINITIALIZE
+- INGEST_FROM_DATE
+- INGEST_TO_DATE
+- NEO_USERNAME
+- NEO_URI
+- NEO_PASSWORD
+
+Those ENV vars must be declares in the AirFlow interface Admin > Variables.
