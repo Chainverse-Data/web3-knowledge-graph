@@ -8,12 +8,15 @@ import requests
 import json
 import time
 
+
 class TwitterPostProcess(Processor):
     """This class reads from the Neo4J instance for Twitter nodes to call the Twitter API and retreive extra infos"""
+
     def __init__(self):
         self.cyphers = TwitterCyphers()
         super().__init__("twitter")
         self.cutoff = datetime.now() - timedelta(days=20)
+        self.full_job = os.environ.get("FULL_TWITTER_JOB", False)
 
         self.batch_size = 100
         self.split_size = 10000
@@ -57,13 +60,16 @@ class TwitterPostProcess(Processor):
         return resp
 
     def get_twitter_nodes_data(self):
-        twitter_handles = self.cyphers.get_recent_twitter(self.cutoff)
+        if self.full_job:
+            twitter_handles = self.cyphers.get_all_twitter(self.cutoff)
+        else:
+            twitter_handles = self.cyphers.get_recent_empty_twitter(self.cutoff)
         logging.info(f"Found {len(twitter_handles)} twitter handles")
 
         user_list = []
         id_dict = {}
         for idx in range(0, len(twitter_handles), self.batch_size):
-            twitter_handles_batch = twitter_handles[idx: idx + self.batch_size]
+            twitter_handles_batch = twitter_handles[idx : idx + self.batch_size]
             batch = self.filter_batch(twitter_handles_batch)
             set_items = set(twitter_handles_batch)
             resp = self.get_user_response(batch)
@@ -79,27 +85,27 @@ class TwitterPostProcess(Processor):
                     "profileImageUrl": user["profile_image_url"],
                     "website": user.get("url", ""),
                     "location": user.get("location", ""),
-                    "language": user.get("language", "")
+                    "language": user.get("language", ""),
                 }
                 set_items.remove(tmp["handle"])
                 user_list.append(tmp)
-                pinned_id = user.get('pinned_tweet_id', -1)
+                pinned_id = user.get("pinned_tweet_id", -1)
                 if pinned_id != -1:
                     id_dict[pinned_id] = idx
-            for idx, entry in enumerate(resp['includes']['tweets']):
-                user_list[id_dict[entry['id']]]['language'] = entry['lang']
+            for idx, entry in enumerate(resp["includes"]["tweets"]):
+                user_list[id_dict[entry["id"]]]["language"] = entry["lang"]
             self.bad_handles.update(set_items)
 
         logging.info(f"Grabbed the data of {len(user_list)} users from the API")
-        node_info_urls = self.s3.save_json_as_csv(
-            user_list, self.bucket_name, f"processor_twitter_data_{self.asOf}")
+        node_info_urls = self.s3.save_json_as_csv(user_list, self.bucket_name, f"processor_twitter_data_{self.asOf}")
         self.cyphers.add_twitter_node_info(node_info_urls)
 
         # add trash labels to bad handle nodes
         bad_handles_dict = [{"handle": x} for x in self.bad_handles]
         logging.info(f"Found {len(bad_handles_dict)} bad handles")
         trash_info_urls = self.s3.save_json_as_csv(
-            bad_handles_dict, self.bucket_name, f"processor_twitter_trash_{self.asOf}")
+            bad_handles_dict, self.bucket_name, f"processor_twitter_trash_{self.asOf}"
+        )
         self.cyphers.add_trash_labels(trash_info_urls)
 
     def clean_twitter_nodes(self):
@@ -110,6 +116,7 @@ class TwitterPostProcess(Processor):
         self.clean_twitter_nodes()
         self.get_twitter_nodes_data()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     processor = TwitterPostProcess()
     processor.run()
