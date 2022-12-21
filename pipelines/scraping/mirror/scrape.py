@@ -194,24 +194,25 @@ class MirrorScraper(Scraper):
         nft = None
         if data and type(data) == dict and "content" in data:
             if "original_content_digest" in transaction:
+                content = data.get("content", {"body": "", "title":"", "timestamp": 0})
                 article = {
-                    "original_content_digest": transaction["original_content_digest"],
-                    "current_content_digest": transaction["content_digest"],
-                    "arweaveTx": transaction["transaction_id"],
-                    "body": data["content"]["body"],
-                    "title": data["content"]["title"],
-                    "timestamp": data["content"]["timestamp"],
-                    "author": transaction["author"],
+                    "original_content_digest": transaction.get("original_content_digest", ""),
+                    "current_content_digest": transaction.get("content_digest", ""),
+                    "arweaveTx": transaction.get("transaction_id", "0x0"),
+                    "body": content["body"],
+                    "title": content["title"],
+                    "timestamp": content["timestamp"],
+                    "author": transaction.get("author", "0x0"),
                 }
                 if "wnft" in data:
                         nft = {
-                            "original_content_digest": transaction["original_content_digest"],
-                            "chain_id": data["chainId"],
-                            "funding_recipient": data["fundingRecipient"],
-                            "owner": data["owner"],
-                            "address": data["proxyAddress"],
-                            "supply": data["supply"],
-                            "symbol": data["symbol"]
+                            "original_content_digest": transaction.get("original_content_digest", ""),
+                            "chain_id": data.get("chainId", -1),
+                            "funding_recipient": data.get("fundingRecipient", "0x0"),
+                            "owner": data.get("owner", "0x0"),
+                            "address": data.get("proxyAddress", "0x0"),
+                            "supply": data.get("supply", 0),
+                            "symbol": data.get("symbol", "")
                         }
             else:
                 logging.error("original_content_digest is missing from the transaction, can't resolve article")
@@ -226,12 +227,13 @@ class MirrorScraper(Scraper):
             accounts = [account.split("/")[-1] for account in twitter_account_list]
             counter = Counter(accounts)
             for account in zip(counter.keys(), counter.values()):
-                tmp = {
-                    "original_content_digest": article["original_content_digest"],
-                    "twitter_handle": account[0],
-                    "mention_count": account[1]
-                } 
-                twitter_accounts.append(tmp)
+                if account and len(account) > 1:
+                    tmp = {
+                        "original_content_digest": article.get("original_content_digest", ""),
+                        "twitter_handle": account[0],
+                        "mention_count": account[1]
+                    } 
+                    twitter_accounts.append(tmp)
         self.data["twitter_accounts"] = twitter_accounts
 
     def run(self):
