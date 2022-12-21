@@ -109,7 +109,7 @@ class GitCoinIngestor(Ingestor):
                         "profileUrl": f"https://twitter.com/{grant['twitter_handle_2']}"
                     }
                     grants_data["twitter_accounts"].append(tmp)
-        grants_data["tags"] = [{"label": tag} for tag in set([el["label"] for el in grants_data["grant_tags"]])]
+        grants_data["tags"] = [{"label": tag} for tag in set([el["label"] for el in grants_data["grants_tags"]])]
         return grants_data
 
     def ingest_donations(self):

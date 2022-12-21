@@ -7,7 +7,7 @@ from airflow.models import Variable
 
 dag = DAG(
     "twitter_post_processing",
-    description="Gets the twitter data from the API for nodes missing it.",
+    description="Gets the twitter data from the API for recent nodes.",
     default_args={
         "start_date": days_ago(2),
         "owner": "Leo Blondel",
