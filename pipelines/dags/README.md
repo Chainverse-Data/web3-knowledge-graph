@@ -222,3 +222,8 @@ task_2 = ECSOperator(
 
 task_1 >> task_2
 ```
+
+# Activating a DAG
+When the code is pushed to GitLab, the dags are automatically pushed to production. Make sure to add your file with git add!
+
+Finally, once a DAG is uploaded, you need to activate it. Go to the AirFlow interface, and activate it in the DAGs page by clicking the "switch" icon to the left of the DAG.
