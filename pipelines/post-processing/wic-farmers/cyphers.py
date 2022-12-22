@@ -113,7 +113,7 @@ class FarmerCyphers(Cypher):
         with 
             context, condition, datetime
         merge 
-            (context)-[r:HAS_CONDITION]->(condition)
+            (context)-[r:_HAS_CONDITION]->(condition)
         set 
             r.createdDt = datetime
         return
@@ -134,7 +134,7 @@ class FarmerCyphers(Cypher):
         with 
             wallet, context, datetime, entity.snapshotId as snapshotId
         merge 
-            (wallet)-[con:HAS_CONTEXT]->(context)
+            (wallet)-[con:_HAS_CONTEXT]->(context)
         set 
             con.createdDt = datetime
         set 
@@ -175,7 +175,7 @@ class FarmerCyphers(Cypher):
         with 
             context, condition, datetime 
         merge
-            (context)-[r:HAS_CONDITION]->(condition)
+            (context)-[r:_HAS_CONDITION]->(condition)
         set
             r.createdDt = datetime
         return 
@@ -211,7 +211,7 @@ class FarmerCyphers(Cypher):
         with 
             datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')) as datetime, w, context
         merge
-            (w)-[con:HAS_CONTEXT]->(context)
+            (w)-[con:_HAS_CONTEXT]->(context)
         set
             con.createdDt = datetime
         set
@@ -242,7 +242,7 @@ class FarmerCyphers(Cypher):
         with 
             context, main, datetime
         merge 
-            (context)-[r:HAS_CONTEXT]->(main)
+            (context)-[r:_HAS_CONTEXT]->(main)
         set
             r.createdDt = datetime
         """
@@ -253,13 +253,13 @@ class FarmerCyphers(Cypher):
         with 
             datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')) as datetime
         match
-            (wallet:Wallet)-[r:HAS_CONTEXT]->(context:_IncentiveFarming:_Context)
+            (wallet:Wallet)-[r:_HAS_CONTEXT]->(context:_IncentiveFarming:_Context)
         match
             (wallet:Wallet)-[:IS_SIGNER]-(:MultiSig)-[:IS_SIGNER]-(otherwallet)
         match
             (cosigners:_Wic:_IncentiveFarming:_Context:_Extensions:_Cosigners)
         where not
-            (otherwallet)-[:HAS_CONTEXT]->(:_IncentiveFarming)
+            (otherwallet)-[:_HAS_CONTEXT]->(:_IncentiveFarming)
         with 
             otherwallet, cosigners, wallet, datetime
         match
@@ -269,9 +269,9 @@ class FarmerCyphers(Cypher):
         match
             (wallet)
         merge
-            (otherwallet)-[con:HAS_CONTEXT]->(cosigners)
+            (otherwallet)-[con:_HAS_CONTEXT]->(cosigners)
         merge
-            (otherwallet)-[conbud:HAS_CONTEXT_BUDDY]->(wallet)
+            (otherwallet)-[conbud:_HAS_CONTEXT_BUDDY]->(wallet)
         set 
             conbud.`_context` = cosigners.`_displayName`
         set
