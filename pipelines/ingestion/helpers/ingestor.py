@@ -2,6 +2,7 @@ from multiprocessing.sharedctypes import Value
 import os
 import logging
 from datetime import datetime
+import re
 
 from ...helpers.s3 import S3Utils
 
@@ -73,7 +74,8 @@ class Ingestor:
         for el in map(lambda x: (x.bucket_name, x.key), self.bucket.objects.all()):
             if "data_" in el[1]:
                 datafiles.append(el[1])
-        dates = [datetime.strptime(key, "data_%Y-%m-%d.json") for key in datafiles]
+        get_date = re.compile("data_([0-9]*-[0-9]*-[0-9]*).*")
+        dates = [datetime.strptime(get_date.match(key).group(1), "%Y-%m-%d") for key in datafiles]
         datafiles_to_keep = []
         dates_to_keep = []
         for datafile, date in sorted(zip(datafiles, dates), key=lambda el: el[1]):

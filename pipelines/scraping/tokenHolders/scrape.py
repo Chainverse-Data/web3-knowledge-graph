@@ -181,6 +181,7 @@ class TokenHolderScraper(Scraper):
         self.get_all_wallets_in_db()
         self.get_transactions_assets_balances()
         self.save_data()
+        self.metadata["wallets_last_block"] = self.wallets_last_block
         self.save_metadata()
 
 if __name__ == "__main__":

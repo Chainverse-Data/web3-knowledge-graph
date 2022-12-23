@@ -14,7 +14,7 @@ class TokenHoldersCypher(Cypher):
             query = """
                 MATCH (wallet:Wallet)
                 RETURN wallet.address
-                LIMIT 1000
+                LIMIT 100
             """
         else:
             query = """

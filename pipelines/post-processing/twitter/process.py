@@ -78,7 +78,7 @@ class TwitterPostProcess(Processor):
                 tmp = {
                     "name": user["name"],
                     "handle": user["username"].lower(),
-                    "bio": user["description"],
+                    "bio": user["description"].replace('"', '').replace("'", ""),
                     "verified": user["verified"],
                     "userId": user["id"],
                     "followerCount": user["public_metrics"]["followers_count"],

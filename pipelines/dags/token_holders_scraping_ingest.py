@@ -80,7 +80,7 @@ token_holdings_scrape_task = ECSOperator(
         "containerOverrides": [
             {
                 "name": "data-pipelines",
-                "command": ["python3", "-m", "pipelines.scraping.token-holders.scrape"],
+                "command": ["python3", "-m", "pipelines.scraping.tokenHolders.scrape"],
                 "environment": env_vars
             },
         ],
@@ -102,7 +102,7 @@ token_holdings_ingest_task = ECSOperator(
         "containerOverrides": [
             {
                 "name": "data-pipelines",
-                "command": ["python3", "-m", "pipelines.ingestion.token-holders.ingest"],
+                "command": ["python3", "-m", "pipelines.ingestion.tokenHolders.ingest"],
                 "environment": env_vars
             },
         ],

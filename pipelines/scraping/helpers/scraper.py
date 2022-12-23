@@ -1,3 +1,4 @@
+import math
 import sys
 import requests
 from datetime import datetime
@@ -6,6 +7,7 @@ import os
 from ...helpers import S3Utils
 import time
 import urllib3
+from .utils import get_size
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # This class is the base class for all scrapers.
@@ -30,9 +32,15 @@ class Scraper:
 
         self.s3 = S3Utils()
         self.bucket = self.s3.create_or_get_bucket(self.bucket_name)
+        # It is hard to estimate exactly the size of an object without exploding python's memory
+        # A good rule of thumb is that this number should be 3x the file size
+        # for a 1Mb file size, it should be 3000000
+        # for 1Gb: 3000000000
+        # AWS max file size with a PUT uploaod is 5Gb so to be on the safe side: 10000000000 (around 3.5Gb)
+        self.S3_max_size = 10000000000
 
         self.data = {}
-        self.data_filename = "data_{}-{}-{}.json".format(self.runtime.year, self.runtime.month, self.runtime.day)
+        self.data_filename = "data_{}-{}-{}".format(self.runtime.year, self.runtime.month, self.runtime.day)
         if not allow_override and self.s3.check_if_file_exists(self.bucket_name, self.data_filename):
             logging.error("The data file for this day has already been created!")
             sys.exit(0)
@@ -106,6 +114,29 @@ class Scraper:
         self.s3.save_json(self.bucket_name, self.metadata_filename, self.metadata)
 
     def save_data(self):
-        "Saves the current data to S3"
+        "Saves the current data to S3. This will take care of chuking the data to less than 5Gb for AWS S3 requierements."
         logging.info("Saving the results to S3 ...")
-        self.s3.save_json(self.bucket_name, self.data_filename, self.data)
+        logging.info("Measuring data size...")
+        data_size = get_size(self.data)
+        logging.info(f"Data size: {data_size}")
+        if data_size > self.S3_max_size:
+            n_chunks = math.ceil(data_size / self.S3_max_size)
+            logging.info(f"Data is too big: {data_size}, chuking it to {n_chunks} chunks ...")
+            len_data = {}
+            for key in self.data:
+                len_data[key] = math.ceil(len(self.data[key])/n_chunks)
+            for i in range(n_chunks):
+                data_chunk = {}
+                for key in self.data:
+                    if type(self.data[key]) == dict:
+                        data_chunk[key] = {}
+                        chunk_keys = list(self.data[key].keys())[i*len_data[key]:min((i+1)*len_data[key], len(self.data[key]))]
+                        for chunk_key in chunk_keys:
+                            data_chunk[key][chunk_key] = self.data[key][chunk_key]
+                    else:
+                        data_chunk[key] = self.data[key][i*len_data[key]:min((i+1)*len_data[key], len(self.data[key]))]
+                filename = self.data_filename + f"_{i}.json"
+                logging.info(f"Saving chunk {i}...")
+                self.s3.save_json(self.bucket_name, filename, data_chunk)
+        else:
+            self.s3.save_json(self.bucket_name, self.data_filename + ".json", self.data)
