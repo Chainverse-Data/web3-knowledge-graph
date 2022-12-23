@@ -95,7 +95,6 @@ class Scraper:
             logging.error(f"An unrecoverable exception occurred: {e}")
             return self.post_request(url, data=data, json=json, headers=headers, counter=counter + 1)
 
-
     # This section contains functions to deal with S3 storage.
 
     def read_metadata(self):
