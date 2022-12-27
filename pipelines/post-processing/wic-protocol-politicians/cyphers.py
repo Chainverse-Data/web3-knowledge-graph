@@ -10,11 +10,11 @@ class ProtocolPoliticiansCyphers(Cypher):
         self.conditions = [
             {
                 "condition": "Voting",
-                "contexts": ["Voter", "EngagedVoter"]
+                "contexts": ["EngagedVoter"]
             },
             {
                 "condition": "ProposalAuthor",
-                "contexts": ["ProposalAuthor", "EngagedProposalAuthor"] ## must pass
+                "contexts": ["ProposalAuthor"] ## must pass
             },
             {
                 "condition": "Delegation",
@@ -74,7 +74,7 @@ class ProtocolPoliticiansCyphers(Cypher):
                 """.format(name=name, condition=condition)
             count += self.query(query)[0].value()
 
-        connect_conditions  = """
+        connect_conditions = """
         match
             (c:_Condition:_{name})
         match
@@ -84,9 +84,10 @@ class ProtocolPoliticiansCyphers(Cypher):
         merge
             (m)-[r:_HAS_CONDITION]->(c)
         return
-            count(distinct(mc))
+            count(distinct(c))
         """.format(name=name)
-        count + self.query(connect_conditions)
+        count += self.query(connect_conditions)[0].value()
+
         for cond in conditions:
             condition = cond['condition']
             for ctxt in cond['contexts']:
@@ -97,7 +98,7 @@ class ProtocolPoliticiansCyphers(Cypher):
                     c._displayName = '{ctxt}'
                 return
                     count(distinct(c))""".format(name=name, condition=condition, ctxt=ctxt)
-                count += self.query(query_context)
+                count += self.query(query_context)[0].value()
 
                 connect_context = """
                 match
@@ -111,7 +112,7 @@ class ProtocolPoliticiansCyphers(Cypher):
                 return 
                     count(distinct(c))
                 """.format(name=name, ctxt=ctxt, condition=condition)
-                count += self.query(connect_context)
+                count += self.query(connect_context)[0].value()
 
         return count 
     
@@ -119,70 +120,29 @@ class ProtocolPoliticiansCyphers(Cypher):
     def voters(self): ##FocusedVoter
         ### I would like to revisit this after we do network enrichment for ML. 
         ### I/e maybe we need to add VOTED edges between wallets and entities and put count on the edge
-        benchmark_query = """
-        match
+        query = """
+         match
             (w:Wallet)-[r:VOTED]->(p:Proposal)-[:HAS_PROPOSAL]-(e:Entity)
-        with
-            w, count(distinct(p)) as votes
-        return 
-            tofloat(apoc.agg.percentiles(votes, [.95])[0])
-        """
-        benchmark = self.query(benchmark_query)[0].value()
-
-        connect_query = """
-        with 
-            {benchmark} as benchmark
-        call
-            apoc.periodic.commit('
-            match (w:Wallet)-[r:VOTED]->(p:Proposal)
-            where not (w)-[:_HAS_CONTEXT]->(:_Context:_Voter)
-            with w, benchmark
-            limit 10000
-            match (w:Wallet)-[r:VOTED]->(p:Proposal)
-            match (wic:_Wic:_Context:_Voter)
-            with w, count(distinct(p)) as votes, benchmark, wic
-            with w, (tofloat(votes) / benchmark) as againstBenchmark, wic
-            merge
-                (w)-[r:_HAS_CONTEXT]->(wic)
-            set
-                r._againstBenchmark = againstBenchmark
-            return
-                count(w)')        
-        """.format(benchmark=benchmark)
-        self.query(connect_query)
-
-        engaged_query = """
-        with 
-            {benchmark} as benchmark
-        match 
-            (w:Wallet)-[r:VOTED]->(p:Proposal)
         match
             (wic:_Wic:_Context:_EngagedVoter)
-        with 
-            w, count(distinct(p)) as votes, benchmark, wic
+        with
+            w, count(distinct(p)) as votes, wic
         where
-            votes > benchmark
+            votes > 10
         merge
             (w)-[r:_HAS_CONTEXT]->(wic)
-        return 
+        set
+            r._count = votes
+        return
             count(distinct(w))
         """
-        count = self.query(engaged_query)
+        count = self.query(query)[0].value()
+
+        return count 
 
 
-
+    @count_query_logging
     def proposal_author(self): ##FocusedProposalAuthor
-
-        normie_benchmark_query = """
-        match
-            (w:Wallet)-[r:AUTHOR]->(p:Proposal)-[:HAS_PROPOSAL]-(e:Entity)
-        with
-            w, count(distinct(p)) as authored
-        return 
-            tofloat(apoc.agg.percentiles(authored, [.5])[0])
-        """
-
-        normie_benchmark = self.query(normie_benchmark_query)[0].value()
 
         engaged_benchmark_query = """
         match
@@ -190,99 +150,75 @@ class ProtocolPoliticiansCyphers(Cypher):
         with
             w, count(distinct(p)) as authored
         return 
-            tofloat(apoc.agg.percentiles(authored, [.95])[0])
+            tofloat(apoc.agg.percentiles(authored, [.5])[0])
         """
         engaged_benchmark = self.query(engaged_benchmark_query)[0].value()
 
-        connect_query = """
-        with 
-            {normie_benchmark} as benchmark
-        call
-            apoc.periodic.commit('
-            match (w:Wallet)-[r:AUTHOR]->(p:Proposal)
-            where not (w)-[:_HAS_CONTEXT]->(:_Context:_ProposalAuthor)
-            with w, benchmark
-            limit 10000
-            match (w:Wallet)-[r:AUTHOR]->(p:Proposal)
-            match (wic:_Wic:_Context:_ProposalAuthor)
-            with w, count(distinct(p)) as authored, benchmark, wic
-            with w, (tofloat(authored) / benchmark) as againstBenchmark, wic
-            merge
-                (w)-[r:_HAS_CONTEXT]->(wic)
-            set
-                r._againstBenchmark = againstBenchmark
-            return
-                count(w)')        
-        """.format(normie_benchmark=normie_benchmark)
-        self.query(connect_query)
-
         engaged_query = """
         with 
-            {engaged_benchmark} as engaged_benchmark
+            tofloat({engaged_benchmark}) as engaged_benchmark
         match
             (w:Wallet)-[r:AUTHOR]->(p:Proposal)-[:HAS_PROPOSAL]-(e:Entity)
         match
-            (wic:_Wic:_Context:_EngagedVoter)
+            (wic:_Wic:_Context:_ProposalAuthor)
         with
             w, count(distinct(p)) as authored, engaged_benchmark, wic
-        where
-            authored > engaged_benchmark
+        with
+            w, wic, (tofloat(authored) / engaged_benchmark) as againstBenchmark
         merge
             (w)-[r:_HAS_CONTEXT]->(wic)
+        set
+            r._againstBenchmark = againstBenchmark
         return
             count(distinct(w))
         """.format(engaged_benchmark=engaged_benchmark)
         count = self.query(engaged_query)[0].value()
 
         return count 
-    
-    
+
+
+    @count_query_logging
     def delegates(self): 
-        
-        normie_benchmark_query = """
+        delegates = """
         match
-            (delegate:Wallet)<-[r:DELAGATED_TO]-(:Delegation)-[:DELEGATED]-(delegator)
-        where not
-            id(delegate) = id(delegator)
-        with
-            delegate, count(distinct(delegator)) as delegators
-        return tofloat(apoc.agg.percentiles(delegators, [.5])) as benchmark
-        """
-
-        normie_benchmark = self.query(normie_benchmark_query)[0].value()
-
-        connect = """
-        with
-            {normie_benchmark} as benchmark
+            (delegate:Wallet)<-[r:DELEGATED_TO]-(:Delegation)-[:DELEGATED]-(delegator)
         match
-            (delegate:Wallet)<-[r:DELAGATED_TO]-(:Delegation)-[:DELEGATED]-(delegator)
-        match
-            (wic:_Wic:_Delegate)
-        where not
-            id(delegate) = id(delegator)
+            (wic:_Wic:_Delegate:_Context)
+        where 
+            id(delegate) <> id(delegator)
         with
-            delegate, wic, count(distinct(delegator)) as count_represented, benchmark 
-        with
-            delegate, wic, (tofloat(count_represented) / benchmark) as againstBenchmark
+            delegate, wic, count(distinct(delegator)) as delegators
         merge
             (delegate)-[r:_HAS_CONTEXT]->(wic)
         set
-            r._againstBenchmark = againstBenchmark
+            r._count = delegators
         return
             count(distinct(delegate))
-        """.format(normie_benchmark=normie_benchmark)
-
-        based_benchmark_query = """
-        match
-            (delegate:Wallet)<-[r:DELAGATED_TO]-(:Delegation)-[:DELEGATED]-(delegator)
-        where not
-            id(delegate) = id(delegator)
-        with
-            delegate, count(distinct(delegator)) as delegators
-        return tofloat(apoc.agg.percentiles(delegators, [.95])) as benchmark
         """
+        count = self.query(delegates)[0].value()
+        
+        return count 
 
-        based_benchmark = self.query(based_benchmark_query)[0].value()
+
+    @count_query_logging
+    def dao_admins(self):
+        query = f"""
+        match
+            (w:Wallet)-[r:CONTRIBUTOR]->(i:Entity)
+        match
+            (wic:_DaoAdmin:_ProtocolPoliticians)
+        with 
+            w,wic, count(distinct(i)) as contributing
+        merge
+            (w)-[r:_HAS_CONTEXT]->(wic)
+        set
+            r._count = contributing
+        return
+            count(distinct(w))
+        """
+        count = self.query(query)[0].value()
+
+        return count
 
 
 
