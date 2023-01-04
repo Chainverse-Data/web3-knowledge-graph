@@ -191,7 +191,7 @@ class DelegationScraper(Scraper):
                         delegatedVotes
                         tokenHoldersRepresented {
                                 id
-                            }
+                        }
                         numberVotes
                     }
                 }      
