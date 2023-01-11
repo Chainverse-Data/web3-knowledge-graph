@@ -12,9 +12,9 @@ dag = DAG(
         "start_date": days_ago(2),
         "owner": "Leo Blondel",
         "email": ["leo@blondel.ninja"],
-        "schedule_interval": "@weekly",
         "retries": 3
     },
+    schedule_interval="@weekly",
     max_active_runs=1,
     dagrun_timeout=timedelta(minutes=10080)
 )

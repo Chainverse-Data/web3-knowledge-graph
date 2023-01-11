@@ -4,17 +4,18 @@ from airflow import DAG
 from airflow.utils.dates import days_ago
 from airflow.contrib.operators.ecs_operator import ECSOperator
 from airflow.models import Variable
+import pendulum
 
 dag = DAG(
     "twitter_post_processing",
     description="Gets the twitter data from the API for recent nodes.",
     default_args={
-        "start_date": days_ago(2),
+        "start_date": pendulum.datetime(2022, 12, 1, tz="UTC"),
         "owner": "Leo Blondel",
         "email": ["leo@blondel.ninja"],
-        "schedule_interval": "@daily",
         "retries": 3        
     },
+    schedule_interval="@daily",
     max_active_runs=1,
     dagrun_timeout=timedelta(minutes=10080)
 )
