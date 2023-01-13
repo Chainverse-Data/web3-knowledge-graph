@@ -37,7 +37,7 @@ class Scraper:
         # for a 1Mb file size, it should be 3000000
         # for 1Gb: 3000000000
         # AWS max file size with a PUT uploaod is 5Gb so to be on the safe side: 10000000000 (around 3.5Gb)
-        self.S3_max_size = 10000000000
+        self.S3_max_size = 1000000000
 
         self.data = {}
         self.data_filename = "data_{}-{}-{}".format(self.runtime.year, self.runtime.month, self.runtime.day)
