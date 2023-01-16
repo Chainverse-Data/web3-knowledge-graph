@@ -8,6 +8,8 @@ import os
 import sys
 from pathlib import Path
 import re
+
+from tqdm import tqdm
 from ..helpers import Ingestor
 from .cyphers import MirrorCyphers
 
@@ -17,9 +19,11 @@ class MirrorIngestor(Ingestor):
         super().__init__("mirror")
 
     def prepare_articles(self):
-        for i in range(len(self.scraper_data["articles"])):
-            self.scraper_data["articles"][i]["text"].replace('"',"'")
-            self.scraper_data["articles"][i]["title"].replace('"',"'")
+        for i in tqdm(range(len(self.scraper_data["articles"]))):
+            if "text" in self.scraper_data["articles"][i]:
+                self.scraper_data["articles"][i]["text"].replace('"',"'")
+            if "title" in self.scraper_data["articles"][i]["title"]: 
+                self.scraper_data["articles"][i]["title"].replace('"',"'")
 
     def ingest_articles(self):
         self.prepare_articles()
