@@ -70,7 +70,7 @@ class MirrorCyphers(Cypher):
         for url in tqdm(urls):
             query = f"""
                     LOAD CSV WITH HEADERS FROM '{url}' AS NFTs
-                    MERGE (nft:Mirror:ERC721 {{address: toLower(NFTs.address)}})
+                    MERGE (nft:Mirror:Token:ERC721 {{address: toLower(NFTs.address)}})
                     ON CREATE set nft.uuid = apoc.create.uuid(),
                         nft.chainId = NFTs.chain_id,
                         nft.supply = NFTs.supply,

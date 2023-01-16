@@ -2,13 +2,10 @@ import time
 
 from tqdm import tqdm
 from ..helpers import Scraper
-import os
 import gql
 import logging
 from gql.transport.aiohttp import AIOHTTPTransport, log as gql_log
-
 gql_log.setLevel(logging.WARNING)
-
 
 class DelegationScraper(Scraper):
     def __init__(self, bucket_name="gab", allow_override=True):
