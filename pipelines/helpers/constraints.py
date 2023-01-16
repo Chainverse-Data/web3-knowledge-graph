@@ -48,10 +48,6 @@ class Constraints(Cypher):
         query = """CREATE CONSTRAINT UniqueID IF NOT EXISTS FOR (d:Proposal) REQUIRE d.snapshotId IS UNIQUE"""
         self.query(query)
 
-    def mirror(self):
-        query = """CREATE CONSTRAINT UniqueMirror IF NOT EXISTS FOR (d:Mirror) REQUIRE d.uri IS UNIQUE"""
-        self.query(query)
-
     def gitcoin_grants(self):
         query = """CREATE CONSTRAINT UniqueId IF NOT EXISTS FOR (grant:GitcoinGrant) REQUIRE grant.id IS UNIQUE"""
         self.query(query)
@@ -65,7 +61,7 @@ class Constraints(Cypher):
         self.query(query)
 
     def mirror_articles(self):
-        query = """CREATE CONSTRAINT UniqueArticleID IF NOT EXISTS FOR (a:Mirror) REQUIRE a.originalContentDigest IS UNIQUE"""
+        query = """CREATE CONSTRAINT UniqueArticleID IF NOT EXISTS FOR (a:MirrorArticle) REQUIRE a.originalContentDigest IS UNIQUE"""
         self.query(query)
 
     def daohaus_dao(self):

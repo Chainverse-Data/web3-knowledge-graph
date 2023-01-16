@@ -27,7 +27,7 @@ class MirrorCyphers(Cypher):
         for url in urls:
             query = f"""
                 LOAD CSV WITH HEADERS FROM '{url}' AS articles
-                MERGE (article:Mirror:Article {{originalContentDigest: articles.original_content_digest}}) 
+                MERGE (article:Mirror:MirrorArticle:Article {{originalContentDigest: articles.original_content_digest}}) 
                 ON CREATE set article.uuid = apoc.create.uuid(),
                     article.uri = articles.arweaveTx,
                     article.title = articles.title,
@@ -93,7 +93,7 @@ class MirrorCyphers(Cypher):
         for url in urls:
             query = f"""
                         LOAD CSV WITH HEADERS FROM '{url}' AS articles_authors
-                        MATCH (article:Mirror:Article {{originalContentDigest: NFTs_articles.original_content_digest}}), (wallet:Wallet {{address: toLower(articles_authors.author)}})
+                        MATCH (article:Mirror:MirrorArticle:Article {{originalContentDigest: NFTs_articles.original_content_digest}}), (wallet:Wallet {{address: toLower(articles_authors.author)}})
                         WITH article, wallet
                         MERGE (wallet)-[edge:IS_AUTHOR]->(article)
                         ON CREATE set edge.uuid = apoc.create.uuid(),
@@ -113,7 +113,7 @@ class MirrorCyphers(Cypher):
         for url in urls:
             query = f"""
                         LOAD CSV WITH HEADERS FROM '{url}' AS NFTs_articles
-                        MATCH (article:Mirror:Article {{originalContentDigest: NFTs_articles.original_content_digest}}), (nft:Mirror:ERC721 {{address: toLower(NFTs_articles.address)}})
+                        MATCH (article:Mirror:MirrorArticle:Article {{originalContentDigest: NFTs_articles.original_content_digest}}), (nft:Mirror:ERC721 {{address: toLower(NFTs_articles.address)}})
                         WITH article, nft
                         MERGE (article)-[edge:HAS_NFT]->(nft)
                         ON CREATE set edge.uuid = apoc.create.uuid(),
@@ -175,7 +175,7 @@ class MirrorCyphers(Cypher):
         for url in urls:
             query = f"""
                         LOAD CSV WITH HEADERS FROM '{url}' AS twitter_articles
-                        MATCH (article:Mirror:Article {{originalContentDigest: twitter_articles.original_content_digest}}), (twitter:Twitter:Account {{handle: toLower(twitter_articles.handle)}})
+                        MATCH (article:Mirror:MirrorArticle:Article {{originalContentDigest: twitter_articles.original_content_digest}}), (twitter:Twitter:Account {{handle: toLower(twitter_articles.handle)}})
                         WITH article, twitter, twitter_articles
                         MERGE (article)-[edge:REFERENCES]->(twitter)
                         ON CREATE set edge.uuid = apoc.create.uuid(),
