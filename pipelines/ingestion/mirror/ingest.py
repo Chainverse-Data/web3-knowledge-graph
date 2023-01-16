@@ -20,8 +20,8 @@ class MirrorIngestor(Ingestor):
 
     def prepare_articles(self):
         for i in tqdm(range(len(self.scraper_data["articles"]))):
-            if "text" in self.scraper_data["articles"][i]:
-                self.scraper_data["articles"][i]["text"].replace('"',"'")
+            if "body" in self.scraper_data["articles"][i]:
+                self.scraper_data["articles"][i]["body"].replace('"',"'")
             if "title" in self.scraper_data["articles"][i]["title"]: 
                 self.scraper_data["articles"][i]["title"].replace('"',"'")
 
