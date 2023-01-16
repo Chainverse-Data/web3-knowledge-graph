@@ -16,7 +16,13 @@ class MirrorIngestor(Ingestor):
         self.cyphers = MirrorCyphers()
         super().__init__("mirror")
 
+    def prepare_articles(self):
+        for i in range(len(self.scraper_data["articles"])):
+            self.scraper_data["articles"][i]["text"].replace('"',"'")
+            self.scraper_data["articles"][i]["title"].replace('"',"'")
+
     def ingest_articles(self):
+        self.prepare_articles()
         urls = self.s3.save_json_as_csv(self.scraper_data["articles"], self.bucket_name, f"ingestor_articles_{self.asOf}")
         self.cyphers.create_or_merge_articles(urls)
 
