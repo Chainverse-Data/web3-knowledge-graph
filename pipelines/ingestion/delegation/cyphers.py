@@ -50,10 +50,56 @@ class DelegationCyphers(Cypher):
                     delegation.blockNumber = toInteger(delegations.blockNumber),
                     delegation.blockTimestamp = toInteger(delegations.blockTimestamp),
                     delegation.logIndex = delegations.logIndex,
+                    delegation.protocol = delegation.protocol,
                     delegation:Delegation,
                     delegation.txHash = delegations.txnHash
             RETURN 
                 COUNT(delegation)
+                """
+            count += self.query(query)[0].value()
+        return count
+
+    def create_or_merge_tokens(self, urls):
+        self.queries.create_or_merge_tokens(urls, "ERC20")
+
+    @count_query_logging
+    def create_or_merge_entities(self, urls):
+        count = 0
+        for url in urls:
+            query = f"""
+                LOAD CSV WITH HEADERS FROM '{url}' AS orgs
+                    MERGE (org:Entity {{name: orgs.protocol}})
+                    ON CREATE set org.uuid = apoc.create.uuid(),
+                        org.name = orgs.protocol, 
+                        org.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
+                        org.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
+                        org.ingestedBy = "{self.CREATED_ID}"
+                    ON MATCH set org.name = orgs.protocol,
+                        org.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
+                        org.ingestedBy = "{self.UPDATED_ID}"
+                    return count(org)
+                """
+            count += self.query(query)[0].value()
+        return count
+
+    @count_query_logging
+    def connect_strategies(self, urls):
+        count = 0
+        for url in urls:
+            query = f"""
+                LOAD CSV WITH HEADERS FROM '{url}' AS strategies
+                    MATCH (entity:Entity {{name: strategies.protocol}})
+                    MATCH (token:Token {{address: strategies.contractAddress}})
+                    MERGE (entity)-[edge:HAS_STRATEGY]->(token)
+                    ON CREATE set edge.uuid = apoc.create.uuid(),
+                        edge.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
+                        edge.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
+                        edge.ingestedBy = "{self.CREATED_ID}"
+                    ON MATCH set edge.name = strategies.protocol,
+                        edge.asOf = strategies.asOf,
+                        edge.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
+                        edge.ingestedBy = "{self.UPDATED_ID}"
+                    return count(edge)
                 """
             count += self.query(query)[0].value()
         return count
@@ -76,6 +122,7 @@ class DelegationCyphers(Cypher):
                     r.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                     r.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                     r1.uuid = apoc.create.uuid(),
+                    r1.protocol = r1.protocol,
                     r1.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                     r1.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
             ON MATCH
