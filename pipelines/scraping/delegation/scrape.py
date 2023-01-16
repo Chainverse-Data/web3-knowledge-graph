@@ -1,4 +1,6 @@
 import time
+
+from tqdm import tqdm
 from ..helpers import Scraper
 import os
 import gql
@@ -82,7 +84,7 @@ class DelegationScraper(Scraper):
 
     def get_delegation_events(self):
         logging.info("Getting delegation events")
-        for entry in self.graph_urls:
+        for entry in tqdm(self.graph_urls):
             protocol = entry["protocol"]
             graph_url = entry["url"]
             skip = 0
@@ -125,7 +127,7 @@ class DelegationScraper(Scraper):
 
     def get_delegation_voting_changes(self):
         logging.info("Getting delegate voting power changes")
-        for entry in self.graph_urls:
+        for entry in tqdm(self.graph_urls):
             protocol = entry["protocol"]
             graph_url = entry["url"]
             skip = 0
@@ -170,7 +172,7 @@ class DelegationScraper(Scraper):
 
     def get_delegates(self):
         logging.info("Getting delegates")
-        for entry in self.graph_urls:
+        for entry in tqdm(self.graph_urls):
             protocol = entry["protocol"]
             graph_url = entry["url"]
             skip = 0
@@ -211,7 +213,7 @@ class DelegationScraper(Scraper):
 
     def get_token_holders(self):
         logging.info("Getting token holders")
-        for entry in self.graph_urls:
+        for entry in tqdm(self.graph_urls):
             protocol = entry["protocol"]
             graph_url = entry["url"]
             skip = 0

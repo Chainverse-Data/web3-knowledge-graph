@@ -14,19 +14,21 @@ class DelegationCyphers(Cypher):
         for url in urls:
             query = f"""
             LOAD CSV WITH HEADERS FROM '{url}' AS wallets
-            MERGE (w:Wallet {{address: wallets.address}})
+            MERGE (wallet:Wallet {{address: wallets.address}})
             ON MATCH 
                 SET
-                    w.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
-                    w:DelegationTest
+                    wallet.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
+                    wallet.ingestedBy = "{self.UPDATED_ID}",
+                    wallet:Delegation,                  
             ON CREATE
                 SET
-                    w.uuid = apoc.create.uuid(),
-                    w:DelegationTest,
-                    w.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
-                    w.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
+                    wallet.uuid = apoc.create.uuid(),
+                    wallet:Delegation,                  
+                    wallet.ingestedBy = "{self.CREATED_ID}",
+                    wallet.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
+                    wallet.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
             RETURN
-                count(distinct(w))
+                count(distinct(wallet))
             """
             count += self.query(query)[0].value()
         return count
@@ -36,19 +38,22 @@ class DelegationCyphers(Cypher):
         for url in urls:
             query = f"""
             LOAD CSV WITH HEADERS FROM '{url}' AS delegations
-            MERGE (d:Delegation:Transaction {{eventId: delegations.id}})
+            MERGE (delegation:Delegation:Transaction {{eventId: delegations.id}})
             ON MATCH
                 SET
-                    d.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
+                    delegation.ingestedBy = "{self.UPDATED_ID}",
+                    delegation:Delegation,
+                    delegation.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
             ON CREATE
                 SET
-                    d.blockNumber = toInteger(delegations.blockNumber),
-                    d.blockTimestamp = toInteger(delegations.blockTimestamp),
-                    d.logIndex = delegations.logIndex,
-                    d:DelegationTest,
-                    d.txHash = delegations.txnHash
+                    delegation.ingestedBy = "{self.CREATED_ID}",
+                    delegation.blockNumber = toInteger(delegations.blockNumber),
+                    delegation.blockTimestamp = toInteger(delegations.blockTimestamp),
+                    delegation.logIndex = delegations.logIndex,
+                    delegation:Delegation,
+                    delegation.txHash = delegations.txnHash
             RETURN 
-                COUNT(d)
+                COUNT(delegation)
                 """
             count += self.query(query)[0].value()
         return count
