@@ -25,7 +25,7 @@ class MirrorIngestor(Ingestor):
 
     def ingest_articles(self):
         self.prepare_articles()
-        urls = self.s3.save_json_as_csv(self.scraper_data["articles"], self.bucket_name, f"ingestor_articles_{self.asOf}")
+        urls = self.s3.save_json_as_csv(self.scraper_data["articles"], self.bucket_name, f"ingestor_articles_{self.asOf}", max_lines=2000)
         self.cyphers.create_or_merge_articles(urls)
 
         authors = [{"address" : article["author"]} for article in self.scraper_data["articles"]]

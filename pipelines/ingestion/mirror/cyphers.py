@@ -1,3 +1,4 @@
+from tqdm import tqdm
 from ...helpers import Cypher
 from ...helpers import Constraints
 from ...helpers import Indexes
@@ -24,7 +25,7 @@ class MirrorCyphers(Cypher):
     @count_query_logging
     def create_or_merge_articles(self, urls):
         count = 0
-        for url in urls:
+        for url in tqdm(urls):
             query = f"""
                 LOAD CSV WITH HEADERS FROM '{url}' AS articles
                 MERGE (article:Mirror:MirrorArticle:Article {{originalContentDigest: articles.original_content_digest}}) 
@@ -48,7 +49,7 @@ class MirrorCyphers(Cypher):
     @count_query_logging
     def create_or_merge_twitter(self, urls):
         count = 0
-        for url in urls:
+        for url in tqdm(urls):
             query = f"""
                     LOAD CSV WITH HEADERS FROM '{url}' AS twitter_handles
                     MERGE (twitter:Twitter:Account {{handle: toLower(twitter_handles.handle)}})
@@ -66,7 +67,7 @@ class MirrorCyphers(Cypher):
     @count_query_logging
     def create_or_merge_NFTs(self, urls):
         count = 0
-        for url in urls:
+        for url in tqdm(urls):
             query = f"""
                     LOAD CSV WITH HEADERS FROM '{url}' AS NFTs
                     MERGE (nft:Mirror:ERC721 {{address: toLower(NFTs.address)}})
@@ -90,7 +91,7 @@ class MirrorCyphers(Cypher):
     @count_query_logging
     def link_authors_to_articles(self, urls):
         count = 0
-        for url in urls:
+        for url in tqdm(urls):
             query = f"""
                         LOAD CSV WITH HEADERS FROM '{url}' AS articles_authors
                         MATCH (article:Mirror:MirrorArticle:Article {{originalContentDigest: NFTs_articles.original_content_digest}}), (wallet:Wallet {{address: toLower(articles_authors.author)}})
@@ -110,7 +111,7 @@ class MirrorCyphers(Cypher):
     @count_query_logging
     def link_NFTs_to_articles(self, urls):
         count = 0
-        for url in urls:
+        for url in tqdm(urls):
             query = f"""
                         LOAD CSV WITH HEADERS FROM '{url}' AS NFTs_articles
                         MATCH (article:Mirror:MirrorArticle:Article {{originalContentDigest: NFTs_articles.original_content_digest}}), (nft:Mirror:ERC721 {{address: toLower(NFTs_articles.address)}})
@@ -130,7 +131,7 @@ class MirrorCyphers(Cypher):
     @count_query_logging
     def link_NFTs_to_owners(self, urls):
         count = 0
-        for url in urls:
+        for url in tqdm(urls):
             query = f"""
                         LOAD CSV WITH HEADERS FROM '{url}' AS NFTs_articles
                         MATCH (wallet:Wallet {{address: NFTs_articles.owner}}), (nft:Mirror:ERC721 {{address: toLower(NFTs_articles.address)}})
@@ -150,7 +151,7 @@ class MirrorCyphers(Cypher):
     @count_query_logging
     def link_NFTs_to_receipient(self, urls):
         count = 0
-        for url in urls:
+        for url in tqdm(urls):
             query = f"""
                         LOAD CSV WITH HEADERS FROM '{url}' AS NFTs_articles
                         MATCH (wallet:Wallet {{address: NFTs_articles.funding_recipient}}), (nft:Mirror:ERC721 {{address: toLower(NFTs_articles.address)}})
@@ -172,7 +173,7 @@ class MirrorCyphers(Cypher):
     @count_query_logging
     def link_twitter_to_article(self, urls):
         count = 0
-        for url in urls:
+        for url in tqdm(urls):
             query = f"""
                         LOAD CSV WITH HEADERS FROM '{url}' AS twitter_articles
                         MATCH (article:Mirror:MirrorArticle:Article {{originalContentDigest: twitter_articles.original_content_digest}}), (twitter:Twitter:Account {{handle: toLower(twitter_articles.handle)}})
