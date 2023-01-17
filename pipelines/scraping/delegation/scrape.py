@@ -13,47 +13,47 @@ class DelegationScraper(Scraper):
         self.graph_urls = [
             {
                 "protocol": "ampleforth",
-                "url": "https://thegraph.com/hosted-service/subgraph/messari/ampleforth-governance",
+                "url": "https://api.thegraph.com/subgraphs/name/messari/ampleforth-governance",
             },
             {
                 "protocol": "compound",
-                "url": "https://thegraph.com/hosted-service/subgraph/messari/compound-governance",
+                "url": "https://api.thegraph.com/subgraphs/name/messari/compound-governance",
             },
             {
                 "protocol": "cryptex",
-                "url": "https://thegraph.com/hosted-service/subgraph/messari/cryptex-governance",
+                "url": "https://api.thegraph.com/subgraphs/name/messari/cryptex-governance",
             },
             {
                 "protocol": "gitcoin",
-                "url": "https://thegraph.com/hosted-service/subgraph/messari/gitcoin-governance",
+                "url": "https://api.thegraph.com/subgraphs/name/messari/gitcoin-governance",
             },
             {
                 "protocol": "idle",
-                "url": "https://thegraph.com/hosted-service/subgraph/messari/idle-governance",
+                "url": "https://api.thegraph.com/subgraphs/name/messari/idle-governance",
             },
             {
                 "protocol": "indexed",
-                "url": "https://thegraph.com/hosted-service/subgraph/messari/indexed-governance",
+                "url": "https://api.thegraph.com/subgraphs/name/messari/indexed-governance",
             },
             {
                 "protocol": "pooltogether",
-                "url": "https://thegraph.com/hosted-service/subgraph/messari/pooltogether-governance",
+                "url": "https://api.thegraph.com/subgraphs/name/messari/pooltogether-governance",
             },
             {
                 "protocol": "radicle",
-                "url": "https://thegraph.com/hosted-service/subgraph/messari/radicle-governance",
+                "url": "https://api.thegraph.com/subgraphs/name/messari/radicle-governance",
             },
             {
                 "protocol": "reflexer",
-                "url": "https://thegraph.com/hosted-service/subgraph/messari/reflexer-governance",
+                "url": "https://api.thegraph.com/subgraphs/name/messari/reflexer-governance",
             },
             {
                 "protocol": "uniswap",
-                "url": "https://thegraph.com/hosted-service/subgraph/messari/uniswap-governance",
+                "url": "https://api.thegraph.com/subgraphs/name/messari/uniswap-governance",
             },
             {
                 "protocol": "unslashed",
-                "url": "https://thegraph.com/hosted-service/subgraph/messari/unslashed-governance",
+                "url": "https://api.thegraph.com/subgraphs/name/messari/unslashed-governance",
             },
         ]
         self.data["delegateChanges"] = []
@@ -84,36 +84,31 @@ class DelegationScraper(Scraper):
         for entry in tqdm(self.graph_urls):
             protocol = entry["protocol"]
             graph_url = entry["url"]
-            skip = 0
             cutoff_block = self.metadata.get(f"{protocol}_delegate_changes_cutoff_block", 0)
             entries = []
             while True:
-                if skip > 5000:
-                    skip = 0
-                    cutoff_block = entries[-1]["blockNumber"]
 
-                variables = {"first": self.interval, "skip": skip, "cutoff": cutoff_block}
-                query = gql.gql(
-                    """
-                query($first: Int!, $skip: Int!, $cutoff: BigInt!) {
-                    delegateChanges(first: $first, skip: $skip, orderBy: blockNumber, orderDirection: asc, where: {blockNumber_gt: $cutoff}) {
-                        id
-                        tokenAddress
-                        delegator
-                        delegate
-                        previousDelegate
-                        txnHash
-                        blockNumber
-                        blockTimestamp
-                    }
-                }      
-                """
-                )
+                variables = {"first": self.interval, "cutoff": cutoff_block}
+                query = gql.gql("""
+                    query($first: Int!, $cutoff: BigInt!) {
+                        delegateChanges(first: $first, orderBy: blockNumber, orderDirection: asc, where: {blockNumber_gt: $cutoff}) {
+                            id
+                            tokenAddress
+                            delegator
+                            delegate
+                            previousDelegate
+                            txnHash
+                            blockNumber
+                            blockTimestamp
+                        }
+                    }      
+                """)
                 result = self.call_the_graph_api(graph_url, query, variables, "delegateChanges")
                 if result == None or result["delegateChanges"] == []:
                     break
+                
                 entries.extend(result["delegateChanges"])
-                skip += self.interval
+                cutoff_block = result["delegateChanges"][-1]["blockNumber"]
 
             for entry in entries:
                 entry["protocol"] = protocol
@@ -127,19 +122,14 @@ class DelegationScraper(Scraper):
         for entry in tqdm(self.graph_urls):
             protocol = entry["protocol"]
             graph_url = entry["url"]
-            skip = 0
             cutoff_block = self.metadata.get(f"{protocol}_delegate_voting_changes_cutoff_block", 0)
             entries = []
             while True:
-                if skip > 5000:
-                    skip = 0
-                    cutoff_block = entries[-1]["blockNumber"]
-
-                variables = {"first": self.interval, "skip": skip, "cutoff": cutoff_block}
+                variables = {"first": self.interval, "cutoff": cutoff_block}
                 query = gql.gql(
                     """
-                query($first: Int!, $skip: Int!, $cutoff: BigInt!) {
-                    delegateVotingPowerChanges(first: $first, skip: $skip, orderBy: blockNumber, orderDirection: asc, where: {blockNumber_gt: $cutoff}) {
+                query($first: Int!, $cutoff: BigInt!) {
+                    delegateVotingPowerChanges(first: $first, orderBy: blockNumber, orderDirection: asc, where: {blockNumber_gt: $cutoff}) {
                         id
                         blockTimestamp
                         blockNumber 
@@ -158,7 +148,7 @@ class DelegationScraper(Scraper):
                 if result == None or result["delegateVotingPowerChanges"] == []:
                     break
                 entries.extend(result["delegateVotingPowerChanges"])
-                skip += self.interval
+                cutoff_block = result["delegateVotingPowerChanges"][-1]["blockNumber"]
 
             for entry in entries:
                 entry["protocol"] = protocol
@@ -172,19 +162,14 @@ class DelegationScraper(Scraper):
         for entry in tqdm(self.graph_urls):
             protocol = entry["protocol"]
             graph_url = entry["url"]
-            skip = 0
-            cutoff = 0
+            cutoff_block = self.metadata.get(f"{protocol}_delegates_cutoff_block", 0)
             entries = []
             while True:
-                if skip > 5000:
-                    skip = 0
-                    cutoff = entries[-1]["delegatedVotesRaw"]
-
-                variables = {"first": self.interval, "skip": skip, "cutoff": cutoff}
+                variables = {"first": self.interval, "cutoff": cutoff_block}
                 query = gql.gql(
                     """
-                query($first: Int!, $skip: Int!, $cutoff: BigInt!) {
-                    delegates(first: $first, skip: $skip, orderBy: delegatedVotesRaw, orderDirection: asc, where: {delegatedVotesRaw_gte: $cutoff}) {
+                query($first: Int!, $cutoff: BigInt!) {
+                    delegates(first: $first, orderBy: delegatedVotesRaw, orderDirection: asc, where: {delegatedVotesRaw_gte: $cutoff}) {
                         id
                         delegatedVotesRaw
                         delegatedVotes
@@ -200,12 +185,13 @@ class DelegationScraper(Scraper):
                 if result == None or result["delegates"] == []:
                     break
                 entries.extend(result["delegates"])
-                skip += self.interval
+                cutoff_block = result["delegates"][-1]["delegatedVotesRaw"]
 
             for entry in entries:
                 entry["protocol"] = protocol
                 self.data["delegates"].append(entry)
 
+            self.metadata[f"{protocol}_delegates_cutoff_block"] = cutoff_block
             logging.info(f"Found {len(entries)} delegates for {protocol}")
 
     def get_token_holders(self):
@@ -213,19 +199,14 @@ class DelegationScraper(Scraper):
         for entry in tqdm(self.graph_urls):
             protocol = entry["protocol"]
             graph_url = entry["url"]
-            skip = 0
-            cutoff = 0
+            cutoff_block = self.metadata.get(f"{protocol}_token_holders_cutoff_block", 0)
             entries = []
             while True:
-                if skip > 5000:
-                    skip = 0
-                    cutoff = entries[-1]["tokenBalanceRaw"]
-
-                variables = {"first": self.interval, "skip": skip, "cutoff": cutoff}
+                variables = {"first": self.interval, "cutoff": cutoff_block}
                 query = gql.gql(
                     """
-                    query($first: Int!, $skip: Int!, $cutoff: BigInt!) {
-                        tokenHolders(first: $first, skip: $skip, orderBy: tokenBalanceRaw, orderDirection: asc, where: {tokenBalanceRaw_gte: $cutoff}) {
+                    query($first: Int!, $cutoff: BigInt!) {
+                        tokenHolders(first: $first, orderBy: tokenBalanceRaw, orderDirection: asc, where: {tokenBalanceRaw_gte: $cutoff}) {
                             id
                             tokenBalance
                             tokenBalanceRaw
@@ -239,12 +220,13 @@ class DelegationScraper(Scraper):
                 if result == None or result["tokenHolders"] == []:
                     break
                 entries.extend(result["tokenHolders"])
-                skip += self.interval
+                cutoff_block = result["tokenHolders"][-1]["tokenBalanceRaw"]
 
             for entry in entries:
                 entry["protocol"] = protocol
                 self.data["tokenHolders"].append(entry)
 
+            self.metadata[f"{protocol}_token_holders_cutoff_block"] = cutoff_block
             logging.info(f"Found {len(entries)} tokenHolders for {protocol}")
 
     def run(self):
