@@ -20,8 +20,8 @@ class MirrorIngestor(Ingestor):
 
     def prepare_articles(self):
         for i in tqdm(range(len(self.scraper_data["articles"]))):
-            self.scraper_data["articles"][i]["body"].replace('"',"'")
-            self.scraper_data["articles"][i]["title"].replace('"',"'")
+            self.scraper_data["articles"][i]["body"] = self.cyphers.sanitize_text(self.scraper_data["articles"][i]["body"])
+            self.scraper_data["articles"][i]["title"] = self.cyphers.sanitize_text(self.scraper_data["articles"][i]["title"])
 
     def ingest_articles(self):
         self.prepare_articles()

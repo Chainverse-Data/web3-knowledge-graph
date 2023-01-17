@@ -39,7 +39,7 @@ class Cypher:
                 database=self.database) if self.database is not None else neo4j_driver.session()
             response = list(session.run(query, parameters))
         except Exception as e:
-            logging.error("Query failed:", e)
+            logging.error(f"Query failed: {e}")
         finally:
             if session is not None:
                 session.close()
