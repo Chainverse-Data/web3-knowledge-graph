@@ -110,7 +110,7 @@ class DelegationScraper(Scraper):
                 """
                 )
                 result = self.call_the_graph_api(graph_url, query, variables, "delegateChanges")
-                if result["delegateChanges"] == []:
+                if result == None or result["delegateChanges"] == []:
                     break
                 entries.extend(result["delegateChanges"])
                 skip += self.interval
@@ -155,7 +155,7 @@ class DelegationScraper(Scraper):
                 """
                 )
                 result = self.call_the_graph_api(graph_url, query, variables, "delegateVotingPowerChanges")
-                if result["delegateVotingPowerChanges"] == []:
+                if result == None or result["delegateVotingPowerChanges"] == []:
                     break
                 entries.extend(result["delegateVotingPowerChanges"])
                 skip += self.interval
@@ -197,7 +197,7 @@ class DelegationScraper(Scraper):
                 """
                 )
                 result = self.call_the_graph_api(graph_url, query, variables, "delegates")
-                if result["delegates"] == []:
+                if result == None or result["delegates"] == []:
                     break
                 entries.extend(result["delegates"])
                 skip += self.interval
@@ -236,7 +236,7 @@ class DelegationScraper(Scraper):
                 """
                 )
                 result = self.call_the_graph_api(graph_url, query, variables, "tokenHolders")
-                if result["tokenHolders"] == []:
+                if result == None or result["tokenHolders"] == []:
                     break
                 entries.extend(result["tokenHolders"])
                 skip += self.interval
