@@ -11,7 +11,6 @@ dag = DAG(
     default_args={
         "start_date": days_ago(2),
         "owner": "Leo Blondel",
-        "email": ["leo@blondel.ninja"],
         "retries": 3
     },
     schedule_interval="@weekly",

@@ -12,7 +12,6 @@ dag = DAG(
     default_args={
         "start_date": pendulum.datetime(2022, 12, 1, tz="UTC"),
         "owner": "Leo Blondel",
-        "email": ["leo@blondel.ninja"],
         "retries": 3        
     },
     schedule_interval="@daily",

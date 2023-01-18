@@ -6,14 +6,14 @@ from airflow.contrib.operators.ecs_operator import ECSOperator
 from airflow.models import Variable
 
 dag = DAG(
-    "ens_scraping_and_ingest",
-    description="Scrapes the latest Gitcoin data, and ingest them into the neo4J instance.",
+    "twitter_post_processing_allDB",
+    description="Gets the twitter data from the API for all nodes.",
     default_args={
         "start_date": days_ago(2),
         "owner": "Leo Blondel",
         "retries": 3        
     },
-    schedule_interval="@daily",
+    schedule_interval="@weekly",
     max_active_runs=1,
     dagrun_timeout=timedelta(minutes=10080)
 )
@@ -23,8 +23,12 @@ ecs_cluster = Variable.get("MWAA_ECS_CLUSTER")  # str(ssm.get_parameter(Name='MW
 ecs_subnets = Variable.get("MWAA_VPC_PRIVATE_SUBNETS") # str(ssm.get_parameter(Name='/mwaa/vpc/private_subnets', WithDecryption=True)['Parameter']['Value'])
 ecs_security_group = Variable.get("MWAA_VPC_SECURITY_GROUPS") # str(ssm.get_parameter(Name='/mwaa/vpc/security_group', WithDecryption=True)['Parameter']['Value'])
 
-# Choose the machine size for the pipeline, if you need to change this for some of the jobs redfine them before each job.
-ecs_task_definition = "pipelines-highcpu"
+# Choose the machine size from:
+# pipelines-small: 1CPU 2Gb RAM
+# pipelines-medium: 1CPU 8Gb RAM
+# pipelines-large: 2CPU 16Gb RAM
+# pipelines-xl: 8CPU 32Gb RAM
+ecs_task_definition = "pipelines-small"
 ecs_task_image = "data-pipelines"
 ecs_awslogs_group = f"/ecs/{ecs_task_definition}"
 ecs_awslogs_stream_prefix = f"ecs/{ecs_task_image}"
@@ -45,6 +49,8 @@ env_vars = [
     {"name": "NEO_USERNAME", "value": Variable.get("NEO_USERNAME")},
     {"name": "NEO_URI", "value": Variable.get("NEO_URI")},
     {"name": "NEO_PASSWORD", "value": Variable.get("NEO_PASSWORD")},
+    {"name": "TWITTER_BEARER_TOKEN", "value": Variable.get("TWITTER_BEARER_TOKEN")},
+    {"name": "FULL_TWITTER_JOB", "value": True},
 ]
 
 network_configuration={
@@ -60,8 +66,8 @@ network_configuration={
 # There are two fields set here:
 # task_id to give it a name
 # overrides -> command -> to set it to the module command 
-ens_scrape_task = ECSOperator(
-    task_id="ens_scraping",
+twitter_post_processing_task = ECSOperator(
+    task_id="twitter_post_processing",
     dag=dag,
     aws_conn_id="aws_ecs",
     cluster=ecs_cluster,
@@ -72,7 +78,7 @@ ens_scrape_task = ECSOperator(
         "containerOverrides": [
             {
                 "name": "data-pipelines",
-                "command": ["python3", "-m", "pipelines.scraping.ens.scrape"],
+                "command": ["python3", "-m", "pipelines.post-processing.twitter.process"],
                 "environment": env_vars
             },
         ],
@@ -82,26 +88,4 @@ ens_scrape_task = ECSOperator(
     awslogs_stream_prefix=ecs_awslogs_stream_prefix
 )
 
-ens_ingest_task = ECSOperator(
-    task_id="ens_ingesting",
-    dag=dag,
-    aws_conn_id="aws_ecs",
-    cluster=ecs_cluster,
-    task_definition=ecs_task_definition,
-    region_name="us-east-2",
-    launch_type="FARGATE",
-    overrides={
-        "containerOverrides": [
-            {
-                "name": "data-pipelines",
-                "command": ["python3", "-m", "pipelines.ingestion.ens.ingest"],
-                "environment": env_vars
-            },
-        ],
-    },
-    network_configuration=network_configuration,
-    awslogs_group=ecs_awslogs_group,
-    awslogs_stream_prefix=ecs_awslogs_stream_prefix
-)
-
-ens_scrape_task >> ens_ingest_task
+twitter_post_processing_task
