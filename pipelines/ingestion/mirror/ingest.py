@@ -32,11 +32,7 @@ class MirrorIngestor(Ingestor):
         urls = self.s3.save_json_as_csv(authors, self.bucket_name, f"ingestor_articles_authors_{self.asOf}")
         self.cyphers.queries.create_wallets(urls)
 
-    def prepare_twitter(self):
-        self.scraper_data["twitter_accounts"] = [twitter for twitter in self.scraper_data["twitter_accounts"] if twitter["handle"]]
-
     def ingest_twitter(self):
-        self.prepare_twitter()
         urls = self.s3.save_json_as_csv(self.scraper_data["twitter_accounts"], self.bucket_name, f"ingestor_twitter_{self.asOf}")
         self.cyphers.create_or_merge_twitter(urls)
         self.cyphers.link_twitter_to_article(urls)

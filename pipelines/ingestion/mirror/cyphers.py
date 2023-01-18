@@ -52,7 +52,7 @@ class MirrorCyphers(Cypher):
         for url in tqdm(urls):
             query = f"""
                     LOAD CSV WITH HEADERS FROM '{url}' AS twitter_handles
-                    MERGE (twitter:Twitter:Account {{handle: toLower(twitter_handles.handle)}})
+                    MERGE (twitter:Twitter:Account {{handle: toLower(twitter_handles.twitter_handle)}})
                     ON CREATE set twitter.uuid = apoc.create.uuid(),
                         twitter.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                         twitter.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
@@ -176,7 +176,7 @@ class MirrorCyphers(Cypher):
         for url in tqdm(urls):
             query = f"""
                         LOAD CSV WITH HEADERS FROM '{url}' AS twitter_articles
-                        MATCH (article:Mirror:MirrorArticle:Article {{originalContentDigest: twitter_articles.original_content_digest}}), (twitter:Twitter:Account {{handle: toLower(twitter_articles.handle)}})
+                        MATCH (article:Mirror:MirrorArticle:Article {{originalContentDigest: twitter_articles.original_content_digest}}), (twitter:Twitter:Account {{handle: toLower(twitter_articles.twitter_handle)}})
                         WITH article, twitter, twitter_articles
                         MERGE (article)-[edge:REFERENCES]->(twitter)
                         ON CREATE set edge.uuid = apoc.create.uuid(),
