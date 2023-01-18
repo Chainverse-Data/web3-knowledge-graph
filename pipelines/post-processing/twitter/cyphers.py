@@ -74,6 +74,8 @@ class TwitterCyphers(Cypher):
                             t.userId = twitter.userId,
                             t.website = twitter.website,
                             t.profileImageUrl = twitter.profileImageUrl,
+                            t.location = twitter.location,
+                            t.language = twitter.language,
                             t.lastUpdatedDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
                         return count(t)
                     """

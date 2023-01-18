@@ -88,7 +88,7 @@ class TwitterPostProcess(Processor):
                     "location": user.get("location", ""),
                     "language": user.get("language", ""),
                 }
-                if tmp['handle'] in set_items:
+                if tmp["handle"] in set_items:
                     set_items.remove(tmp["handle"])
                 users.append(tmp)
                 pinned_id = user.get("pinned_tweet_id", -1)
