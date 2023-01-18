@@ -13,7 +13,7 @@ class DelegationIngestor(Ingestor):
     def prepare_delegation_data(self):
         logging.info("Preparing data...")
         delegateChangesDf = pd.DataFrame(self.scraper_data['delegateChanges'][1:])
-        delegateTokens = delegateChangesDf.groupby(["protocol", "tokenAddress"], as_index=False)[["protocol", "tokenAddress"]]
+        delegateTokens = delegateChangesDf[["protocol", "tokenAddress"]].drop_duplicates()
         delegateTokens.rename(columns={"tokenAddress": "contractAddress"})
         delegateTokens["symbol"] = delegateTokens["protocol"]
         delegateTokens["decimal"] = delegateTokens["-1"]
