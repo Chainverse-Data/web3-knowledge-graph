@@ -73,8 +73,9 @@ class TwitterPostProcess(Processor):
             batch = self.filter_batch(twitter_handles_batch)
             set_items = set(twitter_handles_batch)
             resp = self.get_user_response(batch)
-            logging.info(f"Got {len(resp['data'])} users from the API")
-            for idx, user in enumerate(resp["data"]):
+            data = resp.get('data', [])
+            logging.info(f"Got {len(data)} users from the API")
+            for idx, user in enumerate(data):
                 tmp = {
                     "name": user["name"],
                     "handle": user["username"].lower(),
@@ -92,7 +93,8 @@ class TwitterPostProcess(Processor):
                 pinned_id = user.get('pinned_tweet_id', -1)
                 if pinned_id != -1:
                     twitter_ids[pinned_id] = idx
-            for idx, entry in enumerate(resp['includes']['tweets']):
+            includes = resp.get('includes', {'tweets': []})
+            for idx, entry in enumerate(includes['tweets']):
                 users[twitter_ids[entry['id']]]['language'] = entry['lang']
             self.bad_handles.update(set_items)
 
