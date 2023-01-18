@@ -18,17 +18,18 @@ class TwitterFollowPostProcess(Processor):
         self.cutoff = datetime.now() - timedelta(days=20)
 
         self.items = []
-        self.headers = {
-            "Authorization": f"Bearer {os.environ.get('TWITTER_BEARER_TOKEN')}",
-        }
+        self.bearer_tokens = os.environ.get("TWITTER_BEARER_TOKEN").split(",")
+        self.i = 0
 
     def twitter_api_call(self, url, retries=0):
         if retries > 10:
             return {"data": []}
-
+        headers = {
+            "Authorization": f"Bearer {self.bearer_tokens[self.i]}",
+        }
         x = requests.get(
             url,
-            headers=self.headers,
+            headers=headers,
         )
         resp = json.loads(x.text)
         head = dict(x.headers)
@@ -38,8 +39,10 @@ class TwitterFollowPostProcess(Processor):
             time_to_wait = int(end_time) - epoch_time
             logging.warning(f"Rate limit exceeded. Waiting {time_to_wait} seconds.")
             time.sleep(time_to_wait)
-            return self.get_user_response(url, retries=retries + 1)
+            return self.twitter_api_call(url, retries=retries + 1)
 
+        self.i += 1
+        self.i %= len(self.bearer_tokens)
         return resp
 
     def get_twitter_handles(self):
@@ -59,7 +62,7 @@ class TwitterFollowPostProcess(Processor):
         logging.info("Getting followers")
         follower_url = "https://api.twitter.com/2/users/{}/followers?max_results=1000{}&user.fields=username"
         results = []
-        for entry in self.items:
+        for idx, entry in enumerate(self.items):
             items = self.handle_user(entry, follower_url)
             for follower in items:
                 results.append(
@@ -68,13 +71,15 @@ class TwitterFollowPostProcess(Processor):
                         "follower": follower.get("username").lower(),
                     }
                 )
+            if idx % 500: # Save every 500
+                self.s3.save_json_as_csv(results, self.bucket_name, "twitter_followers.csv")
         return results
 
     def get_following(self):
         logging.info("Getting following")
         following_url = "https://api.twitter.com/2/users/{}/following?max_results=1000{}&user.fields=username"
         results = []
-        for entry in self.items:
+        for idx, entry in enumerate(self.items):
             items = self.handle_user(entry, following_url)
             for following in items:
                 results.append(
@@ -83,6 +88,8 @@ class TwitterFollowPostProcess(Processor):
                         "follower": entry.get("handle").lower(),
                     }
                 )
+            if idx % 500:
+                self.s3.save_json_as_csv(results, self.bucket_name, "twitter_following.csv")
         return results
 
     def handle_user(self, user, url):

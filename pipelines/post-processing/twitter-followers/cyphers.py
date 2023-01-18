@@ -10,13 +10,13 @@ class TwitterFollowerCyphers(Cypher):
         self.queries = Queries()
 
     @get_query_logging
-    def get_wallet_alias_handles(self, limit=2000):
+    def get_wallet_alias_handles(self, limit=5000):
         results = []
         offset = 0
         while True:
             query = f"""
                         MATCH (w:Wallet)-[:HAS_ALIAS]-(:Alias)-[:HAS_ALIAS]-(t:Twitter)
-                        WHERE NOT t:Trash
+                        WHERE NOT t:Trash and exists(t.userId)
                         return t
                         SKIP {offset} LIMIT {limit}
                     """
