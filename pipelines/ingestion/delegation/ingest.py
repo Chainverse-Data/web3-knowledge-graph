@@ -16,7 +16,7 @@ class DelegationIngestor(Ingestor):
         delegateTokens = delegateChangesDf[["protocol", "tokenAddress"]].drop_duplicates()
         delegateTokens.rename(columns={"tokenAddress": "contractAddress"})
         delegateTokens["symbol"] = delegateTokens["protocol"]
-        delegateTokens["decimal"] = delegateTokens["-1"]
+        delegateTokens["decimal"] = "-1"
         logging.info(f"Ingested delegate changes DF")
         delegateVotingPowerChanges = pd.DataFrame(self.scraper_data['delegateVotingPowerChanges'][1:])
         logging.info("Ingested delegate voting power changes")
