@@ -16,7 +16,7 @@ class TwitterPostProcess(Processor):
         self.cyphers = TwitterCyphers()
         super().__init__("twitter")
         self.cutoff = datetime.now() - timedelta(days=20)
-        self.full_job = os.environ.get("FULL_TWITTER_JOB", False)
+        self.full_job = bool(os.environ.get("FULL_TWITTER_JOB", False))
 
         self.batch_size = 100
         self.split_size = 10000
@@ -71,15 +71,15 @@ class TwitterPostProcess(Processor):
         for idx in range(0, len(twitter_handles), self.batch_size):
             twitter_handles_batch = twitter_handles[idx : idx + self.batch_size]
             batch = self.filter_batch(twitter_handles_batch)
-            set_items = set(twitter_handles_batch)
+            set_items = set(batch)
             resp = self.get_user_response(batch)
-            data = resp.get('data', [])
+            data = resp.get("data", [])
             logging.info(f"Got {len(data)} users from the API")
             for idx, user in enumerate(data):
                 tmp = {
-                    "name": user["name"],
+                    "name": self.cyphers.sanitize_text(user["name"]),
                     "handle": user["username"].lower(),
-                    "bio": user["description"].replace('"', '').replace("'", ""),
+                    "bio": self.cyphers.sanitize_text(user["description"]),
                     "verified": user["verified"],
                     "userId": user["id"],
                     "followerCount": user["public_metrics"]["followers_count"],
@@ -88,14 +88,15 @@ class TwitterPostProcess(Processor):
                     "location": user.get("location", ""),
                     "language": user.get("language", ""),
                 }
-                set_items.remove(tmp["handle"])
+                if tmp['handle'] in set_items:
+                    set_items.remove(tmp["handle"])
                 users.append(tmp)
-                pinned_id = user.get('pinned_tweet_id', -1)
+                pinned_id = user.get("pinned_tweet_id", -1)
                 if pinned_id != -1:
                     twitter_ids[pinned_id] = idx
-            includes = resp.get('includes', {'tweets': []})
-            for idx, entry in enumerate(includes['tweets']):
-                users[twitter_ids[entry['id']]]['language'] = entry['lang']
+            includes = resp.get("includes", {"tweets": []})
+            for idx, entry in enumerate(includes["tweets"]):
+                users[twitter_ids[entry["id"]]]["language"] = entry["lang"]
             self.bad_handles.update(set_items)
 
         logging.info(f"Grabbed the data of {len(users)} users from the API")
@@ -105,7 +106,9 @@ class TwitterPostProcess(Processor):
         # add trash labels to bad handle nodes
         bad_handles = [{"handle": x} for x in self.bad_handles]
         logging.info(f"Found {len(bad_handles)} bad handles")
-        trash_info_urls = self.s3.save_json_as_csv(bad_handles, self.bucket_name, f"processor_twitter_trash_{self.asOf}")
+        trash_info_urls = self.s3.save_json_as_csv(
+            bad_handles, self.bucket_name, f"processor_twitter_trash_{self.asOf}"
+        )
         self.cyphers.add_trash_labels(trash_info_urls)
 
     def clean_twitter_nodes(self):
