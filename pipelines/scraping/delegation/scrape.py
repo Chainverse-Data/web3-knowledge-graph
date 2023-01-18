@@ -63,7 +63,6 @@ class DelegationScraper(Scraper):
         self.interval = 1000
 
     def call_the_graph_api(self, graph_url, query, variables, result_name, counter=0):
-        print("Calling:", graph_url, variables)
         time.sleep(counter)
         if counter > 20:
             return None
@@ -229,8 +228,8 @@ class DelegationScraper(Scraper):
             logging.info(f"Found {len(entries)} tokenHolders for {protocol}")
 
     def run(self):
-        # self.get_delegation_events()
-        # self.get_delegation_voting_changes()
+        self.get_delegation_events()
+        self.get_delegation_voting_changes()
         self.get_delegates()
         self.get_token_holders()
         self.save_metadata()
