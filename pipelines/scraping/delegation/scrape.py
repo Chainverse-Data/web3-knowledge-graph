@@ -63,6 +63,7 @@ class DelegationScraper(Scraper):
         self.interval = 1000
 
     def call_the_graph_api(self, graph_url, query, variables, result_name, counter=0):
+        print("Calling:", graph_url, variables)
         time.sleep(counter)
         if counter > 20:
             return None
@@ -162,14 +163,14 @@ class DelegationScraper(Scraper):
         for entry in tqdm(self.graph_urls):
             protocol = entry["protocol"]
             graph_url = entry["url"]
-            cutoff_block = self.metadata.get(f"{protocol}_delegates_cutoff_block", 0)
+            cutoff_block = "0"
             entries = []
             while True:
                 variables = {"first": self.interval, "cutoff": cutoff_block}
                 query = gql.gql(
                     """
-                query($first: Int!, $cutoff: BigInt!) {
-                    delegates(first: $first, orderBy: delegatedVotesRaw, orderDirection: asc, where: {delegatedVotesRaw_gte: $cutoff}) {
+                query($first: Int!, $cutoff: String!) {
+                    delegates(first: $first, orderBy: id, orderDirection: asc, where: {id_gt: $cutoff}) {
                         id
                         delegatedVotesRaw
                         delegatedVotes
@@ -185,13 +186,12 @@ class DelegationScraper(Scraper):
                 if result == None or result["delegates"] == []:
                     break
                 entries.extend(result["delegates"])
-                cutoff_block = result["delegates"][-1]["delegatedVotesRaw"]
+                cutoff_block = result["delegates"][-1]["id"]
 
             for entry in entries:
                 entry["protocol"] = protocol
                 self.data["delegates"].append(entry)
 
-            self.metadata[f"{protocol}_delegates_cutoff_block"] = cutoff_block
             logging.info(f"Found {len(entries)} delegates for {protocol}")
 
     def get_token_holders(self):
@@ -199,14 +199,14 @@ class DelegationScraper(Scraper):
         for entry in tqdm(self.graph_urls):
             protocol = entry["protocol"]
             graph_url = entry["url"]
-            cutoff_block = self.metadata.get(f"{protocol}_token_holders_cutoff_block", 0)
+            cutoff_block = "0"
             entries = []
             while True:
                 variables = {"first": self.interval, "cutoff": cutoff_block}
                 query = gql.gql(
                     """
-                    query($first: Int!, $cutoff: BigInt!) {
-                        tokenHolders(first: $first, orderBy: tokenBalanceRaw, orderDirection: asc, where: {tokenBalanceRaw_gte: $cutoff}) {
+                    query($first: Int!, $cutoff: String!) {
+                        tokenHolders(first: $first, orderBy: id, orderDirection: asc, where: {id_gt: $cutoff}) {
                             id
                             tokenBalance
                             tokenBalanceRaw
@@ -220,18 +220,17 @@ class DelegationScraper(Scraper):
                 if result == None or result["tokenHolders"] == []:
                     break
                 entries.extend(result["tokenHolders"])
-                cutoff_block = result["tokenHolders"][-1]["tokenBalanceRaw"]
+                cutoff_block = result["tokenHolders"][-1]["id"]
 
             for entry in entries:
                 entry["protocol"] = protocol
                 self.data["tokenHolders"].append(entry)
 
-            self.metadata[f"{protocol}_token_holders_cutoff_block"] = cutoff_block
             logging.info(f"Found {len(entries)} tokenHolders for {protocol}")
 
     def run(self):
-        self.get_delegation_events()
-        self.get_delegation_voting_changes()
+        # self.get_delegation_events()
+        # self.get_delegation_voting_changes()
         self.get_delegates()
         self.get_token_holders()
         self.save_metadata()
