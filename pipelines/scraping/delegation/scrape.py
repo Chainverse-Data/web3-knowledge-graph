@@ -8,7 +8,7 @@ from gql.transport.aiohttp import AIOHTTPTransport, log as gql_log
 gql_log.setLevel(logging.WARNING)
 
 class DelegationScraper(Scraper):
-    def __init__(self, bucket_name="gab", allow_override=True):
+    def __init__(self, bucket_name="delegation", allow_override=True):
         super().__init__(bucket_name, allow_override=allow_override)
         self.graph_urls = [
             {
