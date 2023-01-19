@@ -6,6 +6,8 @@ import gql
 import logging
 from gql.transport.aiohttp import AIOHTTPTransport, log as gql_log
 gql_log.setLevel(logging.WARNING)
+import os
+DEBUG = os.environ.get("DEBUG", False)
 
 class DelegationScraper(Scraper):
     def __init__(self, bucket_name="delegation", allow_override=True):
@@ -106,10 +108,11 @@ class DelegationScraper(Scraper):
                 result = self.call_the_graph_api(graph_url, query, variables, "delegateChanges")
                 if result == None or result["delegateChanges"] == []:
                     break
-                
+            
                 entries.extend(result["delegateChanges"])
                 cutoff_block = result["delegateChanges"][-1]["blockNumber"]
-
+                if DEBUG:
+                    break
             for entry in entries:
                 entry["protocol"] = protocol
                 self.data["delegateChanges"].append(entry)
@@ -149,7 +152,8 @@ class DelegationScraper(Scraper):
                     break
                 entries.extend(result["delegateVotingPowerChanges"])
                 cutoff_block = result["delegateVotingPowerChanges"][-1]["blockNumber"]
-
+                if DEBUG:
+                    break
             for entry in entries:
                 entry["protocol"] = protocol
                 self.data["delegateVotingPowerChanges"].append(entry)
@@ -186,7 +190,8 @@ class DelegationScraper(Scraper):
                     break
                 entries.extend(result["delegates"])
                 cutoff_block = result["delegates"][-1]["id"]
-
+                if DEBUG:
+                    break
             for entry in entries:
                 entry["protocol"] = protocol
                 self.data["delegates"].append(entry)
@@ -220,7 +225,8 @@ class DelegationScraper(Scraper):
                     break
                 entries.extend(result["tokenHolders"])
                 cutoff_block = result["tokenHolders"][-1]["id"]
-
+                if DEBUG:
+                    break
             for entry in entries:
                 entry["protocol"] = protocol
                 self.data["tokenHolders"].append(entry)

@@ -8,75 +8,122 @@ import logging
 class DelegationIngestor(Ingestor):
     def __init__(self):
         self.cyphers = DelegationCyphers()
-        super().__init__('gab')
+        super().__init__('delegation')
     
     def prepare_delegation_data(self):
         logging.info("Preparing data...")
-        delegateChangesDf = pd.DataFrame(self.scraper_data['delegateChanges'])
-        delegateTokens = delegateChangesDf[["protocol", "tokenAddress"]].drop_duplicates()
-        delegateTokens.rename(columns={"tokenAddress": "contractAddress"})
-        delegateTokens["symbol"] = delegateTokens["protocol"]
-        delegateTokens["decimal"] = "-1"
-        logging.info(f"Preparing delegate changes DF. Done!")
-        delegateVotingPowerChanges = pd.DataFrame(self.scraper_data['delegateVotingPowerChanges'][1:])
-        logging.info("Preparing delegate voting power changes. Done!")
-        delegatesDf = pd.DataFrame(self.scraper_data['delegates'])
-        logging.info("Preparing delegates. Done!")
-        tokenHoldersDf = pd.DataFrame(self.scraper_data['tokenHolders'])
-        ## make wallet list
-        delegateWallets = list(delegateChangesDf['delegate'])
-        delegatorWallets = list(delegateChangesDf['delegator'])
-        tokenHolderWallets = list(tokenHoldersDf['id'])
-        allWallets = delegateWallets + delegatorWallets + tokenHolderWallets
-        allWalletsDf = pd.DataFrame()
-        allWalletsDf['address'] = allWallets
-        logging.info("Preparing tokenHolders. Done!")
-        return {
-            'delegateChangesDf': delegateChangesDf,
-            'tokenStrategies': delegateTokens,
-            'allWalletsDf': allWalletsDf,
-            'delegateVotingPowerChanges': delegateVotingPowerChanges
+
+        data = {
+            "wallets": [],
+            "entities": [],
+            "tokens": [],
+            "delegationsNew": [],
+            "delegationsRemoval": [],
+            "delegates": []
         }
 
-    def ingest_wallets(self, data=None):
-        logging.info("Ingesting wallets...")
-        urls = self.s3.save_df_as_csv(data['allWalletsDf'], self.bucket_name, f"ingestor_wallets_{self.asOf}", ACL='public-read')
-        self.cyphers.create_or_merge_wallets(urls)
-        logging.info(f"successfully ingested wallets. good job dev!")
-    
-    def ingest_delegate_changes(self, data=None):
-        logging.info("Ingesting delegate changes...")
-        urls = self.s3.save_df_as_csv(data['delegateChangesDf'], self.bucket_name, f"ingestor_delegate_changes_{self.asOf}", ACL='public-read')
-        self.cyphers.create_delegation_events(urls)
-        logging.info(f"successfully ingested delegate changes. good job dev!")
-    
-    def ingest_delegate_connections(self, data=None):
-        logging.info("Ingesting delegate connections...")
-        urls = self.s3.save_df_as_csv(data['delegateChangesDf'], self.bucket_name, f"ingestor_delegate_connections_{self.asOf}", ACL='public-read')
-        self.cyphers.connect_delegate_events(urls)
-        logging.info(f"successfully ingested delegate connections. good job dev!")
+        uniqueWallets = set()
+        uniqueProtocols = set()
+        for change in self.scraper_data['delegateChanges']:
+            uniqueWallets.add(change["delegator"])
+            uniqueWallets.add(change["delegate"])
+            uniqueProtocols.add(change["protocol"])
+            
+            data["tokens"].append(
+                {
+                    "protocol": change["protocol"], 
+                    "contractAddress": change["tokenAddress"],
+                    "symbol": "",
+                    "decimal": -1
+                })
+            data["delegationsNew"].append(
+                {
+                    "protocol": change["protocol"], 
+                    "delegate": change["delegate"],
+                    "delegator": change["delegator"],
+                    "txHash": change["txnHash"]
+                })
+            data["delegationsRemoval"].append(
+                {
+                    "protocol": change["protocol"], 
+                    "delegate": change["previousDelegate"],
+                    "delegator": change["delegator"],
+                })
 
-    def ingest_token_strategies(self, data=None):
-        logging.info("Ingesting strategies connections...")
-        urls = self.s3.save_df_as_csv(data['tokenStrategies'], self.bucket_name, f"ingestor_delegate_strategies_{self.asOf}", ACL='public-read')
-        self.cyphers.create_or_merge_tokens(urls)
+
+        for holder in self.scraper_data['tokenHolders']:
+            uniqueWallets.add(holder["id"])
+        
+        data["wallets"] = [{"address": address} for address in uniqueWallets]
+        data["entities"] = [{"protocol": protocol} for protocol in uniqueProtocols]
+
+        delegates = {}
+        for delegate in self.scraper_data['delegates']:
+            if delegate["protocol"] not in delegates:
+                delegates[delegate["protocol"]] = {}
+            delegates[delegate["protocol"]][delegate["id"]] = {
+                "delegatedVotesRaw": delegate["delegatedVotesRaw"],
+                "delegatedVotes": delegate["delegatedVotes"],
+                "numberVotes": delegate["numberVotes"],
+            }
+        for change in self.scraper_data['delegateVotingPowerChanges']:
+            if change["delegate"] not in delegates[change["protocol"]]:
+                delegates[change["protocol"]][change["delegate"]] = {
+                    "delegatedVotesRaw": 0,
+                    "delegatedVotes": 0,
+                    "numberVotes": 0,
+                }
+            delegates[change["protocol"]][change["delegate"]]["previousBalance"] = change["previousBalance"]
+            delegates[change["protocol"]][change["delegate"]]["newBalance"] = change["newBalance"]
+        
+        delegatesData = []
+        for protocol in delegates:
+            for delegate in delegates[protocol]:
+                delegates[protocol][delegate]["protocol"] = protocol
+                delegates[protocol][delegate]["delegate"] = delegate
+                delegatesData.append(delegates[protocol][delegate])
+
+        data["delegates"] = delegatesData
+        
+        return data
+
+    def ingest_wallets_entities_tokens(self, data):
+        logging.info(f"""Ingesting {len(data["wallets"])} wallets...""")
+        urls = self.s3.save_json_as_csv(data["wallets"], self.bucket_name, f"ingestor_wallets_{self.asOf}", ACL='public-read')
+        self.cyphers.queries.create_wallets(urls)
+
+        logging.info(f"""Ingesting {len(data["entities"])} Entities and delegations...""")
+        urls = self.s3.save_json_as_csv(data["entities"], self.bucket_name, f"ingestor_entities_{self.asOf}", ACL='public-read')
         self.cyphers.create_or_merge_entities(urls)
-        self.cyphers.connect_strategies(urls)
-        logging.info(f"successfully ingested strategies. good job dev!")
+        self.cyphers.create_or_merge_delegations(urls)
+        self.cyphers.link_or_merge_delegation_to_entity(urls)
 
-    def enrich_delegate_events(self, data=None):
-        logging.info("Enriching delegate events...")
-        delegateVotingPowerChanges = data['delegateVotingPowerChanges']
-        urls = self.s3.save_df_as_csv(delegateVotingPowerChanges, self.bucket_name, f"ingestor_delegate_voting_power_changes_{self.asOf}", ACL='public-read')
-        self.cyphers.enrich_delegation_events(urls)
-        logging.info(f"successfully enriched delegate events. good job dev!")
-    
+        logging.info(f"""Ingesting {len(data["tokens"])} Tokens...""")
+        urls = self.s3.save_json_as_csv(data["tokens"], self.bucket_name, f"ingestor_tokens_{self.asOf}", ACL='public-read')
+        self.cyphers.create_or_merge_tokens(urls)
+        self.cyphers.link_or_merge_strategies(urls)
+        self.cyphers.link_or_merge_delegation_to_token(urls)
+
+    def ingest_delegations(self, data):
+        logging.info(f"""Deleting {len(data["delegationsRemoval"])} removed delegations...""")
+        urls = self.s3.save_json_as_csv(data["delegationsRemoval"], self.bucket_name, f"ingestor_delegationRemoval_{self.asOf}", ACL='public-read')
+        self.cyphers.detach_wallets_delegations(urls)
+        self.cyphers.detach_wallets_delegators(urls)
+        self.cyphers.detach_wallets_delegates(urls)
+
+        logging.info(f"""Adding {len(data["delegationsNew"])} new_delegations...""")
+        urls = self.s3.save_json_as_csv(data["delegationsNew"], self.bucket_name, f"ingestor_delegationNew_{self.asOf}", ACL='public-read')
+        self.cyphers.link_or_merge_wallet_delegators(urls)
+        self.cyphers.link_or_merge_wallet_delegates(urls)
+        
+        logging.info(f"""Linking {len(data["delegates"])} Delegating wallets...""")
+        urls = self.s3.save_json_as_csv(data["delegates"], self.bucket_name, f"ingestor_delegations_{self.asOf}", ACL='public-read')
+        self.cyphers.link_or_merge_wallets_delegations(urls)
+
     def run(self):
         delegationData = self.prepare_delegation_data()
-        self.ingest_wallets(data=delegationData)
-        self.ingest_delegate_changes(data=delegationData)
-        self.ingest_delegate_connections(data=delegationData)
-        self.enrich_delegate_events(data=delegationData)
+        self.ingest_wallets_entities_tokens(delegationData)
+        self.ingest_delegations(delegationData)
         self.save_metadata()
 
 if __name__== '__main__':
