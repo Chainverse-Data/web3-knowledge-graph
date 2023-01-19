@@ -12,7 +12,7 @@ class DelegationIngestor(Ingestor):
     
     def prepare_delegation_data(self):
         logging.info("Preparing data...")
-        delegateChangesDf = pd.DataFrame(self.scraper_data['delegateChanges'][1:])
+        delegateChangesDf = pd.DataFrame(self.scraper_data['delegateChanges'])
         delegateTokens = delegateChangesDf[["protocol", "tokenAddress"]].drop_duplicates()
         delegateTokens.rename(columns={"tokenAddress": "contractAddress"})
         delegateTokens["symbol"] = delegateTokens["protocol"]
@@ -20,13 +20,13 @@ class DelegationIngestor(Ingestor):
         logging.info(f"Ingested delegate changes DF")
         delegateVotingPowerChanges = pd.DataFrame(self.scraper_data['delegateVotingPowerChanges'][1:])
         logging.info("Ingested delegate voting power changes")
-        delegatesDf = pd.DataFrame(self.scraper_data['delegates'][1:])
+        delegatesDf = pd.DataFrame(self.scraper_data['delegates'])
         logging.info("Ingested delegates")
-        tokenHoldersDf = pd.DataFrame(self.scraper_data['tokenHolders'][1:])
+        tokenHoldersDf = pd.DataFrame(self.scraper_data['tokenHolders'])
         ## make wallet list
         delegateWallets = list(delegateChangesDf['delegate'])
         delegatorWallets = list(delegateChangesDf['delegator'])
-        tokenHolderWallets = list(tokenHoldersDf['tokenHolderAddress'])
+        tokenHolderWallets = list(tokenHoldersDf['id'])
         allWallets = delegateWallets + delegatorWallets + tokenHolderWallets
         allWalletsDf = pd.DataFrame()
         allWalletsDf['address'] = allWallets
