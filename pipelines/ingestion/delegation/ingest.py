@@ -89,35 +89,35 @@ class DelegationIngestor(Ingestor):
 
     def ingest_wallets_entities_tokens(self, data):
         logging.info(f"""Ingesting {len(data["wallets"])} wallets...""")
-        urls = self.s3.save_json_as_csv(data["wallets"], self.bucket_name, f"ingestor_wallets_{self.asOf}", ACL='public-read')
+        urls = self.s3.save_json_as_csv(data["wallets"], self.bucket_name, f"ingestor_wallets_{self.asOf}")
         self.cyphers.queries.create_wallets(urls)
 
         logging.info(f"""Ingesting {len(data["entities"])} Entities and delegations...""")
-        urls = self.s3.save_json_as_csv(data["entities"], self.bucket_name, f"ingestor_entities_{self.asOf}", ACL='public-read')
+        urls = self.s3.save_json_as_csv(data["entities"], self.bucket_name, f"ingestor_entities_{self.asOf}")
         self.cyphers.create_or_merge_entities(urls)
         self.cyphers.create_or_merge_delegations(urls)
         self.cyphers.link_or_merge_delegation_to_entity(urls)
 
         logging.info(f"""Ingesting {len(data["tokens"])} Tokens...""")
-        urls = self.s3.save_json_as_csv(data["tokens"], self.bucket_name, f"ingestor_tokens_{self.asOf}", ACL='public-read')
+        urls = self.s3.save_json_as_csv(data["tokens"], self.bucket_name, f"ingestor_tokens_{self.asOf}", max_lines=2000)
         self.cyphers.create_or_merge_tokens(urls)
         self.cyphers.link_or_merge_strategies(urls)
         self.cyphers.link_or_merge_delegation_to_token(urls)
 
     def ingest_delegations(self, data):
         logging.info(f"""Deleting {len(data["delegationsRemoval"])} removed delegations...""")
-        urls = self.s3.save_json_as_csv(data["delegationsRemoval"], self.bucket_name, f"ingestor_delegationRemoval_{self.asOf}", ACL='public-read')
+        urls = self.s3.save_json_as_csv(data["delegationsRemoval"], self.bucket_name, f"ingestor_delegationRemoval_{self.asOf}", max_lines=2000)
         self.cyphers.detach_wallets_delegations(urls)
         self.cyphers.detach_wallets_delegators(urls)
         self.cyphers.detach_wallets_delegates(urls)
 
         logging.info(f"""Adding {len(data["delegationsNew"])} new_delegations...""")
-        urls = self.s3.save_json_as_csv(data["delegationsNew"], self.bucket_name, f"ingestor_delegationNew_{self.asOf}", ACL='public-read')
+        urls = self.s3.save_json_as_csv(data["delegationsNew"], self.bucket_name, f"ingestor_delegationNew_{self.asOf}", max_lines=2000)
         self.cyphers.link_or_merge_wallet_delegators(urls)
         self.cyphers.link_or_merge_wallet_delegates(urls)
         
         logging.info(f"""Linking {len(data["delegates"])} Delegating wallets...""")
-        urls = self.s3.save_json_as_csv(data["delegates"], self.bucket_name, f"ingestor_delegations_{self.asOf}", ACL='public-read')
+        urls = self.s3.save_json_as_csv(data["delegates"], self.bucket_name, f"ingestor_delegations_{self.asOf}", max_lines=2000)
         self.cyphers.link_or_merge_wallets_delegations(urls)
 
     def run(self):
