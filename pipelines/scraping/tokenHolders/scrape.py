@@ -22,6 +22,7 @@ class TokenHolderScraper(Scraper):
         self.alchemy_api_url = "https://eth-mainnet.g.alchemy.com/v2/{}".format(os.environ["ALCHEMY_API_KEY"])
         self.get_current_block()
         self.max_thread = multiprocessing.cpu_count() * 2
+        self.important_only = os.environ.get("IMPORTANT_WALLETS", False)
         if DEBUG:
             self.max_thread = multiprocessing.cpu_count() - 1
         os.environ["NUMEXPR_MAX_THREADS"] = str(self.max_thread)
@@ -38,7 +39,10 @@ class TokenHolderScraper(Scraper):
         self.current_block = int(content["result"], 16)
 
     def get_all_wallets_in_db(self):
-        self.wallet_list  = self.cyphers.get_all_wallets()
+        if self.important_only:
+            self.wallet_list  = self.cyphers.get_important_wallets()
+        else:
+            self.wallet_list  = self.cyphers.get_all_wallets()
 
     def job_get_transactions(self, wallet):
         assets = set()
