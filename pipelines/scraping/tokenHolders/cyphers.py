@@ -27,28 +27,24 @@ class TokenHoldersCypher(Cypher):
 
     @get_query_logging
     def get_important_wallets(self):
-        if DEBUG:
-            query = """
-                MATCH (wallet:Wallet)
-                RETURN wallet.address
-                LIMIT 100
-            """
-        else:
-            query = """
-                match (w:Wallet:MultiSig)
-                optional match (w)-[r:_HAS_CONTEXT]-(wic)
-                with w, count(distinct(r)) as contexts
-                return distinct w.address as address, contexts
-                limit 2000
-                union
-                match (w:Wallet)-[r:_HAS_CONTEXT]->()
-                where not w:MultiSig 
-                and not (w)-[:_HAS_CONTEXT]->(:_IncentiveFarming)
-                with w, count(distinct(r)) as contexts
-                return distinct w.address as address, contexts
-                order by contexts desc
-                limit 98000
-            """
+        query = """
+            match (w:Wallet:MultiSig)
+            optional match (w)-[r:_HAS_CONTEXT]-(wic)
+            with w, count(distinct(r)) as contexts
+            return distinct w.address as address, contexts
+            limit 2000
+        """
         result = self.query(query)
-        result = [el["address"] for el in result]
-        return result
+        wallets = [el["address"] for el in result]
+        query = """
+            match (w:Wallet)-[r:_HAS_CONTEXT]->()
+            where not w:MultiSig 
+            and not (w)-[:_HAS_CONTEXT]->(:_IncentiveFarming)
+            with w, count(distinct(r)) as contexts
+            return distinct w.address as address, contexts
+            order by contexts desc
+            limit 98000
+        """
+        result = self.query(query)
+        wallets += [el["address"] for el in result]
+        return wallets
