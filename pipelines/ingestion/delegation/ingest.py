@@ -99,7 +99,7 @@ class DelegationIngestor(Ingestor):
         self.cyphers.link_or_merge_delegation_to_entity(urls)
 
         logging.info(f"""Ingesting {len(data["tokens"])} Tokens...""")
-        urls = self.s3.save_json_as_csv(data["tokens"], self.bucket_name, f"ingestor_tokens_{self.asOf}", max_lines=2000)
+        urls = self.s3.save_json_as_csv(data["tokens"], self.bucket_name, f"ingestor_tokens_{self.asOf}", max_lines=1000)
         self.cyphers.create_or_merge_tokens(urls)
         self.cyphers.link_or_merge_strategies(urls)
         self.cyphers.link_or_merge_delegation_to_token(urls)
