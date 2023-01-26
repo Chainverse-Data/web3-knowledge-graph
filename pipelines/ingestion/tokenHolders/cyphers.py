@@ -1,3 +1,4 @@
+from tqdm import tqdm
 from ...helpers import Cypher
 from ...helpers import Constraints
 from ...helpers import Indexes
@@ -25,7 +26,7 @@ class TokenHoldersCyphers(Cypher):
     def link_wallet_tokens(self, urls):
         "CSV Must have the columns: [contractAddress, address, balance, numericBalance]"
         count = 0
-        for url in urls:
+        for url in tqdm(urls):
             query = f"""
                 LOAD CSV WITH HEADERS FROM '{url}' AS holdings
                 MATCH (token:Token {{address: toLower(holdings.contractAddress)}}), (wallet:Wallet {{address: toLower(holdings.address)}})

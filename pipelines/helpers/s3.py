@@ -6,6 +6,7 @@ import json
 import boto3
 from botocore.exceptions import ClientError
 import pandas as pd
+from tqdm import tqdm
 
 
 class S3Utils:
@@ -47,8 +48,9 @@ class S3Utils:
         if df.memory_usage(index=False).sum() > max_size or len(df) > max_lines:
             chunks = self.split_dataframe(df, chunk_size=max_lines)
 
+        logging.info("Uploading data...")
         urls = []
-        for chunk, chunk_id in zip(chunks, range(len(chunks))):
+        for chunk, chunk_id in tqdm(zip(chunks, range(len(chunks)))):
             chunk.to_csv(f"s3://{bucket_name}/{file_name}--{chunk_id}.csv", index=False)
             self.s3_resource.ObjectAcl(bucket_name, f"{file_name}--{chunk_id}.csv").put(ACL=ACL)
             location = self.s3_client.get_bucket_location(Bucket=bucket_name)["LocationConstraint"]
