@@ -29,7 +29,7 @@ class Cypher:
     def create_indexes(self):
         logging.warning("This function should be implemented in the children class.")
 
-    def query(self, query, parameters=None):
+    def query(self, query, parameters=None, counter=0):
         neo4j_driver = self.get_driver()
         assert neo4j_driver is not None, "Driver not initialized!"
         session = None
@@ -39,7 +39,9 @@ class Cypher:
                 database=self.database) if self.database is not None else neo4j_driver.session()
             response = list(session.run(query, parameters))
         except Exception as e:
-            logging.error(f"Query failed: {e}")
+            if counter > 10:
+                logging.error(f"Query failed: {e}")
+            return self.query(query, parameters=parameters, counter=counter+1)
         finally:
             if session is not None:
                 session.close()
