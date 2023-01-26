@@ -1,3 +1,4 @@
+from tqdm import tqdm
 from .cypher import Cypher
 from .decorators import count_query_logging
 # This file is for universal queries only, any queries that generate new nodes or edges must be in its own cyphers.py file in the service folder
@@ -19,7 +20,7 @@ class Queries(Cypher):
     def create_wallets(self, urls):
         """csv is: address"""
         count = 0
-        for url in urls:
+        for url in tqdm(urls):
             query = f"""
                     LOAD CSV WITH HEADERS FROM '{url}' AS wallets
                     MERGE(wallet:Wallet {{address: toLower(wallets.address)}})
@@ -37,7 +38,7 @@ class Queries(Cypher):
     # @count_query_logging
     # def create_or_merge_tokens(self, urls):
     #     count = 0
-    #     for url in urls:
+    #     for url in tqdm(urls):
     #         query = f"""
     #                 LOAD CSV WITH HEADERS FROM '{url}' AS tokens
     #                 MERGE(t:Token {{address: toLower(tokens.address)}})
@@ -51,7 +52,7 @@ class Queries(Cypher):
     @count_query_logging
     def create_or_merge_twitter(self, urls):
         count = 0
-        for url in urls:
+        for url in tqdm(urls):
             query = f"""
                     LOAD CSV WITH HEADERS FROM '{url}' AS twitter
                     MERGE (t:Twitter {{handle: toLower(twitter.handle)}})
@@ -71,7 +72,7 @@ class Queries(Cypher):
     @count_query_logging
     def create_or_merge_alias(self, urls):
         count = 0
-        for url in urls:
+        for url in tqdm(urls):
             query = f"""
                     LOAD CSV WITH HEADERS FROM '{url}' AS alias
                     MERGE (a:Alias {{name: toLower(alias.name)}})
@@ -87,7 +88,7 @@ class Queries(Cypher):
     @count_query_logging
     def create_or_merge_ens_nft(self, urls):
         count = 0
-        for url in urls:
+        for url in tqdm(urls):
             query = f"""
                     LOAD CSV WITH HEADERS FROM '{url}' AS ens
                     MERGE (e:Ens:Nft {{editionId: ens.tokenId}})
@@ -103,7 +104,7 @@ class Queries(Cypher):
     @count_query_logging
     def create_or_merge_transaction(self, urls):
         count = 0
-        for url in urls:
+        for url in tqdm(urls):
             query = f"""
                     LOAD CSV WITH HEADERS FROM '{url}' AS tx
                     MERGE (t:Transaction {{txHash: toLower(tx.txHash)}})
@@ -119,7 +120,7 @@ class Queries(Cypher):
     @count_query_logging
     def link_wallet_alias(self, urls):
         count = 0
-        for url in urls:
+        for url in tqdm(urls):
             query = f"""
                     LOAD CSV WITH HEADERS FROM '{url}' AS alias
                     MATCH (a:Alias {{name: toLower(alias.name)}}), 
@@ -134,7 +135,7 @@ class Queries(Cypher):
     @count_query_logging
     def link_wallet_transaction_ens(self, urls):
         count = 0
-        for url in urls:
+        for url in tqdm(urls):
             query = f"""
                     LOAD CSV WITH HEADERS FROM '{url}' AS tx
                     MATCH (t:Transaction {{txHash: toLower(tx.txHash)}}), 
@@ -149,7 +150,7 @@ class Queries(Cypher):
     @count_query_logging
     def link_ens_transaction(self, urls):
         count = 0
-        for url in urls:
+        for url in tqdm(urls):
             query = f"""
                     LOAD CSV WITH HEADERS FROM '{url}' AS tx
                     MATCH (t:Transaction {{txHash: toLower(tx.txHash)}}), 
@@ -163,7 +164,7 @@ class Queries(Cypher):
     @count_query_logging
     def link_ens_alias(self, urls):
         count = 0
-        for url in urls:
+        for url in tqdm(urls):
             query = f"""
                     LOAD CSV WITH HEADERS FROM '{url}' AS ens
                     MATCH (e:Ens {{editionId: ens.tokenId}}), 
@@ -178,7 +179,7 @@ class Queries(Cypher):
     @count_query_logging
     def create_or_merge_partitions(self, urls, label):
         count = 0
-        for url in urls:
+        for url in tqdm(urls):
             query = f"""
                 LOAD CSV WITH HEADERS FROM '{url}' AS partitions
                 MERGE(partition:Partition:{label} {{partitionTarget: partitions.partitionTarget, partition: partitions.partition}})
@@ -207,7 +208,7 @@ class Queries(Cypher):
     @count_query_logging
     def link_partitions(self, urls, partitionTarget, targetField, label):
         count = 0
-        for url in urls:
+        for url in tqdm(urls):
             query = f"""
                 LOAD CSV WITH HEADERS FROM '{url}' AS partitions
                 MATCH (target:{partitionTarget} {{ {targetField}: partitions.targetField }}), (partition:Partition:{label} {{partitionTarget: "{partitionTarget}", partition: partitions.partition }})
@@ -230,7 +231,7 @@ class Queries(Cypher):
     def create_or_merge_tokens(self, urls, token_type):
         "CSV Must have the columns: [contractAddress, symbol, decimal]"
         count = 0
-        for url in urls:
+        for url in tqdm(urls):
             query = f"""
                 LOAD CSV WITH HEADERS FROM '{url}' AS tokens
                 MERGE(token:Token {{address: toLower(tokens.contractAddress)}})

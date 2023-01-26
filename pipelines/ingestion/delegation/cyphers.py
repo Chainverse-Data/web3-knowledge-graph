@@ -1,3 +1,4 @@
+from tqdm import tqdm
 from ...helpers import Cypher
 from ...helpers import Constraints, Indexes, Queries
 from ...helpers import count_query_logging
@@ -9,7 +10,7 @@ class DelegationCyphers(Cypher):
 
     def create_or_merge_delegations(self, urls):
         count = 0
-        for url in urls:
+        for url in tqdm(urls):
             query = f"""
             LOAD CSV WITH HEADERS FROM '{url}' AS delegations
             MERGE (delegation:Delegation {{protocol: delegations.protocol}})
@@ -30,7 +31,7 @@ class DelegationCyphers(Cypher):
     @count_query_logging
     def create_or_merge_entities(self, urls):
         count = 0
-        for url in urls:
+        for url in tqdm(urls):
             query = f"""
                 LOAD CSV WITH HEADERS FROM '{url}' AS orgs
                     MERGE (org:Entity {{name: orgs.protocol}})
@@ -48,7 +49,7 @@ class DelegationCyphers(Cypher):
     @count_query_logging
     def link_or_merge_strategies(self, urls):
         count = 0
-        for url in urls:
+        for url in tqdm(urls):
             query = f"""
                 LOAD CSV WITH HEADERS FROM '{url}' AS strategies
                     MATCH (entity:Entity {{name: strategies.protocol}})
@@ -70,7 +71,7 @@ class DelegationCyphers(Cypher):
     @count_query_logging
     def link_or_merge_delegation_to_token(self, urls):
         count = 0
-        for url in urls:
+        for url in tqdm(urls):
             query = f"""
                 LOAD CSV WITH HEADERS FROM '{url}' AS delegations
                     MATCH (token:Token {{address: delegations.contractAddress}}), (delegation:Delegation {{protocol: delegations.protocol}})
@@ -89,7 +90,7 @@ class DelegationCyphers(Cypher):
     @count_query_logging
     def link_or_merge_wallet_delegators(self, urls):
         count = 0
-        for url in urls:
+        for url in tqdm(urls):
             query = f"""
                 LOAD CSV WITH HEADERS FROM '{url}' AS delegations
                     MATCH (delegation:Delegation {{protocol: delegations.protocol}}), (wallet:Wallet {{address: delegations.address}})
@@ -108,7 +109,7 @@ class DelegationCyphers(Cypher):
     @count_query_logging
     def link_or_merge_wallet_delegates(self, urls):
         count = 0
-        for url in urls:
+        for url in tqdm(urls):
             query = f"""
                 LOAD CSV WITH HEADERS FROM '{url}' AS delegations
                     MATCH (delegation:Delegation {{protocol: delegations.protocol}}), (wallet:Wallet {{address: delegations.address}})
@@ -134,7 +135,7 @@ class DelegationCyphers(Cypher):
     @count_query_logging
     def link_or_merge_delegation_to_entity(self, urls):
         count = 0
-        for url in urls:
+        for url in tqdm(urls):
             query = f"""
                 LOAD CSV WITH HEADERS FROM '{url}' AS strategies
                     MATCH (entity:Entity {{name: strategies.protocol}}), (delegation:Delegation {{protocol: strategies.protocol}})
@@ -153,7 +154,7 @@ class DelegationCyphers(Cypher):
     @count_query_logging
     def link_or_merge_wallets_delegations(self, urls):
         count = 0
-        for url in urls:
+        for url in tqdm(urls):
             query = f"""
                 LOAD CSV WITH HEADERS FROM '{url}' AS delegations
                     MATCH (delegator:Wallet {{address: delegations.delegator}}), (delegate:Wallet {{address: delegations.delegate}})
@@ -177,7 +178,7 @@ class DelegationCyphers(Cypher):
     @count_query_logging
     def detach_wallets_delegations(self, urls):
         count = 0
-        for url in urls:
+        for url in tqdm(urls):
             query = f"""
                 LOAD CSV WITH HEADERS FROM '{url}' AS delegations
                     MATCH (delegator:Wallet {{address: delegations.delegator}}), (delegate:Wallet {{address: delegations.delegate}}), (delegator)-[edge:DELEGATES_TO {{protocol: delegations.protocol}}]->(delegate)
@@ -190,7 +191,7 @@ class DelegationCyphers(Cypher):
     @count_query_logging
     def detach_wallets_delegators(self, urls):
         count = 0
-        for url in urls:
+        for url in tqdm(urls):
             query = f"""
                 LOAD CSV WITH HEADERS FROM '{url}' AS delegations
                     MATCH (delegator:Wallet {{address: delegations.delegator}}),  (delegation:Delegation {{protocol: delegations.protocol}}), (delegator)-[edge:IS_DELEGATING {{protocol: delegations.protocol}}]->(delegation)
@@ -203,7 +204,7 @@ class DelegationCyphers(Cypher):
     @count_query_logging
     def detach_wallets_delegates(self, urls):
         count = 0
-        for url in urls:
+        for url in tqdm(urls):
             query = f"""
                 LOAD CSV WITH HEADERS FROM '{url}' AS delegations
                     MATCH (delegation:Delegation {{protocol: delegations.protocol}}), (delegate:Wallet {{address: delegations.delegate}}), (delegator)-[edge:IS_DELEGATE {{protocol: delegations.protocol}}]->(delegation)

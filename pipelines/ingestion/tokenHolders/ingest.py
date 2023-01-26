@@ -14,10 +14,17 @@ class TokenHoldersIngestor(Ingestor):
         }
         for tokenAddress in self.scraper_data["tokens"]:
             token = self.scraper_data["tokens"][tokenAddress]
+            symbol = token["symbol"]
+            decimal = token["decimal"]
+            if type(symbol) == str:
+                symbol.replace(",", "")
+            if type(decimal) == str:
+                decimal.replace(",", ".")
+
             tmp = {
                 "contractAddress": tokenAddress, 
-                "symbol": token["symbol"],
-                "decimal": token["decimal"]
+                "symbol": symbol,
+                "decimal": decimal
             }
             data[token["contractType"].upper()].append(tmp)
         return data
@@ -25,15 +32,14 @@ class TokenHoldersIngestor(Ingestor):
     def ingest_tokens(self):
         token_data = self.prepare_token_data()
         for tokenType in token_data:
-            urls = self.s3.save_json_as_csv(
-                token_data[tokenType], self.bucket_name, f"ingestor_tokens_{tokenType}_{self.asOf}")
+            urls = self.s3.save_json_as_csv(token_data[tokenType], self.bucket_name, f"ingestor_tokens_{tokenType}_{self.asOf}")
             self.cyphers.create_or_merge_tokens(urls, tokenType)
 
     def prepare_holdings_data(self):
         data = []
         for wallet in self.scraper_data["balances"]:
             for balance in self.scraper_data["balances"][wallet]:
-                if "error" not in balance:
+                if type(balance) == dict and "error" not in balance:
                     contractAddress = balance["contractAddress"]
                     decimal = self.scraper_data["tokens"][contractAddress]["decimal"]
                     if type(decimal) == str and "0x" in decimal:
@@ -56,7 +62,7 @@ class TokenHoldersIngestor(Ingestor):
 
     def ingest_holdings(self):
         holding_data = self.prepare_holdings_data()
-        urls = self.s3.save_json_as_csv(holding_data, self.bucket_name, f"ingestor_holdings_{self.asOf}")
+        urls = self.s3.save_json_as_csv(holding_data, self.bucket_name, f"ingestor_holdings_{self.asOf}", max_lines=2000)
         self.cyphers.link_wallet_tokens(urls)
 
     def run(self):
