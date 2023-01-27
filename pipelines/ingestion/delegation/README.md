@@ -6,17 +6,19 @@ This ingestor will take care of data obtained by the Delegation scraper.
 
 Nodes:
 
-- Wallet:Delegation
-- Delegation:Transaction
+- Wallet
+- Delegation
 - Token:ERC20
 - Entity
 
 Edges:
 
-- Entity -[HAS_STRATEGY]-> Token:ERC20
-- Wallet -[DELEGATED]-> Delegation:Transaction
-- Delegation:Transaction -[DELEGATED_TO]-> Wallet
-- 
+- Entity -[HAS_STRATEGY] {delegation:true} -> Token:ERC20
+- Entity -[HAS_DELEGATION]-> Delegation
+- Delegation -[USE_TOKEN]-> Token:ERC20
+- Wallet -[IS_DELEGATE]-> Delegation
+- Wallet -[IS_DELEGATING]-> Delegation
+- Wallet -[DELEGATES_TO]-> Wallet 
 
 # Bucket
 

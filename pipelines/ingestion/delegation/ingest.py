@@ -121,15 +121,15 @@ class DelegationIngestor(Ingestor):
         logging.info(f"""Adding {len(data["delegationsNew"])} new_delegations...""")
         urls = self.s3.save_df_as_csv(data["delegationsNew"], self.bucket_name, f"ingestor_delegationNew_{self.asOf}", max_lines=2000)
         self.cyphers.link_or_merge_wallet_delegators(urls)
-        self.cyphers.link_or_merge_wallet_delegates(urls)
+        self.cyphers.link_or_merge_wallets_delegations(urls)
         
         logging.info(f"""Linking {len(data["delegates"])} Delegating wallets...""")
         urls = self.s3.save_df_as_csv(data["delegates"], self.bucket_name, f"ingestor_delegations_{self.asOf}", max_lines=2000)
-        self.cyphers.link_or_merge_wallets_delegations(urls)
+        self.cyphers.link_or_merge_wallet_delegates(urls)
 
     def run(self):
         delegationData = self.prepare_delegation_data()
-        self.ingest_wallets_entities_tokens(delegationData)
+        #self.ingest_wallets_entities_tokens(delegationData)
         self.ingest_delegations(delegationData)
         self.save_metadata()
 

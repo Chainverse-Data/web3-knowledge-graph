@@ -83,7 +83,7 @@ class MirrorCyphers(Cypher):
                         nft.supply = NFTs.supply,
                         nft.symbol = NFTs.symbol,
                         nft.ingestedBy = "{self.UPDATED_ID}"
-                    return count(nft)    
+                    return count(nft)
             """
             count += self.query(query)[0].value()
         return count
@@ -94,7 +94,8 @@ class MirrorCyphers(Cypher):
         for url in tqdm(urls):
             query = f"""
                         LOAD CSV WITH HEADERS FROM '{url}' AS articles_authors
-                        MATCH (article:Mirror:MirrorArticle:Article {{originalContentDigest: NFTs_articles.original_content_digest}}), (wallet:Wallet {{address: toLower(articles_authors.author)}})
+                        MATCH (article:Mirror:MirrorArticle:Article {{originalContentDigest: NFTs_articles.original_content_digest}})
+                        MATCH (wallet:Wallet {{address: toLower(articles_authors.author)}})
                         WITH article, wallet
                         MERGE (wallet)-[edge:IS_AUTHOR]->(article)
                         ON CREATE set edge.uuid = apoc.create.uuid(),
@@ -114,7 +115,8 @@ class MirrorCyphers(Cypher):
         for url in tqdm(urls):
             query = f"""
                         LOAD CSV WITH HEADERS FROM '{url}' AS NFTs_articles
-                        MATCH (article:Mirror:MirrorArticle:Article {{originalContentDigest: NFTs_articles.original_content_digest}}), (nft:Mirror:ERC721 {{address: toLower(NFTs_articles.address)}})
+                        MATCH (article:Mirror:MirrorArticle:Article {{originalContentDigest: NFTs_articles.original_content_digest}})
+                        MATCH (nft:Mirror:ERC721 {{address: toLower(NFTs_articles.address)}})
                         WITH article, nft
                         MERGE (article)-[edge:HAS_NFT]->(nft)
                         ON CREATE set edge.uuid = apoc.create.uuid(),
@@ -134,7 +136,8 @@ class MirrorCyphers(Cypher):
         for url in tqdm(urls):
             query = f"""
                         LOAD CSV WITH HEADERS FROM '{url}' AS NFTs_articles
-                        MATCH (wallet:Wallet {{address: NFTs_articles.owner}}), (nft:Mirror:ERC721 {{address: toLower(NFTs_articles.address)}})
+                        MATCH (wallet:Wallet {{address: toLower(NFTs_articles.owner)}})
+                        MATCH (nft:Mirror:ERC721 {{address: toLower(NFTs_articles.address)}})
                         WITH wallet, nft
                         MERGE (wallet)-[edge:IS_OWNER]->(nft)
                         ON CREATE set edge.uuid = apoc.create.uuid(),
@@ -154,7 +157,8 @@ class MirrorCyphers(Cypher):
         for url in tqdm(urls):
             query = f"""
                         LOAD CSV WITH HEADERS FROM '{url}' AS NFTs_articles
-                        MATCH (wallet:Wallet {{address: NFTs_articles.funding_recipient}}), (nft:Mirror:ERC721 {{address: toLower(NFTs_articles.address)}})
+                        MATCH (wallet:Wallet {{address: toLower(NFTs_articles.funding_recipient)}})
+                        MATCH (nft:Mirror:ERC721 {{address: toLower(NFTs_articles.address)}})
                         WITH wallet, nft
                         MERGE (wallet)-[edge:IS_RECEIPIENT]->(nft)
                         ON CREATE set edge.uuid = apoc.create.uuid(),
