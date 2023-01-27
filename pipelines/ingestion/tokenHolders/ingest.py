@@ -48,6 +48,7 @@ class TokenHoldersIngestor(Ingestor):
         logging.info("Ingesting token data")
         token_data = self.prepare_token_data()
         for tokenType in token_data:
+            logging.info(f"Ingesting : {tokenType}")
             urls = self.s3.save_df_as_csv(token_data[tokenType], self.bucket_name, f"ingestor_tokens_{tokenType}_{self.asOf}", max_lines=5000)
             self.cyphers.create_or_merge_tokens(urls, tokenType)
 
