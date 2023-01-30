@@ -11,7 +11,7 @@ gql_log.setLevel(logging.WARNING)
 
 
 class LockScraper(Scraper):
-    def __init__(self, bucket_name="unlock-demo", allow_override=True):
+    def __init__(self, bucket_name="unlock", allow_override=True):
         super().__init__(bucket_name, allow_override=allow_override)
 
         ## graph urls
@@ -150,7 +150,6 @@ class LockScraper(Scraper):
         cutoff_block = self.metadata.get(f"{network}_cutoff_block", 0)
 
         while True:
-            print("x")
             if skip > 5000:
                 skip = 0
                 cutoff_block = self.data["locks"][-1]["creationBlock"]

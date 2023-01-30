@@ -14,77 +14,60 @@ class UnlockCyphers(Cypher):
 
     ## should add something to make sure that the number of wallets created / merged matches number of unique
     ## wallets in the file
-    def create_wallets(self, urls):
-        count = 0
-        for url in urls:
-            walletsQuery = f"""
-            LOAD CSV WITH HEADERS FROM '{url}' as wallets
-            MERGE (w:Wallet {{address: wallets.address}})
-            ON MATCH SET
-                w:UnlockTestStage,
-                w.lastUpdateDt = datetime(apoc.date.toISO8601(toInteger(wallets.occurDt), 'ms'))
-            ON CREATE SET
-                w.uuid = apoc.create.uuid(),
-                w:UnlockTestStage,
-                w.lastUpdateDt = datetime(apoc.date.toISO8601(toInteger(wallets.occurDt), 'ms')),
-                w.createdDt = datetime(apoc.date.toISO8601(toInteger(wallets.occurDt), 'ms'))
-            RETURN COUNT(DISTINCT(w))
-                """
-            count += self.query(walletsQuery)[0].value()
-            logging.info(f"Nice I created {count} wallets.")
+    def create_unlock_wallets(self, urls):
+        count = self.queries.create_wallets(urls)
         return count 
     
     def create_locks(self, urls):
         count = 0
         for url in urls:
             lockMetadataQuery = f"""
-            LOAD CSV WITH HEADERS FROM '{url}' as locks
-            MERGE (t:Token {{address: locks.address}})  // this needs to change lol
-            ON MATCH SET
-                t:Nft,
-                t:Lock,
-                t:UnlockTestStage,
-                t.lastUpdateDt = datetime(apoc.date.toISO8601(toInteger(locks.occurDt), 'ms')),
-                t.price = locks.price
-            ON CREATE SET
-                t:Nft,
-                t:Lock,
-                t.uuid = apoc.create.uuid(),
-                t:UnlockTestStage,
-                t.lastUpdateDt = datetime(apoc.date.toISO8601(toInteger(locks.occurDt), 'ms')),
-                t.createdDt = datetime(apoc.date.toISO8601(toInteger(locks.occurDt), 'ms'))
-            RETURN
-                COUNT(DISTINCT(t))
+                                LOAD CSV WITH HEADERS FROM '{url}' as locks
+                                MERGE (t:Token {{address: locks.address}})
+                                ON MATCH SET
+                                    t:Nft,
+                                    t:Lock,
+                                    t:UnlockTestStage,
+                                    t.lastUpdateDt = datetime(apoc.date.toISO8601(toInteger(locks.occurDt), 'ms')),
+                                    t.price = locks.price
+                                ON CREATE SET
+                                    t:Nft,
+                                    t:Lock,
+                                    t.uuid = apoc.create.uuid(),
+                                    t:UnlockTestStage,
+                                    t.lastUpdateDt = datetime(apoc.date.toISO8601(toInteger(locks.occurDt), 'ms')),
+                                    t.createdDt = datetime(apoc.date.toISO8601(toInteger(locks.occurDt), 'ms'))
+                                RETURN
+                                    COUNT(DISTINCT(t))
                         """
             count += self.query(lockMetadataQuery)[0].value()
-            logging.info(f"Nice I created or modified {count} locks.")
         return count
     
     def create_keys(self, urls):
         count = 0
         for url in urls:
             keyMetadataQuery = f"""
-            LOAD CSV WITH HEADERS FROM '{url}' as keys
-            MERGE (t:Token:Nft {{tokenId: keys.keyId, tokenContract: keys.lockAddress}})
-            ON MATCH SET
-                t:UnlockTestStage,
-                t:Key,
-                t:Instance, // should discuss with Xqua w/r/t what this means for NFT ontology
-                t.lastUpdateDt = datetime(apoc.date.toISO8601(toInteger(keys.occurDt), 'ms')),
-                t.expiration = keys.expiration,
-                t.tokenUri = keys.tokenURI,
-                t.tokenContract = keys.lockAddress
-            ON CREATE SET
-                t:UnlockTestStage,
-                t:Key,
-                t.uuid = apoc.create.uuid(),
-                t.lastUpdateDt = datetime(apoc.date.toISO8601(toInteger(keys.occurDt), 'ms')),
-                t.createdDt = datetime(apoc.date.toISO8601(toInteger(keys.occurDt), 'ms')),
-                t.tokenUri = keys.tokenURI,
-                t.tokenContract = keys.lockAddress,
-                t.expiration = keys.expiration
-            RETURN
-                COUNT(DISTINCT(t))
+                                LOAD CSV WITH HEADERS FROM '{url}' as keys
+                                MERGE (t:Token:Nft {{tokenId: keys.keyId, tokenContract: keys.lockAddress}})
+                                ON MATCH SET
+                                    t:UnlockTestStage,
+                                    t:Key,
+                                    t:Instance,
+                                    t.lastUpdateDt = datetime(apoc.date.toISO8601(toInteger(keys.occurDt), 'ms')),
+                                    t.expiration = keys.expiration,
+                                    t.tokenUri = keys.tokenURI,
+                                    t.tokenContract = keys.lockAddress
+                                ON CREATE SET
+                                    t:UnlockTestStage,
+                                    t:Key,
+                                    t.uuid = apoc.create.uuid(),
+                                    t.lastUpdateDt = datetime(apoc.date.toISO8601(toInteger(keys.occurDt), 'ms')),
+                                    t.createdDt = datetime(apoc.date.toISO8601(toInteger(keys.occurDt), 'ms')),
+                                    t.tokenUri = keys.tokenURI,
+                                    t.tokenContract = keys.lockAddress,
+                                    t.expiration = keys.expiration
+                                RETURN
+                                    COUNT(DISTINCT(t))
                         """
             count += self.query(keyMetadataQuery)[0].value()
             logging.info(f"Nice I created or modified {count} keys.")
