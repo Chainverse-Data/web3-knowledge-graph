@@ -23,6 +23,13 @@ class MirrorIngestor(Ingestor):
             self.scraper_data["articles"][i]["body"] = self.cyphers.sanitize_text(self.scraper_data["articles"][i]["body"])
             self.scraper_data["articles"][i]["title"] = self.cyphers.sanitize_text(self.scraper_data["articles"][i]["title"])
 
+    def prepare_NFT_data(self):
+        nft_data = []
+        for nft in self.scraper_data["NFTs"]:
+            if nft["address"] != "0x0":
+                nft_data.append(nft)
+        self.scraper_data["NFTs"] = nft_data
+
     def ingest_articles(self):
         self.prepare_articles()
         urls = self.s3.save_json_as_csv(self.scraper_data["articles"], self.bucket_name, f"ingestor_articles_{self.asOf}", max_lines=1000)
@@ -38,11 +45,13 @@ class MirrorIngestor(Ingestor):
         self.cyphers.link_twitter_to_article(urls)
 
     def ingest_nfts(self):
-        owners = [{"address": nft["owner"]} for nft in self.scraper_data["NFTs"]]
+        self.prepare_NFT_data()
+        
+        owners = [{"address": nft["owner"]} for nft in self.scraper_data["NFTs"] if nft["owner"] != "0x0"]
         urls = self.s3.save_json_as_csv(owners, self.bucket_name, f"ingestor_nfts_owners_{self.asOf}")
         self.cyphers.queries.create_wallets(urls)
 
-        receipients = [{"address": nft["funding_recipient"]} for nft in self.scraper_data["NFTs"]]
+        receipients = [{"address": nft["funding_recipient"]} for nft in self.scraper_data["NFTs"]  if nft["funding_recipient"] != "0x0"]
         urls = self.s3.save_json_as_csv(receipients, self.bucket_name, f"ingestor_nfts_receipients_{self.asOf}")
         self.cyphers.queries.create_wallets(urls)
 
