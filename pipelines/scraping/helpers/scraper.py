@@ -138,4 +138,4 @@ class Scraper:
                 logging.info(f"Saving chunk {i}...")
                 self.s3.save_json(self.bucket_name, filename, data_chunk)
         else:
-            self.s3.save_json(self.bucket_name, self.data_filename + ".json", self.data)
+            self.s3.save_json(self.bucket_name, self.data_filename + f"_{chunk_prefix}.json", self.data)
