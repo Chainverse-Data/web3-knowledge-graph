@@ -50,8 +50,8 @@ class S3Utils:
 
         logging.info("Uploading data...")
         urls = []
-        for chunk, chunk_id in tqdm(zip(chunks, range(len(chunks)))):
-            chunk.to_csv(f"s3://{bucket_name}/{file_name}--{chunk_id}.csv", index=False)
+        for chunk, chunk_id in zip(chunks, range(len(chunks))):
+            chunk.to_csv(f"s3://{bucket_name}/{file_name}--{chunk_id}.csv", index=False, escapechar='\\')
             self.s3_resource.ObjectAcl(bucket_name, f"{file_name}--{chunk_id}.csv").put(ACL=ACL)
             location = self.s3_client.get_bucket_location(Bucket=bucket_name)["LocationConstraint"]
             urls.append("https://s3-%s.amazonaws.com/%s/%s" % (location, bucket_name, f"{file_name}--{chunk_id}.csv"))

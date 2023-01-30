@@ -30,10 +30,17 @@ class TokenHoldersIngestor(Ingestor):
         }
         for tokenAddress in self.scraper_data["tokens"]:
             token = self.scraper_data["tokens"][tokenAddress]
+            symbol = token["symbol"]
+            decimal = token["decimal"]
+            if type(symbol) == str:
+                symbol.replace(",", "")
+            if type(decimal) == str:
+                decimal.replace(",", ".")
+
             tmp = {
                 "contractAddress": tokenAddress, 
-                "symbol": token["symbol"],
-                "decimal": token["decimal"]
+                "symbol": symbol,
+                "decimal": decimal
             }
             data[token["contractType"].upper()].append(tmp)
         

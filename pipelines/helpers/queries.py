@@ -1,3 +1,4 @@
+import time
 from tqdm import tqdm
 from .cypher import Cypher
 from .decorators import count_query_logging
@@ -33,6 +34,7 @@ class Queries(Cypher):
                     return count(wallet)
             """
             count += self.query(query)[0].value()
+            time.sleep(1)
         return count
 
     # @count_query_logging
