@@ -243,7 +243,7 @@ class Queries(Cypher):
                     token.ingestedBy = "{self.CREATED_ID}",
                     token:{token_type}
                 ON MATCH set token.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
-                    token.ingestedBy = "{self.UPDATED_ID}"
+                    token.ingestedBy = "{self.UPDATED_ID}",
                     token:{token_type}
                 return count(token)
             """

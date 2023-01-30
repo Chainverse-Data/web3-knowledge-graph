@@ -112,7 +112,7 @@ class Scraper:
         logging.info("Saving the metadata to S3 ...")
         self.s3.save_json(self.bucket_name, self.metadata_filename, self.metadata)
 
-    def save_data(self):
+    def save_data(self, chunk_prefix=""):
         "Saves the current data to S3. This will take care of chuking the data to less than 5Gb for AWS S3 requierements."
         logging.info("Saving the results to S3 ...")
         logging.info("Measuring data size...")
@@ -134,7 +134,7 @@ class Scraper:
                             data_chunk[key][chunk_key] = self.data[key][chunk_key]
                     else:
                         data_chunk[key] = self.data[key][i*len_data[key]:min((i+1)*len_data[key], len(self.data[key]))]
-                filename = self.data_filename + f"_{i}.json"
+                filename = self.data_filename + f"_{chunk_prefix}{i}.json"
                 logging.info(f"Saving chunk {i}...")
                 self.s3.save_json(self.bucket_name, filename, data_chunk)
         else:

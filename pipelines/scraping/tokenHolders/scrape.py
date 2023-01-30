@@ -67,30 +67,28 @@ class TokenHolderScraper(Scraper):
         balances = self.get_balances(wallet, self.data["assets"][wallet])
         return (wallet, balances)
 
-    def get_transactions_assets_balances(self):
+    def get_transactions_assets_balances(self, wallets):
         logging.info("Getting all transactions assets and balances")
-        # self.data["transactions"] = {}
         self.data["balances"] = {}
         self.data["assets"] = {}
         self.data["tokens"] = {}
         logging.info("Multithreaded scraping launching!")
-        with tqdm_joblib(tqdm(desc="Getting transactions data", total=len(self.wallet_list))):
-            data = joblib.Parallel(n_jobs=self.max_thread, backend="threading")(joblib.delayed(self.job_get_transactions)(wallet) for wallet in self.wallet_list)
+        with tqdm_joblib(tqdm(desc="Getting transactions data", total=len(wallets))):
+            data = joblib.Parallel(n_jobs=self.max_thread, backend="threading")(joblib.delayed(self.job_get_transactions)(wallet) for wallet in wallets)
         for item in tqdm(data):
             wallet, assets, tokens = item
             self.data["assets"][wallet] = assets
-            # self.data["transactions"][wallet] = transactions
             for token in tokens:
                 if token not in self.data["tokens"]:
                     self.data["tokens"][token] = tokens[token]
         
-        with tqdm_joblib(tqdm(desc="Getting balances data", total=len(self.wallet_list))):
-            data = joblib.Parallel(n_jobs=self.max_thread, backend="threading")(joblib.delayed(self.job_get_balances)(wallet) for wallet in self.wallet_list)
+        with tqdm_joblib(tqdm(desc="Getting balances data", total=len(wallets))):
+            data = joblib.Parallel(n_jobs=self.max_thread, backend="threading")(joblib.delayed(self.job_get_balances)(wallet) for wallet in wallets)
         for item in tqdm(data):
             wallet, balances = item
             self.data["balances"][wallet] = balances
 
-        for wallet in tqdm(self.wallet_list):
+        for wallet in tqdm(wallets):
             self.wallets_last_block[wallet] = self.current_block
 
     def alchemy_API_call_iterate(self, payload, key, pagekey=1, counter=0, results=[]):
@@ -179,14 +177,18 @@ class TokenHolderScraper(Scraper):
             return token_balances
         except:
             logging.error(f"There has been an error getting information about the address: {wallet}")
-            return {"wallet": [], "tokenList": []}
+            return []
 
     def run(self):
         self.get_all_wallets_in_db()
-        self.get_transactions_assets_balances()
-        self.save_data()
-        self.metadata["wallets_last_block"] = self.wallets_last_block
-        self.save_metadata()
+        chunk_id = 0
+        chunk_size = 100000
+        for i in range(0, len(self.wallet_list), chunk_size):
+            self.get_transactions_assets_balances(self.wallet_list[i:i+chunk_size])
+            self.save_data(chunk_prefix=chunk_id)
+            self.metadata["wallets_last_block"] = self.wallets_last_block
+            self.save_metadata()
+            chunk_id += 1
 
 if __name__ == "__main__":
     scraper = TokenHolderScraper()
