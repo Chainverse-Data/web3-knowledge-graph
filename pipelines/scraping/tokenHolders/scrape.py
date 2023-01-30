@@ -186,9 +186,11 @@ class TokenHolderScraper(Scraper):
         for i in range(0, len(self.wallet_list), chunk_size):
             self.get_transactions_assets_balances(self.wallet_list[i:i+chunk_size])
             self.save_data(chunk_prefix=chunk_id)
+            self.data = {}
             self.metadata["wallets_last_block"] = self.wallets_last_block
             self.save_metadata()
             chunk_id += 1
+
 
 if __name__ == "__main__":
     scraper = TokenHolderScraper()
