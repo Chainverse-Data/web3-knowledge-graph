@@ -46,6 +46,7 @@ class MultisigScraper(Scraper):
             req = 0
             max_req = 5
         while len(wallets) > 0 or len(transactions) > 0:
+            print(skip)
             if DEBUG:
                 req += 1
                 if req > max_req:

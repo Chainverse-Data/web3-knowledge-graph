@@ -11,7 +11,7 @@ Nodes:
 - Wallet
 
 Edges:
-- Wallet -[IS_AUTHOR]-> Mirror:Article
+- Wallet -[AUTHOR]-> Mirror:Article
 - Mirror:MirrorArticle:Article -[HAS_NFT]-> Mirror:Token:ERC721
 - Mirror:MirrorArticle:Article -[REFERENCES]-> Twitter
 - Wallet -[IS_OWNER]-> Mirror:Token:ERC721

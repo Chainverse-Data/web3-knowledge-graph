@@ -94,10 +94,10 @@ class MirrorCyphers(Cypher):
         for url in tqdm(urls):
             query = f"""
                         LOAD CSV WITH HEADERS FROM '{url}' AS articles_authors
-                        MATCH (article:Mirror:MirrorArticle:Article {{originalContentDigest: NFTs_articles.original_content_digest}})
+                        MATCH (article:Mirror:MirrorArticle:Article {{originalContentDigest: articles_authors.original_content_digest}})
                         MATCH (wallet:Wallet {{address: toLower(articles_authors.author)}})
                         WITH article, wallet
-                        MERGE (wallet)-[edge:IS_AUTHOR]->(article)
+                        MERGE (wallet)-[edge:AUTHOR]->(article)
                         ON CREATE set edge.uuid = apoc.create.uuid(),
                             edge.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                             edge.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),

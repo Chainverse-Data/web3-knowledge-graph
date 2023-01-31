@@ -37,20 +37,6 @@ class Queries(Cypher):
             time.sleep(1)
         return count
 
-    # @count_query_logging
-    # def create_or_merge_tokens(self, urls):
-    #     count = 0
-    #     for url in tqdm(urls):
-    #         query = f"""
-    #                 LOAD CSV WITH HEADERS FROM '{url}' AS tokens
-    #                 MERGE(t:Token {{address: toLower(tokens.address)}})
-    #                 ON CREATE set t = tokens,
-    #                     t.uuid = apoc.create.uuid()
-    #                 return count(t)
-    #         """
-    #         count += self.query(query)[0].value()
-    #     return count
-
     @count_query_logging
     def create_or_merge_twitter(self, urls):
         count = 0

@@ -4,6 +4,8 @@ This repo has scripts for scraping various data sources and ingesting this data 
 
 The code is organized into four main python modules: **ingestion**, **scraping**, **analytics**, **post-processing**. There are scrict design guidelines to allow for easy maintenance and expandability.
 
+**If you need a .env example ask Jordan or Leo!**
+
 ## Design strategy
 The code stack follows a python module approach such that one can call the following: `python3 -m pipelines.[module_name].[service_name].[action]`. For example, to scrape GitCoin `python3 -m pipelines.scraping.gitcoin.scrape`.
 
@@ -90,8 +92,9 @@ class Scraper:
         #Access the S3 bucket to read the metadata and returns a dictionary that corresponds to the saved JSON object. This is called automatically.
         ...
 
-    def save_data():
+    def save_data(self, chunk_prefix=""):
         # This function allows to generate the calls to save the scraped data to amazon S3. This exports the self.data variable as a JSON file to S3.
+        # Chunk_Prefix allows to add a number to the data file for partial saving during the scraping.
         ...
     
     def save_metadata(self):
@@ -326,7 +329,6 @@ class ExampleCyphers(Cypher):
 - [GitCoin](/ingestion/gitcoin/README.md): `ingestion/gitcoin`
 
 ### To be cleaned
-- Miror.xyz: `ingestion/miror`
 - Snapshot: `ingestion/snapshot`
 - DAOHaus: `ingestion/daohaus` 
 - Twitter: `ingestion/twitter`
@@ -338,9 +340,3 @@ class ExampleCyphers(Cypher):
 
 # Contribute
 To contribute a new service, clone the main branch, then create a new branch named after the service or analysis you are targetting. Create the scraper, ingestor, analysis or post processing scripts, then create a Pull request for code-review.
-
-# TODO
-- [ ] Remove the env.sample files
-- [ ] Convert the Mirror scraper to the scraper module architecture
-- [ ] Convert the Snapshot scraper to the scraper module architecture
-- [ ] Convert the Snapshot scraper to the scraper module architecture
