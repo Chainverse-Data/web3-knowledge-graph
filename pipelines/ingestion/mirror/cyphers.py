@@ -70,7 +70,7 @@ class MirrorCyphers(Cypher):
         for url in tqdm(urls):
             query = f"""
                     LOAD CSV WITH HEADERS FROM '{url}' AS NFTs
-                    MERGE (nft:Mirror:Token:ERC721 {{address: toLower(NFTs.address)}})
+                    MERGE (nft:Mirror:ERC721 {{address: toLower(NFTs.address)}})
                     ON CREATE set nft.uuid = apoc.create.uuid(),
                         nft.chainId = NFTs.chain_id,
                         nft.supply = NFTs.supply,
@@ -180,7 +180,8 @@ class MirrorCyphers(Cypher):
         for url in tqdm(urls):
             query = f"""
                         LOAD CSV WITH HEADERS FROM '{url}' AS twitter_articles
-                        MATCH (article:Mirror:MirrorArticle:Article {{originalContentDigest: twitter_articles.original_content_digest}}), (twitter:Twitter:Account {{handle: toLower(twitter_articles.twitter_handle)}})
+                        MATCH (article:Mirror:MirrorArticle:Article {{originalContentDigest: twitter_articles.original_content_digest}})
+                        MATCH (twitter:Twitter:Account {{handle: toLower(twitter_articles.twitter_handle)}})
                         WITH article, twitter, twitter_articles
                         MERGE (article)-[edge:REFERENCES]->(twitter)
                         ON CREATE set edge.uuid = apoc.create.uuid(),
