@@ -129,7 +129,7 @@ class DelegationIngestor(Ingestor):
 
     def run(self):
         delegationData = self.prepare_delegation_data()
-        #self.ingest_wallets_entities_tokens(delegationData)
+        self.ingest_wallets_entities_tokens(delegationData)
         self.ingest_delegations(delegationData)
         self.save_metadata()
 
