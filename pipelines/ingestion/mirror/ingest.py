@@ -35,9 +35,10 @@ class MirrorIngestor(Ingestor):
         urls = self.s3.save_json_as_csv(self.scraper_data["articles"], self.bucket_name, f"ingestor_articles_{self.asOf}", max_lines=1000)
         self.cyphers.create_or_merge_articles(urls)
 
-        authors = [{"address" : article["author"]} for article in self.scraper_data["articles"]]
+        authors = [{"address" : article["author"], "original_content_digest": article["original_content_digest"]} for article in self.scraper_data["articles"]]
         urls = self.s3.save_json_as_csv(authors, self.bucket_name, f"ingestor_articles_authors_{self.asOf}")
         self.cyphers.queries.create_wallets(urls)
+        self.cyphers.link_authors_to_articles(urls)
 
     def ingest_twitter(self):
         urls = self.s3.save_json_as_csv(self.scraper_data["twitter_accounts"], self.bucket_name, f"ingestor_twitter_{self.asOf}")

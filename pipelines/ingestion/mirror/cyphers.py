@@ -95,7 +95,7 @@ class MirrorCyphers(Cypher):
             query = f"""
                         LOAD CSV WITH HEADERS FROM '{url}' AS articles_authors
                         MATCH (article:Mirror:MirrorArticle:Article {{originalContentDigest: articles_authors.original_content_digest}})
-                        MATCH (wallet:Wallet {{address: toLower(articles_authors.author)}})
+                        MATCH (wallet:Wallet {{address: toLower(articles_authors.address)}})
                         WITH article, wallet
                         MERGE (wallet)-[edge:AUTHOR]->(article)
                         ON CREATE set edge.uuid = apoc.create.uuid(),
