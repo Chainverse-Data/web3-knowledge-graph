@@ -10,6 +10,17 @@ class TwitterFollowerCyphers(Cypher):
         self.queries = Queries()
 
     @get_query_logging
+    def get_high_rep_handles(self):
+        query = """
+                    match (w:Wallet)-[r:HAS_ALIAS]-(a:Alias)-[:HAS_ALIAS]-(t:Twitter)
+                    optional match (w)-[:_HAS_CONTEXT]->(context:_Context)
+                    with t, count(distinct(context)) as reputation
+                    return distinct t.userId, t.handle, reputation order by reputation desc
+                """
+        results = self.query(query)
+        return results
+
+    @get_query_logging
     def get_wallet_alias_handles(self, limit=5000):
         results = []
         offset = 0

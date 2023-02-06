@@ -20,10 +20,13 @@ class TwitterFollowPostProcess(Processor):
         self.items = []
         self.bearer_tokens = os.environ.get("TWITTER_BEARER_TOKEN").split(",")
         self.i = 0
+        self.metadata["following"] = self.metadata.get("following", [])
+        self.metadata["followers"] = self.metadata.get("followers", [])
 
     def twitter_api_call(self, url, retries=0):
         if retries > 10:
             return {"data": []}
+        print(self.i)
         headers = {
             "Authorization": f"Bearer {self.bearer_tokens[self.i]}",
         }
@@ -33,6 +36,9 @@ class TwitterFollowPostProcess(Processor):
         )
         resp = json.loads(x.text)
         head = dict(x.headers)
+        if "data" not in resp and "title" not in resp:
+            return resp
+
         if "data" not in resp and resp["title"] == "Too Many Requests":
             end_time = head["x-rate-limit-reset"]
             epoch_time = int(time.time())
@@ -58,11 +64,22 @@ class TwitterFollowPostProcess(Processor):
             self.items.append({"id": entry.get("userId"), "handle": entry.get("handle")})
         logging.info(f"Found {len(self.items)} twitter handles")
 
+    def get_high_rep_handles(self):
+        results = self.cyphers.get_high_rep_handles()
+        for entry in results:
+            self.items.append(
+                {"id": entry.get("t.userId"), "handle": entry.get("t.handle"), "rep": entry.get("reputation")}
+            )
+
+        logging.info(f"Found {len(self.items)} twitter handles")
+
     def get_followers(self):
         logging.info("Getting followers")
         follower_url = "https://api.twitter.com/2/users/{}/followers?max_results=1000{}&user.fields=username"
         results = []
         for idx, entry in enumerate(self.items):
+            if entry.get("id") in self.metadata["followers"]:
+                continue
             items = self.handle_user(entry, follower_url)
             for follower in items:
                 results.append(
@@ -71,15 +88,22 @@ class TwitterFollowPostProcess(Processor):
                         "follower": follower.get("username").lower(),
                     }
                 )
-            if idx % 500: # Save every 500
-                self.s3.save_json_as_csv(results, self.bucket_name, "twitter_followers.csv")
+            if idx % 500:  # Save every 500
+                self.s3.save_full_json_as_csv(results, self.bucket_name, "twitter_followers")
+                self.save_metadata()
+            self.metadata["followers"].append(entry.get("id"))
         return results
 
     def get_following(self):
         logging.info("Getting following")
         following_url = "https://api.twitter.com/2/users/{}/following?max_results=1000{}&user.fields=username"
         results = []
+        if self.metadata.get("following", None) is not None:
+            results = self.s3.load_csv(self.bucket_name, "twitter_following.csv").to_dict("records")
+            logging.info(f"Loaded {len(results)} following from S3")
         for idx, entry in enumerate(self.items):
+            if entry.get("id") in self.metadata["following"]:
+                continue
             items = self.handle_user(entry, following_url)
             for following in items:
                 results.append(
@@ -88,19 +112,25 @@ class TwitterFollowPostProcess(Processor):
                         "follower": entry.get("handle").lower(),
                     }
                 )
+            self.metadata["following"].append(entry.get("id"))
             if idx % 500:
-                self.s3.save_json_as_csv(results, self.bucket_name, "twitter_following.csv")
+                self.s3.save_full_json_as_csv(results, self.bucket_name, "twitter_following")
+                self.save_metadata()
         return results
 
     def handle_user(self, user, url):
         token = None
         results = []
+        if user.get("id") is None:
+            return results
         while True:
             if token:
                 cur_url = url.format(user.get("id"), f"&pagination_token={token}")
             else:
                 cur_url = url.format(user.get("id"), "")
             resp = self.twitter_api_call(cur_url)
+            if "data" not in resp:
+                break
             results.extend(resp.get("data"))
             meta = resp.get("meta", {})
             if meta.get("next_token", None):
@@ -127,9 +157,9 @@ class TwitterFollowPostProcess(Processor):
         self.cyphers.merge_follow_relationships(follower_urls)
 
     def run(self):
-        self.get_twitter_handles()
-        followers = self.get_followers()
-        following = self.get_following()
+        self.get_high_rep_handles()
+        followers = self.get_following()
+        following = self.get_followers()
         self.handle_ingestion(followers + following)
 
 
