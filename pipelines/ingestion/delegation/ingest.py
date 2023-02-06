@@ -8,7 +8,7 @@ import logging
 class DelegationIngestor(Ingestor):
     def __init__(self):
         self.cyphers = DelegationCyphers()
-        super().__init__('gab')
+        super().__init__('delegation')
     
     def prepare_delegation_data(self):
         logging.info("Preparing data...")
