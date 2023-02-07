@@ -26,7 +26,7 @@ class Indexes(Cypher):
     def wallets(self):
         query = """CREATE INDEX UniqueWalletAddress IF NOT EXISTS FOR (n:Wallet) ON (n.address)"""
         self.query(query)
-    
+
     def tokens(self):
         query = """CREATE INDEX UniqueTokenAddress IF NOT EXISTS FOR (d:Token) ON (d.address)"""
         self.query(query)
@@ -70,7 +70,11 @@ class Indexes(Cypher):
     def daohaus_dao(self):
         query = """CREATE INDEX UniqueDaoID IF NOT EXISTS FOR (a:Dao) ON a.daohausId"""
         self.query(query)
-    
+
     def daohaus_proposal(self):
         query = """CREATE INDEX UniqueProposalID IF NOT EXISTS FOR (a:Proposal) ON a.proposalId"""
+        self.query(query)
+
+    def website(self):
+        query = """CREATE INDEX UniqueWebsiteID IF NOT EXISTS FOR (a:Website) ON a.url"""
         self.query(query)

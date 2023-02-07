@@ -1,11 +1,20 @@
 from datetime import datetime
-from ...helpers import Cypher
+from ...helpers import Cypher, Indexes, Queries, Constraints
 from ...helpers import count_query_logging, get_query_logging
 
 
 class WebsiteCyphers(Cypher):
     def __init__(self, database=None):
         super().__init__(database)
+        self.queries = Queries()
+
+    def create_indexes(self):
+        index = Indexes()
+        index.website()
+
+    def create_constraints(self):
+        constraint = Constraints()
+        constraint.website()
 
     @get_query_logging
     def get_all_twitter(self, interval=10000):

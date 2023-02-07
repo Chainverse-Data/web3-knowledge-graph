@@ -14,7 +14,7 @@ class Constraints(Cypher):
     def contracts(self):
         query = """CREATE CONSTRAINT UniqueAddress IF NOT EXISTS FOR (d:Contract) REQUIRE d.address IS UNIQUE"""
         self.query(query)
-    
+
     def twitter(self):
         query = """CREATE CONSTRAINT UniqueHandle IF NOT EXISTS FOR (d:Twitter) REQUIRE d.handle IS UNIQUE"""
         self.query(query)
@@ -67,8 +67,11 @@ class Constraints(Cypher):
     def daohaus_dao(self):
         query = """CREATE CONSTRAINT UniqueDaoID IF NOT EXISTS FOR (a:Dao) REQUIRE a.id IS UNIQUE"""
         self.query(query)
-    
+
     def daohaus_proposal(self):
         query = """CREATE CONSTRAINT UniqueProposalID IF NOT EXISTS FOR (a:Proposal) REQUIRE a.id IS UNIQUE"""
         self.query(query)
-    
+
+    def website(self):
+        query = """CREATE CONSTRAINT UniqueWebsite IF NOT EXISTS FOR (a:Website) REQUIRE a.url IS UNIQUE"""
+        self.query(query)
