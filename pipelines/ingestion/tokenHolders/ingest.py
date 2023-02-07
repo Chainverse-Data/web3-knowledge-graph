@@ -66,23 +66,24 @@ class TokenHoldersIngestor(Ingestor):
             for balance in self.scraper_data["balances"][wallet]:
                 if type(balance) == dict and "error" not in balance:
                     contractAddress = balance["contractAddress"]
-                    decimal = self.scraper_data["tokens"][contractAddress]["decimal"]
-                    if type(decimal) == str and "0x" in decimal:
-                        decimal = int(decimal, 16)
-                    elif type(decimal) == str:
-                        decimal = int(decimal)
-                    if balance["tokenBalance"] == "0x":
-                        balance["tokenBalance"] = "0x0"
-                    if self.scraper_data["tokens"][contractAddress]["contractType"] == "erc20" and decimal:
-                        numericBalance = int(balance["tokenBalance"], 16) / 10**decimal
-                    else:
-                        numericBalance = int(balance["tokenBalance"], 16)
-                    data.append({
-                        "address": wallet,
-                        "contractAddress": contractAddress,
-                        "balance": balance,
-                        "numericBalance": numericBalance
-                    })
+                    if contractAddress in self.scraper_data["tokens"]:
+                        decimal = self.scraper_data["tokens"][contractAddress]["decimal"]
+                        if type(decimal) == str and "0x" in decimal:
+                            decimal = int(decimal, 16)
+                        elif type(decimal) == str:
+                            decimal = int(decimal)
+                        if balance["tokenBalance"] == "0x":
+                            balance["tokenBalance"] = "0x0"
+                        if self.scraper_data["tokens"][contractAddress]["contractType"] == "erc20" and decimal:
+                            numericBalance = int(balance["tokenBalance"], 16) / 10**decimal
+                        else:
+                            numericBalance = int(balance["tokenBalance"], 16)
+                        data.append({
+                            "address": wallet,
+                            "contractAddress": contractAddress,
+                            "balance": balance,
+                            "numericBalance": numericBalance
+                        })
         data = pd.DataFrame.from_dict(data)
         return data
 
