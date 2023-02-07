@@ -3,6 +3,8 @@ from ..helpers import Ingestor
 from .cyphers import TokenHoldersCyphers
 import re
 import pandas as pd
+import sys
+sys.set_int_max_str_digits(0) # Required for very large numbers!
 
 class TokenHoldersIngestor(Ingestor):
     def __init__(self, bucket_name="token-holders"):
