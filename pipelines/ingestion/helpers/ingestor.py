@@ -3,6 +3,7 @@ import os
 import logging
 from datetime import datetime
 import re
+import sys
 
 from ...helpers.s3 import S3Utils
 
@@ -83,7 +84,6 @@ class Ingestor:
             urls.append("https://s3-%s.amazonaws.com/%s/%s" % (location, bucket_name, f"{file_name}--{chunk_id}.csv"))
         return urls
 
-
     def save_metadata(self):
         "Saves the current metadata to S3"
         self.metadata["last_date_ingested"] = f"{self.runtime.year}-{self.runtime.month}-{self.runtime.day}"
@@ -108,6 +108,9 @@ class Ingestor:
                     break
                 datafiles_to_keep.append(datafile)
                 dates_to_keep.append(date)
+        if len(dates_to_keep) == 0:
+            logging.error("No data file found that match the current date range")
+            sys.exit(1)
         if not self.end_date:
             self.end_date = max(dates_to_keep)
         logging.info("Datafiles for ingestion: {}".format(",".join(datafiles_to_keep)))
