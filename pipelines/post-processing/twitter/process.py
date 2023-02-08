@@ -16,20 +16,20 @@ class TwitterPostProcess(Processor):
         self.cyphers = TwitterCyphers()
         super().__init__("twitter")
         self.cutoff = datetime.now() - timedelta(days=20)
-        self.full_job = bool(os.environ.get("FULL_TWITTER_JOB", False))
+        self.full_job = int(os.environ.get("FULL_TWITTER_JOB", 0))
 
         self.batch_size = 100
         self.split_size = 10000
         self.bad_handles = set()
         self.headers = {
-            "Authorization": f"Bearer {os.environ.get('TWITTER_BEARER_TOKEN')}",
+            "Authorization": f"Bearer {os.environ.get('TWITTER_BEARER_TOKEN').split(',')[0]}",
         }
 
     def filter_batch(self, batch):
         rex = re.compile("^[A-Za-z0-9_]{1,15}$")
         new_batch = []
         for x in batch:
-            if not bool(rex.match(x)):
+            if not x or not bool(rex.match(x)):
                 self.bad_handles.add(x)
             else:
                 new_batch.append(x)
@@ -60,8 +60,10 @@ class TwitterPostProcess(Processor):
         return resp
 
     def get_twitter_nodes_data(self):
-        if self.full_job:
+        if self.full_job == 2:
             twitter_handles = self.cyphers.get_all_twitter()
+        elif self.full_job == 1:
+            twitter_handles = self.cyphers.get_all_empty_twitter()
         else:
             twitter_handles = self.cyphers.get_recent_empty_twitter(self.cutoff)
         logging.info(f"Found {len(twitter_handles)} twitter handles")
@@ -116,7 +118,6 @@ class TwitterPostProcess(Processor):
         self.cyphers.clean_twitter_nodes()
 
     def run(self):
-        self.clean_twitter_nodes()
         self.get_twitter_nodes_data()
 
 
