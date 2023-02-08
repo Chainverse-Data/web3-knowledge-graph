@@ -39,6 +39,28 @@ class TwitterCyphers(Cypher):
         return twitter
 
     @get_query_logging
+    def get_all_empty_twitter(self, interval=20000):
+        offset = 0
+        results = []
+
+        while True:
+            query = f"""
+                        MATCH (t:Twitter) 
+                        WHERE NOT t:Trash AND t.name is NULL
+                        return t.handle
+                        SKIP {offset} LIMIT {interval}
+                    """
+            x = self.query(query)
+            if not x:
+                break
+            results.extend(x)
+            offset += interval
+            break
+
+        twitter = [y.get("t.handle") for y in results]
+        return twitter
+
+    @get_query_logging
     def get_recent_empty_twitter(self, cutoff: datetime, interval=2000):
         offset = 0
         results = []
@@ -47,7 +69,7 @@ class TwitterCyphers(Cypher):
 
             query = f"""
                         MATCH (t:Twitter) 
-                        WHERE t.createdDt >= datetime({{year: {cutoff.year}, month: {cutoff.month}, day: {cutoff.day}}}) AND NOT EXISTS(t.name) AND NOT t:Trash
+                        WHERE t.lastUpdatedDt >= datetime({{year: {cutoff.year}, month: {cutoff.month}, day: {cutoff.day}}}) AND t.name is NULL AND NOT t:Trash
                         return t.handle
                         SKIP {offset} LIMIT {interval}
                     """
@@ -67,7 +89,8 @@ class TwitterCyphers(Cypher):
             query = f"""
                         LOAD CSV WITH HEADERS FROM '{url}' AS twitter
                         MATCH (t:Twitter {{handle: twitter.handle}})
-                        SET t.name = twitter.name,
+                        SET t:Account,
+                            t.name = twitter.name,
                             t.bio = twitter.bio,
                             t.followerCount = toInteger(twitter.followerCount),
                             t.verified = toBoolean(twitter.verified),
