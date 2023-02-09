@@ -7,6 +7,7 @@ import re
 import requests
 import json
 import time
+import tqdm
 
 
 class TwitterFollowPostProcess(Processor):
@@ -26,7 +27,6 @@ class TwitterFollowPostProcess(Processor):
     def twitter_api_call(self, url, retries=0):
         if retries > 10:
             return {"data": []}
-        print(self.i)
         headers = {
             "Authorization": f"Bearer {self.bearer_tokens[self.i]}",
         }
@@ -77,7 +77,11 @@ class TwitterFollowPostProcess(Processor):
         logging.info("Getting followers")
         follower_url = "https://api.twitter.com/2/users/{}/followers?max_results=1000{}&user.fields=username"
         results = []
-        for idx, entry in enumerate(self.items):
+        if self.metadata.get("followers", None):
+            results = self.s3.load_csv(self.bucket_name, "twitter_followers.csv").to_dict("records")
+            logging.info(f"Loaded {len(results)} followers from S3")
+
+        for idx, entry in tqdm.tqdm(enumerate(self.items), total=len(self.items), desc="Getting followers"):
             if entry.get("id") in self.metadata["followers"]:
                 continue
             items = self.handle_user(entry, follower_url)
@@ -88,7 +92,7 @@ class TwitterFollowPostProcess(Processor):
                         "follower": follower.get("username").lower(),
                     }
                 )
-            if idx % 500:  # Save every 500
+            if idx % 100:  # Save every 500
                 self.s3.save_full_json_as_csv(results, self.bucket_name, "twitter_followers")
                 self.save_metadata()
             self.metadata["followers"].append(entry.get("id"))
@@ -98,10 +102,11 @@ class TwitterFollowPostProcess(Processor):
         logging.info("Getting following")
         following_url = "https://api.twitter.com/2/users/{}/following?max_results=1000{}&user.fields=username"
         results = []
-        if self.metadata.get("following", None) is not None:
+        if self.metadata.get("following", None):
             results = self.s3.load_csv(self.bucket_name, "twitter_following.csv").to_dict("records")
             logging.info(f"Loaded {len(results)} following from S3")
-        for idx, entry in enumerate(self.items):
+
+        for idx, entry in tqdm.tqdm(enumerate(self.items), total=len(self.items), desc="Getting following"):
             if entry.get("id") in self.metadata["following"]:
                 continue
             items = self.handle_user(entry, following_url)
@@ -132,6 +137,8 @@ class TwitterFollowPostProcess(Processor):
             if "data" not in resp:
                 break
             results.extend(resp.get("data"))
+            if len(results) >= 5000:
+                break
             meta = resp.get("meta", {})
             if meta.get("next_token", None):
                 token = meta.get("next_token")
@@ -158,7 +165,7 @@ class TwitterFollowPostProcess(Processor):
 
     def run(self):
         self.get_high_rep_handles()
-        followers = self.get_following()
+        # followers = self.get_following()
         following = self.get_followers()
         self.handle_ingestion(followers + following)
 
