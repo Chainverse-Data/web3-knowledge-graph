@@ -7,11 +7,11 @@ import logging
 import json
 from gql.transport.aiohttp import AIOHTTPTransport, log as gql_log
 
+
 gql_log.setLevel(logging.WARNING)
 
-
-class LockScraper(Scraper):
-    def __init__(self, bucket_name="unlock", allow_override=True):
+class UnlockScraper(Scraper):
+    def __init__(self, bucket_name="unlock", allow_override=True): 
         super().__init__(bucket_name, allow_override=allow_override)
 
         ## graph urls
@@ -237,8 +237,7 @@ class LockScraper(Scraper):
         self.save_metadata()
         self.save_data()
 
-
 if __name__ == "__main__":
-    scraper = LockScraper()
+    scraper = UnlockScraper()
     scraper.run()
     logging.info("Run complete!")

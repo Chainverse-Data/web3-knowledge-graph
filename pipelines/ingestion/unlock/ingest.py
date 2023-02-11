@@ -1,7 +1,6 @@
-from ..helpers import Ingestor
+from ..helpers import Ingestor, utils
 from .cyphers import UnlockCyphers
 import datetime
-import pandas as pd
 from typing import Dict, List, Any
 import logging
 
@@ -11,78 +10,143 @@ class UnlockIngestor(Ingestor):
         self.cyphers = UnlockCyphers()
         super().__init__("unlock")
 
-    def prepare_unlock_data(self):
-        locks = pd.DataFrame(self.scraper_data["locks"])
-        keys = pd.DataFrame(self.scraper_data["keys"])
-        managers = pd.DataFrame(self.scraper_data["managers"])
-        holders = pd.DataFrame(self.scraper_data["holders"])
+        # used for filtering out burn addresses
+        self.nullAddress = "0x0000000000000000000000000000000000000000"
 
-        logging.info(
-            "Ingested data... there are {lockRows} and {keyRows}".format(lockRows=len(locksDf), keyRows=len(keysDf))
-        )
+#TODO: Get the decimal from the graph and convert price to a float - look at ingestor/tokenholder/line 44
+#TODO: This just means they hold at least one NFT in the collection. We should set a property 
+# that says how many they hold.If they used to hold some but now hold none former should = True
+#TODO: Make readme for scraper and ingestor
 
-        holders["tokenId"] = holders["keyId"].apply(lambda x: x.split("-")[1])
+    def ingest_locks(self):
+        "This function ingests the unlock data loaded in self.data"
+        logging.info("Ingesting lock data...")
+        locks_data = self.process_locks()
 
-        ### wallets
-        manager_wallets = list(managers["address"])
-        holder_wallets = list(holders["address"])
-        wallets = set(manager_wallets + holder_wallets)
-        wallets = pd.DataFrame({"address": list(wallets)})
+        urls = self.s3.save_json_as_csv(locks_data, self.bucket_name, f"ingestor_locks_{self.asOf}")
+        print("DEBUG: Locks urls: {}".format(urls))
+        self.cyphers.create_or_merge_locks(urls)
+        self.cyphers.link_or_merge_locks_to_keys(urls)
 
-        ## tokens
-        tokens = set(list(locks["address"]))
-        tokens = pd.DataFrame({"address": list(tokens)})
+    def process_locks(self):
+        logging.info("Processing locks data...")
+        locks_data = []
+        
+        for lock in self.scraper_data["locks"]:
+            if lock["tokenAddress"] != self.nullAddress and utils.is_valid_address(lock["address"]):
+                tmp = {
+                    "address": lock["address"].lower(),
+                    "name": lock["name"].lower(),
+                    "tokenAddress": lock["tokenAddress"].lower(),
+                    "creationBlock": lock["creationBlock"],
+                    "price": lock["price"],                               
+                    "expirationDuration": lock["expirationDuration"],
+                    "totalSupply": int(lock["totalSupply"]),
+                    "network": lock["network"].lower(),
+                    "asOf": self.asOf
+                }
 
-        return {
-            "locks": locks,
-            "keys": keys,
-            "managers": managers,
-            "holders": holders,
-            "wallets": wallets,
-            "tokens": tokens,
-        }
+                locks_data.append(tmp)
+        
+        return locks_data
 
-    def ingest_wallets(self, data=None):
-        urls = self.s3.save_df_as_csv(
-            data["wallets"], self.bucket_name, f"ingestor_wallets_{self.asOf}", ACL="public-read"
-        )
-        self.cyphers.create_unlock_wallets(urls)
+    def ingest_managers(self):
+        "This function ingests the managers data loaded in self.data"
+        logging.info("Ingesting managers data...")
+        managers_data = self.process_managers()
 
-    def ingest_lock_metadata(self, data=None):
-        urls = self.s3.save_df_as_csv(data["locks"], self.bucket_name, f"ingestor_locks_{self.asOf}", ACL="public-read")
-        self.cyphers.create_locks(urls)
+        urls = self.s3.save_json_as_csv(managers_data, self.bucket_name, f"ingestor_managers_{self.asOf}")
+        print("DEBUG: Manager urls: {}".format(urls))
+        self.cyphers.create_or_merge_managers(urls)
+        self.cyphers.link_or_merge_managers_to_locks(urls)
+        self.cyphers.create_unlock_managers_wallets(urls)
+    
+    def process_managers(self):
+        logging.info("Processing managers data...")
+        managers_data = []
+        
+        for manager in self.scraper_data["managers"]:
+            if manager["lock"] != self.nullAddress and utils.is_valid_address(manager["address"]): 
+                tmp = {
+                    "lock": manager["lock"].lower(),
+                    "address": manager["address"].lower(),
+                    "asOf": self.asOf
+                }
 
-    def ingest_key_metadata(self, data=None):
-        urls = self.s3.save_df_as_csv(data["keys"], self.bucket_name, f"ingestor_keys_{self.asOf}", ACL="public-read")
-        self.cyphers.create_keys(urls)
+                managers_data.append(tmp)
+        
+        return managers_data
+    
+    def ingest_keys(self):
+        "This function ingests the keys data loaded in self.data"
+        logging.info("Ingesting keys data...")
+        keys_data = self.process_keys() 
 
-    def ingest_lock_managers(self, data=None):
-        urls = self.s3.save_df_as_csv(
-            data["managers"], self.bucket_name, f"ingestor_lock_managers_{self.asOf}", ACL="public-read"
-        )
-        self.cyphers.create_lock_managers(urls)
+        urls = self.s3.save_json_as_csv(keys_data, self.bucket_name, f"ingestor_keys_{self.asOf}")
+        print("DEBUG: Keys urls: {}".format(urls))
+        self.cyphers.create_or_merge_keys(urls)
 
-    def ingest_key_holders(self, data=None):
-        urls = self.s3.save_df_as_csv(
-            data["holders"], self.bucket_name, f"ingestor_key_holders_{self.asOf}", ACL="public-read"
-        )
-        self.cyphers.create_key_holders(urls)
+    def process_keys(self):
+        logging.info("Processing keys data...")
+        keys_data = []
+        
+        for key in self.scraper_data["keys"]:
+            if key["address"] != self.nullAddress and utils.is_valid_address(key["address"]):
+                tmp = {
+                    "id": key["id"].lower(),
+                    "address": key["address"].lower(),
+                    "expiration": key["expiration"],
+                    "tokenURI": key["tokenURI"].lower(),
+                    "createdAt": key["createdAt"],
+                    "network": key["network"].lower(),
+                    "asOf": self.asOf
+                }
 
-    def ingest_locks_keys(self, data=None):
-        logging.info("Connecting locks and keys...")
-        locks = data["allTokensUnique"]
-        urls = self.s3.save_df_as_csv(locks, self.bucket_name, f"ingest_locks_keys{self.asOf}", ACL="public-read")
-        self.cyphers.connect_locks_keys(urls)
-        logging.info("successfully connected locks to keys. good job dev!")
+                keys_data.append(tmp)
+
+        return keys_data
+
+    def ingest_holders(self):
+        "This function ingests the holders loaded in self.data"
+        logging.info("Ingesting holders data...")    
+
+        holders_data = self.process_holders()
+
+        urls = self.s3.save_json_as_csv(holders_data, self.bucket_name, f"ingestor_holders_{self.asOf}")
+        print("DEBUG: Holders urls: {}".format(urls))
+        self.cyphers.create_or_merge_holders(urls)
+        self.cyphers.link_or_merge_holders_to_locks(urls)
+        self.cyphers.link_or_merge_holders_to_keys(urls)
+        self.cyphers.create_unlock_holders_wallets(urls)
+
+    def process_holders(self):
+        logging.info("Processing holders data...")
+        holders_data = []
+
+        for holder in self.scraper_data["holders"]:
+            #NOTE: run a script to compare id to addy to ensure addresses are identical to id - -> TRUE
+            if holder["tokenAddress"] != self.nullAddress  and utils.is_valid_address(holder["address"]):
+                tmp = {
+                    "address": holder["address"].lower(),
+                    "keyId": holder["keyId"].lower(),       
+                    "tokenAddress": holder["tokenAddress"].lower(),
+                    "asOf": self.asOf
+                }
+                holders_data.append(tmp)
+
+        return holders_data
+
+    def done(self):
+        print("Program done running")
+
 
     def run(self):
-        unlock_data = self.prepare_unlock_data()
-        self.ingest_wallets(data=unlock_data)
-        self.ingest_lock_metadata(data=unlock_data)
-        self.ingest_key_metadata(data=unlock_data)
-        self.ingest_lock_managers(data=unlock_data)
-        self.ingest_key_holders(data=unlock_data)
-        self.ingest_locks_keys(data=unlock_data)
+        self.ingest_locks()
+        self.ingest_managers()
+        self.ingest_keys()
+        self.ingest_holders()
+        self.save_metadata()
+        self.done()
 
 
 if __name__ == "__main__":
