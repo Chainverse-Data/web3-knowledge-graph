@@ -80,13 +80,12 @@ class TokenHoldersIngestor(Ingestor):
                             numericBalance = int(balance["tokenBalance"], 16) / 10**decimal
                         else:
                             numericBalance = int(balance["tokenBalance"], 16)
-                            if numericBalance > 10**18:
-                                numericBalance = numericBalance // 10**18
                         data.append({
                             "address": wallet,
                             "contractAddress": contractAddress,
                             "balance": balance["tokenBalance"],
-                            "numericBalance": numericBalance
+                            # this should be fixed somehow
+                            "numericBalance": str(numericBalance)
                         })
         data = pd.DataFrame.from_dict(data)
         return data
