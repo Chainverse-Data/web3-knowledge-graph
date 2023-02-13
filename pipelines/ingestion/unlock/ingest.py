@@ -4,6 +4,7 @@ import datetime
 from typing import Dict, List, Any
 import logging
 
+#TODO: Make readme for scraper and ingestor
 
 class UnlockIngestor(Ingestor):
     def __init__(self):
@@ -13,10 +14,6 @@ class UnlockIngestor(Ingestor):
         # used for filtering out burn addresses
         self.nullAddress = "0x0000000000000000000000000000000000000000"
 
-#TODO: Get the decimal from the graph and convert price to a float - look at ingestor/tokenholder/line 44
-#TODO: This just means they hold at least one NFT in the collection. We should set a property 
-# that says how many they hold.If they used to hold some but now hold none former should = True
-#TODO: Make readme for scraper and ingestor
 
     def ingest_locks(self):
         "This function ingests the unlock data loaded in self.data"
@@ -42,8 +39,7 @@ class UnlockIngestor(Ingestor):
                     "price": lock["price"],                               
                     "expirationDuration": lock["expirationDuration"],
                     "totalSupply": int(lock["totalSupply"]),
-                    "network": lock["network"].lower(),
-                    "asOf": self.asOf
+                    "network": lock["network"].lower()
                 }
 
                 locks_data.append(tmp)
@@ -57,7 +53,6 @@ class UnlockIngestor(Ingestor):
 
         urls = self.s3.save_json_as_csv(managers_data, self.bucket_name, f"ingestor_managers_{self.asOf}")
         print("DEBUG: Manager urls: {}".format(urls))
-        self.cyphers.create_or_merge_managers(urls)
         self.cyphers.link_or_merge_managers_to_locks(urls)
         self.cyphers.create_unlock_managers_wallets(urls)
     
@@ -69,8 +64,7 @@ class UnlockIngestor(Ingestor):
             if manager["lock"] != self.nullAddress and utils.is_valid_address(manager["address"]): 
                 tmp = {
                     "lock": manager["lock"].lower(),
-                    "address": manager["address"].lower(),
-                    "asOf": self.asOf
+                    "address": manager["address"].lower()
                 }
 
                 managers_data.append(tmp)
@@ -96,7 +90,7 @@ class UnlockIngestor(Ingestor):
                     "id": key["id"].lower(),
                     "address": key["address"].lower(),
                     "expiration": key["expiration"],
-                    "tokenURI": key["tokenURI"].lower(),
+                    "tokenUri": key["tokenURI"].lower(),
                     "createdAt": key["createdAt"],
                     "network": key["network"].lower(),
                     "asOf": self.asOf
@@ -114,7 +108,6 @@ class UnlockIngestor(Ingestor):
 
         urls = self.s3.save_json_as_csv(holders_data, self.bucket_name, f"ingestor_holders_{self.asOf}")
         print("DEBUG: Holders urls: {}".format(urls))
-        self.cyphers.create_or_merge_holders(urls)
         self.cyphers.link_or_merge_holders_to_locks(urls)
         self.cyphers.link_or_merge_holders_to_keys(urls)
         self.cyphers.create_unlock_holders_wallets(urls)
@@ -124,21 +117,18 @@ class UnlockIngestor(Ingestor):
         holders_data = []
 
         for holder in self.scraper_data["holders"]:
-            #NOTE: run a script to compare id to addy to ensure addresses are identical to id - -> TRUE
             if holder["tokenAddress"] != self.nullAddress  and utils.is_valid_address(holder["address"]):
                 tmp = {
                     "address": holder["address"].lower(),
                     "keyId": holder["keyId"].lower(),       
-                    "tokenAddress": holder["tokenAddress"].lower(),
-                    "asOf": self.asOf
+                    "tokenAddress": holder["tokenAddress"].lower()
                 }
                 holders_data.append(tmp)
 
         return holders_data
 
     def done(self):
-        print("Program done running")
-
+        print("DEBUG: Program done running")
 
     def run(self):
         self.ingest_locks()
