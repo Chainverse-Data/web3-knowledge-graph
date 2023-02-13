@@ -21,6 +21,9 @@ class TwitterPostProcess(Processor):
         self.batch_size = 100
         self.split_size = 10000
         self.bad_handles = set()
+        self.bearer_tokens = os.environ.get("TWITTER_BEARER_TOKEN").split(",")
+        self.i = 0
+
         self.headers = {
             "Authorization": f"Bearer {os.environ.get('TWITTER_BEARER_TOKEN').split(',')[0]}",
         }
@@ -43,9 +46,12 @@ class TwitterPostProcess(Processor):
             return {"data": []}
 
         twitter_handles_batch = ",".join(batch)
+        headers = {
+            "Authorization": f"Bearer {self.bearer_tokens[self.i]}",
+        }
         x = requests.get(
             f"https://api.twitter.com/2/users/by?usernames={twitter_handles_batch}&user.fields=description,id,location,name,public_metrics,verified,profile_image_url,url&expansions=pinned_tweet_id&tweet.fields=geo,lang",
-            headers=self.headers,
+            headers=headers,
         )
         resp = json.loads(x.text)
         head = dict(x.headers)
@@ -56,6 +62,9 @@ class TwitterPostProcess(Processor):
             logging.warning(f"Rate limit exceeded. Waiting {time_to_wait} seconds.")
             time.sleep(time_to_wait)
             return self.get_user_response(batch, retries=retries + 1)
+
+        self.i += 1
+        self.i %= len(self.bearer_tokens)
 
         return resp
 
