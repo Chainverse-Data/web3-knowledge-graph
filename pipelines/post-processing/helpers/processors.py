@@ -1,3 +1,7 @@
+import logging
+import time
+
+import requests
 from ...helpers import Cypher
 from datetime import datetime
 import os
@@ -32,6 +36,19 @@ class Processor():
         self.s3.save_json(self.bucket_name,
                           self.metadata_filename, self.metadata)
 
+    def post_request(self, url, data=None, json=None, headers=None, counter=0):
+        time.sleep(counter * 10)
+        if counter > 10:
+            return None
+        try:
+            r = requests.post(url, data=data, json=json, headers=headers, verify=False)
+            if r.status_code <= 200 and r.status_code > 300:
+                logging.error(f"Status code not 200: {r.status_code} Retrying {counter*10}s (counter = {counter})...")
+                return self.post_request(url, data=data, json=json, headers=headers, counter=counter + 1)
+            return r.content.decode("UTF-8")
+        except Exception as e:
+            logging.error(f"An unrecoverable exception occurred: {e}")
+            return self.post_request(url, data=data, json=json, headers=headers, counter=counter + 1)
 
     def run(self):
         "Main function to be called. Every postprocessor must implement its own run function!"
