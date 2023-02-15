@@ -4,7 +4,10 @@ from .cyphers import TokenHoldersCyphers
 import re
 import pandas as pd
 import sys
-sys.set_int_max_str_digits(0) # Required for very large numbers!
+try:
+    sys.set_int_max_str_digits(0) # Required for very large numbers!
+except:
+    pass
 
 class TokenHoldersIngestor(Ingestor):
     def __init__(self, bucket_name="token-holders"):
@@ -31,7 +34,7 @@ class TokenHoldersIngestor(Ingestor):
         transfer_wallets = from_wallets.append(to_wallets).drop_duplicates("address")
         return transfer_wallets
 
-    def ingest_transfer_data(self):
+    def ingest_transfers(self):
         transfer_wallets = self.prepare_transfer_data()
         urls = self.s3.save_df_as_csv(transfer_wallets, self.bucket_name, f"ingestor_transfers_wallets_{self.asOf}")
         self.cyphers.queries.create_wallets(urls)
@@ -80,7 +83,7 @@ class TokenHoldersIngestor(Ingestor):
         logging.info("Preparing balances data")
         data = []
         wallets = [wallet for wallet in self.scraper_data["balances"] if not self.is_zero_address(wallet)]
-        for wallet in self.scraper_data["balances"]:
+        for wallet in wallets:
             for balance in self.scraper_data["balances"][wallet]:
                 if type(balance) == dict and "error" not in balance:
                     contractAddress = balance["contractAddress"]
@@ -114,6 +117,7 @@ class TokenHoldersIngestor(Ingestor):
     def run(self):
         self.ingest_tokens()
         self.ingest_holdings()
+        self.ingest_transfers()
         self.save_metadata()
 
 if __name__ == '__main__':
