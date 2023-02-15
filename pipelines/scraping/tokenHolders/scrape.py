@@ -61,7 +61,7 @@ class TokenHolderScraper(Scraper):
                     }
                 assets.add(contractAddress)
         assets = list(assets)
-        return (wallet, assets, tokens)
+        return (wallet, assets, tokens, transactions)
 
     def job_get_balances(self, wallet):
         balances = self.get_balances(wallet, self.data["assets"][wallet])
@@ -72,16 +72,28 @@ class TokenHolderScraper(Scraper):
         self.data["balances"] = {}
         self.data["assets"] = {}
         self.data["tokens"] = {}
+        self.data["transfers"] = []
         logging.info("Multithreaded scraping launching!")
         with tqdm_joblib(tqdm(desc="Getting transactions data", total=len(wallets))):
             data = joblib.Parallel(n_jobs=self.max_thread, backend="threading")(joblib.delayed(self.job_get_transactions)(wallet) for wallet in wallets)
         for item in tqdm(data):
-            wallet, assets, tokens = item
+            wallet, assets, tokens, transactions = item
             self.data["assets"][wallet] = assets
             for token in tokens:
                 if token not in self.data["tokens"]:
                     self.data["tokens"][token] = tokens[token]
-        
+            for transaction in transactions["received"] + transactions["sent"]:
+                tmp = {
+                    "from": transaction["from"],
+                    "to": transaction["to"],
+                    "value": transaction["value"],
+                    "erc721TokenId": transaction["erc721TokenId"],
+                    "erc1155Metadata": transaction["erc1155Metadata"],
+                    "asset": transaction["asset"],
+                    "contractAddress": transaction["rawContract"]["address"],
+                    "hash": transaction["hash"]
+                }
+                self.data["transfers"].append(tmp)
         with tqdm_joblib(tqdm(desc="Getting balances data", total=len(wallets))):
             data = joblib.Parallel(n_jobs=self.max_thread, backend="threading")(joblib.delayed(self.job_get_balances)(wallet) for wallet in wallets)
         for item in tqdm(data):

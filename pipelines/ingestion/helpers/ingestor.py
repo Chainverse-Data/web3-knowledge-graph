@@ -41,6 +41,11 @@ class Ingestor:
         "Main function to be called. Every ingestor must implement its own run function!"
         raise NotImplementedError("ERROR: the run function has not been implemented!")
 
+    def is_zero_address(self, address):
+        if int(address, 16) == 0:
+            return True
+        return False
+
     def set_start_end_date(self):
         "Sets the start and end date from either params, env or metadata"
         if not self.start_date and "INGEST_FROM_DATE" in os.environ and os.environ["INGEST_FROM_DATE"].strip():

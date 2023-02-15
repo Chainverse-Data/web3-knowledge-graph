@@ -23,6 +23,21 @@ class TokenHoldersIngestor(Ingestor):
             return int(decimal)
         return -1
 
+    def prepare_transfer_data(self):
+        logging.info("Preparing transfer data")
+        self.scraper_data["transfers"] = pd.DataFrame.from_dict(self.scraper_data["transfers"]).drop_duplicates(["from", "to", "hash"])
+        from_wallets = pd.DataFrame(self.scraper_data["transfers"]["from"].unique(), columns=["address"])
+        to_wallets = pd.DataFrame(self.scraper_data["transfers"]["to"].unique(), columns=["address"])
+        transfer_wallets = from_wallets.append(to_wallets).drop_duplicates("address")
+        return transfer_wallets
+
+    def ingest_transfer_data(self):
+        transfer_wallets = self.prepare_transfer_data()
+        urls = self.s3.save_df_as_csv(transfer_wallets, self.bucket_name, f"ingestor_transfers_wallets_{self.asOf}")
+        self.cyphers.queries.create_wallets(urls)
+        urls = self.s3.save_df_as_csv(self.scraper_data["transfers"], self.bucket_name, f"ingestor_transfers_{self.asOf}")
+        self.cyphers.link_or_merge_transfers(urls)
+
     def prepare_token_data(self):
         logging.info("Preparing token data")
         data = {
@@ -64,11 +79,12 @@ class TokenHoldersIngestor(Ingestor):
     def prepare_holdings_data(self):
         logging.info("Preparing balances data")
         data = []
+        wallets = [wallet for wallet in self.scraper_data["balances"] if not self.is_zero_address(wallet)]
         for wallet in self.scraper_data["balances"]:
             for balance in self.scraper_data["balances"][wallet]:
                 if type(balance) == dict and "error" not in balance:
                     contractAddress = balance["contractAddress"]
-                    if contractAddress in self.scraper_data["tokens"]:
+                    if contractAddress in self.scraper_data["tokens"] and not self.is_zero_address(contractAddress):
                         decimal = self.scraper_data["tokens"][contractAddress]["decimal"]
                         if type(decimal) == str and "0x" in decimal:
                             decimal = int(decimal, 16)
@@ -84,8 +100,7 @@ class TokenHoldersIngestor(Ingestor):
                             "address": wallet,
                             "contractAddress": contractAddress,
                             "balance": balance["tokenBalance"],
-                            # this should be fixed somehow
-                            "numericBalance": str(numericBalance)
+                            "numericBalance": numericBalance
                         })
         data = pd.DataFrame.from_dict(data)
         return data
