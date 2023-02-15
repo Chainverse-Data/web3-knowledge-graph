@@ -14,14 +14,12 @@ class UnlockIngestor(Ingestor):
         # used for filtering out burn addresses
         self.nullAddress = "0x0000000000000000000000000000000000000000"
 
-
     def ingest_locks(self):
         "This function ingests the unlock data loaded in self.data"
         logging.info("Ingesting lock data...")
         locks_data = self.process_locks()
 
         urls = self.s3.save_json_as_csv(locks_data, self.bucket_name, f"ingestor_locks_{self.asOf}")
-        print("DEBUG: Locks urls: {}".format(urls))
         self.cyphers.create_or_merge_locks(urls)
         self.cyphers.link_or_merge_locks_to_keys(urls)
 
@@ -34,7 +32,7 @@ class UnlockIngestor(Ingestor):
                 tmp = {
                     "address": lock["address"].lower(),
                     "name": lock["name"].lower(),
-                    "tokenAddress": lock["tokenAddress"].lower(),
+                    "contractAddress": lock["tokenAddress"].lower(),
                     "creationBlock": lock["creationBlock"],
                     "price": lock["price"],                               
                     "expirationDuration": lock["expirationDuration"],
@@ -52,7 +50,6 @@ class UnlockIngestor(Ingestor):
         managers_data = self.process_managers()
 
         urls = self.s3.save_json_as_csv(managers_data, self.bucket_name, f"ingestor_managers_{self.asOf}")
-        print("DEBUG: Manager urls: {}".format(urls))
         self.cyphers.link_or_merge_managers_to_locks(urls)
         self.cyphers.create_unlock_managers_wallets(urls)
     
@@ -77,7 +74,6 @@ class UnlockIngestor(Ingestor):
         keys_data = self.process_keys() 
 
         urls = self.s3.save_json_as_csv(keys_data, self.bucket_name, f"ingestor_keys_{self.asOf}")
-        print("DEBUG: Keys urls: {}".format(urls))
         self.cyphers.create_or_merge_keys(urls)
 
     def process_keys(self):
@@ -88,7 +84,7 @@ class UnlockIngestor(Ingestor):
             if key["address"] != self.nullAddress and utils.is_valid_address(key["address"]):
                 tmp = {
                     "id": key["id"].lower(),
-                    "address": key["address"].lower(),
+                    "contractAddress": key["address"].lower(),
                     "expiration": key["expiration"],
                     "tokenUri": key["tokenURI"].lower(),
                     "createdAt": key["createdAt"],
@@ -107,7 +103,6 @@ class UnlockIngestor(Ingestor):
         holders_data = self.process_holders()
 
         urls = self.s3.save_json_as_csv(holders_data, self.bucket_name, f"ingestor_holders_{self.asOf}")
-        print("DEBUG: Holders urls: {}".format(urls))
         self.cyphers.link_or_merge_holders_to_locks(urls)
         self.cyphers.link_or_merge_holders_to_keys(urls)
         self.cyphers.create_unlock_holders_wallets(urls)
@@ -121,14 +116,11 @@ class UnlockIngestor(Ingestor):
                 tmp = {
                     "address": holder["address"].lower(),
                     "keyId": holder["keyId"].lower(),       
-                    "tokenAddress": holder["tokenAddress"].lower()
+                    "contractAddress": holder["tokenAddress"].lower()
                 }
                 holders_data.append(tmp)
 
         return holders_data
-
-    def done(self):
-        print("DEBUG: Program done running")
 
     def run(self):
         self.ingest_locks()
@@ -136,8 +128,6 @@ class UnlockIngestor(Ingestor):
         self.ingest_keys()
         self.ingest_holders()
         self.save_metadata()
-        self.done()
-
 
 if __name__ == "__main__":
     ingestor = UnlockIngestor()
