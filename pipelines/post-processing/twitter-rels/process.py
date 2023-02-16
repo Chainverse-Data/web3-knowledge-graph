@@ -30,6 +30,7 @@ class TwitterRelsProcessor(Processor):
         matches = re.findall(r'@\w+', val)
         if not matches:
             return None 
+            
         return [match.strip() for match in matches]
 
     def extract_accounts_from_bio(self):
@@ -40,15 +41,19 @@ class TwitterRelsProcessor(Processor):
         len_bios = len(bios)
         exploded_bios = bios.explode('handles')
         logging.info(f"nice, you have {len_bios} rows")
+
         return exploded_bios 
 
     
-    def ingest_stuff(self):
+    def ingest_references(self):
         bios = self.extract_accounts_from_bio()
-        self.cyphers.ingest_references(bios) 
+        self.cyphers.ingest_references(bios)
+
+        return None 
 
     def get_websites(self):
         websites_df = self.cyphers.get_twitter_websites()
+
         return websites_df
 
     def extract_website_data(self, url, counter=0):
@@ -64,7 +69,7 @@ class TwitterRelsProcessor(Processor):
         except Exception as e:
             return self.extract_website_data(url, counter=counter+1) 
     
-    def create_csv(self, website_df):
+    def create_website_csvs(self, website_df):
         results_list = list()
         for index, row in tqdm(website_df.iterrows(), total=len(website_df)):
             userId = row[0]
@@ -83,6 +88,7 @@ class TwitterRelsProcessor(Processor):
         results_df = pd.DataFrame(results_list)
         fname = "websites_" + self.asOf
         urls = self.s3.save_df_as_csv(results_df, bucket_name=self.bucket_name, file_name=fname, ACL='public-read', max_lines=10000, max_size=10000000)
+
         return urls 
 
     def get_websites(self):
@@ -94,12 +100,20 @@ class TwitterRelsProcessor(Processor):
         return urls 
 
     def ingest_websites(self):
-        s
-
-
-
+        logging.info("ingesting twitter / website / domain data")
+        websites_df = self.get_websites()
+        self.cyphers.create_domains(websites_df)
+        self.cyphers.create_websites(websites_df)
+        self.cyphers.link_websites_domains(websites_df)
+        self.cyphers.link_twitter_website(websites_df)
+        logging.info("damn that took awhile, but not as long as it could have, because Leo added multithreading.")
         return None 
 
+    def run(self):
+        bios = self.extract_accounts_from_bio()
+        self.ingest_references(bios)
+        websites = self.get_websites()
+        self.ingest_websites(websites)
 
 if __name__ == "__main__":
     processor = TwitterRelsProcessor()

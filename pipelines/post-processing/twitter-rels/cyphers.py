@@ -156,7 +156,34 @@ class TwitterRelsCyphers(Cypher):
                 COUNT(DISTINCT(website))
             """
             count += self.query(websites_query)[0].value()
+            
         return count 
+
+    @count_query_logging
+    def link_websites_domains(self, urls):
+        count = 0 
+        for url in urls:
+            link_website_domain_query = f"""
+            WITH 
+                datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')) as ingestDate
+            LOAD CSV WITH HEADERS FROM {url} as websites
+            MATCH (website:Website {{url: websites.url}})
+            MATCH (domain:Domain {{domain: websites.domain}})
+            WITH website, domain, ingestDate
+            MERGE (website)-[r:HAS_DOMAIN]->(domain)
+            SET r.createdDt = ingestDate
+            SET r.lastUpdateDt = ingestDate
+            RETURN COUNT(DISTINCT(website))"""
+
+            count += self.query(link_website_domain_query)[0].value()
+
+        return count 
+
+
+            
+            
+            
+            """
 
 
 
