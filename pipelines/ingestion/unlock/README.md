@@ -6,36 +6,61 @@ This ingestor will take care of data obtained by the Unlock scraper.
 
 
 Nodes:
-lockNode:Unlock:Lock
-keyNode:Unlock:Key
-managerNode:Unlock:Manager
-holderNode:Unlock:Holder
-
+Lock:
+    lock:Nft:ERC721:Lock
+        Properties:
+            address
+            name
+            price
+            createdDt
+            lastUpdateDt    
+            ingestedBy
+            uuid
+Key:
+    key:Nft:ERC721:Instance
+        Properties:
+            contractAddress
+            tokenId
+            createdAt
+            expiration
+            tokenUri
+            network
+            createdDt
+            lastUpdateDt
+            ingestedBy
+            uuid
+Manager and Holder:
+    wallet:Wallet
+        Properties:
+            address
+            createdDt
+            lastUpdateDt
+            ingestedBy
+            uuid
 
 
 Edges:
-(managerNode)-[CREATED]->(lockNode)
-(lockNode)-[HAS_KEY]->(keyNode)
-(holderNode)-[HOLDS]->(lockNode)
-(holderNode)-[HOLDS_INSTANCE]->(keyNode)
+Manager to Lock:
+    (wallet)-[CREATED]->(lock)
+        Properties:
+            createdDt
+            lastUpdateDt
+Lock to Key:
+    (lock)-[HAS_KEY]->(key)
+        Properties:
+            createdDt
+            lastUpdateDt
+Holder to Lock:
+    (wallet)-[HOLDS]->(lock)
+        Properties:
+            createdDt
+            lastUpdateDt
+Holder to Key:
+    (wallet)-[HOLDS_INSTANCE]->(key)
+        Properties:
+            createdDt
+            lastUpdateDt
 
-
-<!-- Nodes:
-- EventGitCoinGrant:GitCoin:Grant:Event
-- EventGitCoinBounty:GitCoin:Bounty:Event
-- UserGitCoin:GitCoin:UserGitHub:GitHub:Account
-- Wallet
-- Twitter:Account
-
-Edges:
-- (UserGitCoin)-[MEMBER]->(EventGitCoinGrant)
-- (Wallet)-[IS_ADMIN]->(EventGitCoinGrant)
-- (EventGitCoinGrant)-[HAS_ACCOUNT]->(Twitter)
-- (Wallet)-[DONATION]->(EventGitCoinGrant)
-- (UserGitCoin)-[IS_OWNER]->(EventGitCoinBounty)
-- (UserGitCoin)-[HAS_FULLFILLED]->(EventGitCoinBounty)
-- (UserGitCoin)-[HAS_INTEREST]->(EventGitCoinBounty)
-- (UserGitCoin)-[HAS_WALLET]->(Wallet) -->
 
 # Bucket
 

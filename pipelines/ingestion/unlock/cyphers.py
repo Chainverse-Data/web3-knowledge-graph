@@ -22,15 +22,14 @@ class UnlockCyphers(Cypher):
     
     @count_query_logging
     def create_or_merge_locks(self, urls):
-        logging.info("Creating or merging locks...")
         count = 0
         for url in urls:
             query = f"""
                     LOAD CSV WITH HEADERS FROM '{url}' AS locks
-                    MERGE(lock:Nft:ERC721 {{address: locks.address}})
+                    MERGE(lock:Nft:ERC721:Lock {{address: locks.address}})
                     ON CREATE SET lock.uuid = apoc.create.uuid(),
                         lock.name = locks.name,
-                        lock.price = locks.price,
+                        lock.price = toIntegerOrNull(locks.price),
                         lock.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                         lock.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                         lock.ingestedBy = '{self.CREATED_ID}'
@@ -43,7 +42,6 @@ class UnlockCyphers(Cypher):
     
     @count_query_logging
     def create_or_merge_keys(self, urls):
-        logging.info("Creating or merging keys...")
         count = 0
         for url in urls: 
             query = f"""
@@ -67,12 +65,12 @@ class UnlockCyphers(Cypher):
 
     @count_query_logging
     def link_or_merge_managers_to_locks(self, urls):
-        logging.info("Linking or merging managers to locks...")
         count = 0
         for url in urls:
             query = f"""
                     LOAD CSV WITH HEADERS FROM '{url}' AS managers
-                    MATCH (wallet:Wallet {{address: managers.address}}), (lock:Nft:ERC721 {{address: managers.lock}})
+                    MATCH (wallet:Wallet {{address: managers.address}})
+                    MATCH (lock:Nft:ERC721:Lock {{address: managers.lock}})
                     WITH wallet, lock, managers
                     MERGE (wallet)-[r:CREATED]->(lock)
                     ON CREATE SET r.createdDt =  datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
@@ -85,18 +83,16 @@ class UnlockCyphers(Cypher):
 
     @count_query_logging
     def link_or_merge_locks_to_keys(self, urls):
-        logging.info("Linking or merging locks to keys...")
         count = 0
         for url in urls:
             query = f""" 
                     LOAD CSV WITH HEADERS FROM '{url}' as keys
-                    MATCH (lock:Nft:ERC721 {{contractAddress: keys.contractAddress}}), (key:Nft:ERC721:Instance {{contractAddress: keys.contractAddress}})
+                    MATCH (lock:Nft:ERC721:Lock {{contractAddress: keys.contractAddress}})
+                    MATCH (key:Nft:ERC721:Instance {{contractAddress: keys.contractAddress}})
                     WITH lock, key, keys
                     MERGE (lock)-[r:HAS_KEY]->(key)
-                    ON CREATE SET r.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
-                        r.asOf = keys.asOf
-                    ON MATCH SET r.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
-                        r.asOf = keys.asOf
+                    ON CREATE SET r.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
+                    ON MATCH SET r.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
                     RETURN count(r)
                     """
             count += self.query(query)[0].value()
@@ -104,12 +100,12 @@ class UnlockCyphers(Cypher):
 
     @count_query_logging
     def link_or_merge_holders_to_locks(self, urls):
-        logging.info("Linking or merging holders to locks...")
         count = 0
         for url in urls:
             query = f"""
                     LOAD CSV WITH HEADERS FROM '{url}' AS holders
-                    MATCH (wallet:Wallet {{contractAddress: holders.contractAddress}}), (lock:Nft:ERC721 {{contractAddress holders.contractAddress}})
+                    MATCH (wallet:Wallet {{contractAddress: holders.contractAddress}})
+                    MATCH (lock:Nft:ERC721:Lock {{contractAddress holders.contractAddress}})
                     WITH wallet, lock, holders
                     MERGE (wallet)-[r:HOLDS]->(lock)
                     ON CREATE SET r.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
@@ -121,18 +117,16 @@ class UnlockCyphers(Cypher):
 
     @count_query_logging
     def link_or_merge_holders_to_keys(self, urls):
-        logging.info("Linking or merging holders to keys...")
         count = 0
         for url in urls:
             query = f"""
                     LOAD CSV WITH HEADERS FROM {url} AS keys
-                    MATCH (wallet: Wallet {{contractAddress: keys.contractAddress}}), (key:Nft:ERC721:Instance {{contractAddress: keys.contractAddress}})
+                    MATCH (wallet: Wallet {{contractAddress: keys.contractAddress}})
+                    MATCH (key:Nft:ERC721:Instance {{contractAddress: keys.contractAddress}})
                     WITH wallet, key, keys
                     MERGE (wallet)-[r:HOLDS_INSTANCE]->(key)
-                    ON CREATE SET r.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
-                        r.asOf = keys.asOf
-                    ON MATCH SET r.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
-                        r.asOf = keys.asOf
+                    ON CREATE SET r.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
+                    ON MATCH SET r.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
                     RETURN count(r)
                     """
             count += self.query(query)[0].value()

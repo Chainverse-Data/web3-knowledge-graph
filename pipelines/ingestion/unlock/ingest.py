@@ -1,6 +1,6 @@
 from ..helpers import Ingestor, utils
 from .cyphers import UnlockCyphers
-import datetime
+import datetime as dt
 from typing import Dict, List, Any
 import logging
 
@@ -50,8 +50,8 @@ class UnlockIngestor(Ingestor):
         managers_data = self.process_managers()
 
         urls = self.s3.save_json_as_csv(managers_data, self.bucket_name, f"ingestor_managers_{self.asOf}")
-        self.cyphers.link_or_merge_managers_to_locks(urls)
         self.cyphers.create_unlock_managers_wallets(urls)
+        self.cyphers.link_or_merge_managers_to_locks(urls)
     
     def process_managers(self):
         logging.info("Processing managers data...")
@@ -85,11 +85,10 @@ class UnlockIngestor(Ingestor):
                 tmp = {
                     "id": key["id"].lower(),
                     "contractAddress": key["address"].lower(),
-                    "expiration": key["expiration"],
+                    "expiration": dt.datetime.fromtimestamp(key["expiration"]),
                     "tokenUri": key["tokenURI"].lower(),
-                    "createdAt": key["createdAt"],
+                    "createdAt": dt.datetime.fromtimestamp(key["createdAt"]),
                     "network": key["network"].lower(),
-                    "asOf": self.asOf
                 }
 
                 keys_data.append(tmp)
@@ -103,9 +102,9 @@ class UnlockIngestor(Ingestor):
         holders_data = self.process_holders()
 
         urls = self.s3.save_json_as_csv(holders_data, self.bucket_name, f"ingestor_holders_{self.asOf}")
+        self.cyphers.create_unlock_holders_wallets(urls)
         self.cyphers.link_or_merge_holders_to_locks(urls)
         self.cyphers.link_or_merge_holders_to_keys(urls)
-        self.cyphers.create_unlock_holders_wallets(urls)
 
     def process_holders(self):
         logging.info("Processing holders data...")
