@@ -109,7 +109,7 @@ class Ingestor:
             if not self.start_date:
                 self.start_date = date
             if date >= self.start_date:
-                if self.end_date and date <= self.end_date:
+                if self.end_date and date >= self.end_date:
                     break
                 datafiles_to_keep.append(datafile)
                 dates_to_keep.append(date)
