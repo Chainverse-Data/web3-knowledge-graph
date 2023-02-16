@@ -24,7 +24,7 @@ class Indexes(Cypher):
         self.query(query)
 
     def wallets(self):
-        query = """CREATE INDEX UniqueAddress IF NOT EXISTS FOR (n:Wallet) ON (n.address)"""
+        query = """CREATE INDEX UniqueWalletAddress IF NOT EXISTS FOR (n:Wallet) ON (n.address)"""
         self.query(query)
     
     def tokens(self):
