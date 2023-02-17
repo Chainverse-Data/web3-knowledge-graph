@@ -87,7 +87,7 @@ class TokenHoldersIngestor(Ingestor):
             for balance in self.scraper_data["balances"][wallet]:
                 if type(balance) == dict and "error" not in balance:
                     contractAddress = balance["contractAddress"]
-                    if contractAddress in self.scraper_data["tokens"] and not self.is_zero_address(contractAddress):
+                    if contractAddress in self.scraper_data["tokens"] and self.is_valid_address(contractAddress) and not self.is_zero_address(contractAddress):
                         decimal = self.scraper_data["tokens"][contractAddress]["decimal"]
                         if type(decimal) == str and "0x" in decimal:
                             decimal = int(decimal, 16)

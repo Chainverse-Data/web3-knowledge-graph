@@ -8,12 +8,6 @@ class GitCoinIngestor(Ingestor):
         self.cyphers = GitcoinCyphers()
         super().__init__("gitcoin")
 
-    def is_valid_address(self, address):
-        check = re.compile("^0x[a-fA-F0-9]{40}$")
-        if check.match(address):
-            return True
-        return False
-
     def ingest_grants(self):
         "This function ingests the grant data loaded in the self.data"
         logging.info("Ingesting grants data...")

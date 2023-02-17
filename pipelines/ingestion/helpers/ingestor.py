@@ -41,9 +41,17 @@ class Ingestor:
         "Main function to be called. Every ingestor must implement its own run function!"
         raise NotImplementedError("ERROR: the run function has not been implemented!")
 
-    def is_zero_address(self, address):
-        if int(address, 16) == 0:
+    def is_valid_address(self, address):
+        check = re.compile("^0x[a-fA-F0-9]{40}$")
+        if check.match(address):
             return True
+        return False
+
+    def is_zero_address(self, address):
+        if self.is_valid_address(address):
+            if int(address, 16) == 0:
+                return True
+            return False
         return False
 
     def set_start_end_date(self):
