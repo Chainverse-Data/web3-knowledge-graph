@@ -1,11 +1,8 @@
 from ..helpers import Scraper
-from ..helpers import tqdm_joblib
 import json
 import logging
-import tqdm
 import os
 import multiprocessing
-import joblib
 import warnings
 import web3
 from ens.auto import ns
@@ -16,23 +13,15 @@ class EnsScraper(Scraper):
         super().__init__(bucket_name, allow_override=allow_override)
         self.provider = "https://eth-mainnet.alchemyapi.io/v2/{}".format(os.environ["ALCHEMY_API_KEY"])
         self.headers = {"accept": "application/json"}
-        self.max_threads = multiprocessing.cpu_count() * 2
-        os.environ["NUMEXPR_MAX_THREADS"] = str(self.max_threads)
 
     def get_all_ens(self):
         logging.info("Getting all ENS...")
         self.data["ens"] = []
-        with tqdm_joblib(tqdm.tqdm(desc="Getting ENS Data", total=len(self.data["owner_addresses"]))):
-            ens_list = joblib.Parallel(n_jobs=self.max_threads, backend="threading")(
-                joblib.delayed(self.get_ens_info)(address) for address in self.data["owner_addresses"]
-            )
+        ens_list = self.parallel_process(self.get_ens_info, self.data["owner_addresses"], description="Getting all ENS NFTs owners")
 
         self.data["ens"] = [item for sublist in ens_list for item in sublist]
 
-        with tqdm_joblib(tqdm.tqdm(desc="Getting Primary Names", total=len(self.data["owner_addresses"]))):
-            primary_list = joblib.Parallel(n_jobs=self.max_threads, backend="threading")(
-                joblib.delayed(self.get_primary_info)(address) for address in self.data["owner_addresses"]
-            )
+        primary_list = self.parallel_process(self.get_primary_info, self.data["owner_addresses"], description="Getting ENS primary information from contracts")
         primary_list = [item for item in primary_list if item is not None]
         self.data["primary"] = primary_list
 

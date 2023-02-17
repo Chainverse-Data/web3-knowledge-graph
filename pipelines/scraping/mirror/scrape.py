@@ -1,5 +1,4 @@
 import multiprocessing
-import joblib
 import requests
 import os
 from tqdm import tqdm
@@ -10,7 +9,7 @@ import pandas as pd
 import web3
 import re
 from collections import Counter
-from ..helpers import tqdm_joblib
+
 DEBUG = os.environ.get("DEBUG", False)
 
 class MirrorScraper(Scraper):
@@ -38,11 +37,6 @@ class MirrorScraper(Scraper):
         self.etherescan_ABI_API_url = "https://api-optimistic.etherscan.io/api?module=contract&action=getabi&address={}&apikey=" + os.environ.get("OPTIMISTIC_ETHERSCAN_API_KEY", "")
         self.alchemy_optimism_rpc = f"https://opt-mainnet.g.alchemy.com/v2/{os.environ['ALCHEMY_API_KEY']}"
         self.w3 = web3.Web3(web3.HTTPProvider(self.alchemy_optimism_rpc))
-        self.max_threads = multiprocessing.cpu_count() * 2
-        if DEBUG:
-            self.max_thread = multiprocessing.cpu_count() - 1
-        os.environ["NUMEXPR_MAX_THREADS"] = str(self.max_threads)
-
 
     def ENSsearch(self, address):
         url = self.ensSearchURL.format(os.environ["ALCHEMY_API_KEY"], address)
@@ -175,10 +169,7 @@ class MirrorScraper(Scraper):
         filtered_transactions = transaction_df.sort_values("block").groupby("original_content_digest", as_index=False).head(1)
         logging.info(f"Getting all the articles content")
         
-        with tqdm_joblib(tqdm(desc="Getting Mirror article content and NFTs", total=len(filtered_transactions.to_dict('records')))):
-            articles_content = joblib.Parallel(n_jobs=self.max_threads, backend="threading")(
-                joblib.delayed(self.get_article_content)(transaction) for transaction in filtered_transactions.to_dict('records')
-            )
+        articles_content = self.parallel_process(self.get_article_content, filtered_transactions.to_dict('records'), description="Getting all articles content")
         articles_cleaned = [element[0] for element in articles_content if element[0]]
         NFTs_cleaned = [element[1] for element in articles_content if element[1]]
 

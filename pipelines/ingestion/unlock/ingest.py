@@ -53,42 +53,42 @@ class UnlockIngestor(Ingestor):
     def ingest_wallets(self, data=None): 
         logging.info("Ingesting wallets...")
         allWalletsUnique = data['allWalletsUnique'] 
-        urls = self.s3.save_df_as_csv(allWalletsUnique, self.bucket_name, f"ingestor_wallets_{self.asOf}", ACL='public-read')
+        urls = self.save_df_as_csv(allWalletsUnique, self.bucket_name, f"ingestor_wallets_{self.asOf}", ACL='public-read')
         self.cyphers.create_wallets(urls)
         logging.info(f"successfully ingested wallets. good job dev!")
     
     def ingest_lock_metadata(self, data=None):
         logging.info("Ingesting lock metadata...")
         lockMetadata = data['lockMetadata']
-        urls = self.s3.save_df_as_csv(lockMetadata, self.bucket_name, f"ingestor_locks_{self.asOf}", ACL='public-read') 
+        urls = self.save_df_as_csv(lockMetadata, self.bucket_name, f"ingestor_locks_{self.asOf}", ACL='public-read') 
         self.cyphers.create_locks(urls)
         logging.info("successfully ingested locks. good job dev!")
     
     def ingest_key_metadata(self, data=None):
         logging.info("Ingesting key metadata...")
         keyMetadata = data['keyMetadata']
-        urls = self.s3.save_df_as_csv(keyMetadata, self.bucket_name, f"ingestor_keys_{self.asOf}", ACL='public-read')
+        urls = self.save_df_as_csv(keyMetadata, self.bucket_name, f"ingestor_keys_{self.asOf}", ACL='public-read')
         self.cyphers.create_keys(urls)
         logging.info("successfully ingested keys. good job dev")
     
     def ingest_lock_managers(self, data=None):
         logging.info("Ingesting lock managers...")
         lockManagers = data['lockManagers']
-        urls = self.s3.save_df_as_csv(lockManagers, self.bucket_name, f"ingestor_lock_managers_{self.asOf}", ACL='public-read')
+        urls = self.save_df_as_csv(lockManagers, self.bucket_name, f"ingestor_lock_managers_{self.asOf}", ACL='public-read')
         self.cyphers.create_lock_managers(urls)
         logging.info("successfully ingested lock managers. good job dev!")
 
     def ingest_key_holders(self, data=None):
         logging.info("Ingesting key holders...")
         keyHolders = data['keyHolders']
-        urls = self.s3.save_df_as_csv(keyHolders, self.bucket_name, f"ingestor_key_holders_{self.asOf}", ACL='public-read')
+        urls = self.save_df_as_csv(keyHolders, self.bucket_name, f"ingestor_key_holders_{self.asOf}", ACL='public-read')
         self.cyphers.create_key_holders(urls)
         logging.info("successfully ingested key holders. good job dev!")
     
     def ingest_locks_keys(self, data=None):
         logging.info("Connecting locks and keys...")
         locks = data['allTokensUnique']
-        urls = self.s3.save_df_as_csv(locks, self.bucket_name, f"ingest_locks_keys{self.asOf}", ACL='public-read')
+        urls = self.save_df_as_csv(locks, self.bucket_name, f"ingest_locks_keys{self.asOf}", ACL='public-read')
         self.cyphers.connect_locks_keys(urls)
         logging.info("successfully connected locks to keys. good job dev!")
 

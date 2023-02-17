@@ -5,22 +5,19 @@ from gql import gql, Client
 from gql.transport.aiohttp import AIOHTTPTransport, log as gql_log
 import joblib
 from tqdm import tqdm
+
+from ....helpers import Multiprocessing
 gql_log.setLevel(logging.WARNING)
 
 import re
 from newspaper import Article
 import json
 import time
-from ...helpers import tqdm_joblib
 DEBUG = os.environ.get("DEBUG", False)
     
-class MirrorScraperHelper():
+class MirrorScraperHelper(Multiprocessing):
     def __init__(self, step = 400):
         self.step = step
-        self.max_thread = min(10, multiprocessing.cpu_count() * 2)
-        if DEBUG:
-            self.max_thread = multiprocessing.cpu_count() - 1
-        os.environ["NUMEXPR_MAX_THREADS"] = str(self.max_thread)
     
     def get_transations(self, query_string, counter=0):
         time.sleep(counter * 60)
@@ -79,13 +76,10 @@ class MirrorScraperHelper():
 
     def getArweaveTxs(self, startBlock, endBlock):
         blockRange = range(startBlock, endBlock, self.step)
-        with tqdm_joblib(tqdm(desc="Getting transactions data", total=len(blockRange))):
-            data = joblib.Parallel(n_jobs=self.max_thread, backend="threading")(joblib.delayed(self.get_all_transactions)(startBlock) for startBlock in blockRange)
-
+        
+        data = self.parallel_process(self.get_all_transactions, blockRange, description="Getting Arweave transactions")
         results = []
         for element in data:
-            # returned = self.get_all_transactions(currentBlock)
-            # logging.info(f"==========> Retrieved {len(returned)} transactions from block {currentBlock} to block {currentBlock+step}")
             results += element
         return results
 

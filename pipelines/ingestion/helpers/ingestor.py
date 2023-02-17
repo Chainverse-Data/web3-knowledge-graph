@@ -5,25 +5,28 @@ from datetime import datetime
 import re
 import sys
 
-from ...helpers.s3 import S3Utils
+from ...helpers import S3Utils
+from ...helpers import Requests
+from ...helpers import Multiprocessing
 
-
-class Ingestor:
+class Ingestor(Requests, S3Utils, Multiprocessing):
     def __init__(self, bucket_name, start_date=None, end_date=None):
+        Requests.__init__(self)
+        S3Utils.__init__(self)
+        Multiprocessing.__init__(self)
         self.runtime = datetime.now()
         self.asOf = f"{self.runtime.year}-{self.runtime.month}-{self.runtime.day}"
 
         try:
             self.cyphers
         except:
-            raise ValueError("Cyphers have not been instanciated to self.cyphers")
+            raise NotImplementedError("Cyphers have not been instanciated to self.cyphers")
 
         if not bucket_name:
             raise ValueError("bucket_name is not defined!")
         self.bucket_name = os.environ["AWS_BUCKET_PREFIX"] + bucket_name
 
-        self.s3 = S3Utils()
-        self.bucket = self.s3.create_or_get_bucket(self.bucket_name)
+        self.bucket = self.create_or_get_bucket(self.bucket_name)
 
         self.metadata_filename = "ingestor_metadata.json"
         self.metadata = self.read_metadata()
@@ -71,36 +74,15 @@ class Ingestor:
 
     def read_metadata(self):
         "Access the S3 bucket to read the metadata and returns a dictionary that corresponds to the saved JSON object"
-        if self.s3.check_if_file_exists(self.bucket_name, self.metadata_filename):
-            return self.s3.load_json(self.bucket_name, self.metadata_filename)
+        if self.check_if_file_exists(self.bucket_name, self.metadata_filename):
+            return self.load_json(self.bucket_name, self.metadata_filename)
         else:
             return {}
     
-    def save_df_as_csv(self, df, bucket_name, file_name, ACL="public-read"):
-        """Function to save a Pandas DataFrame to a CSV file in S3.
-        This functions takes care of splitting the dataframe if the resulting CSV is more than 10Mb.
-        parameters:
-        - df: the dataframe to be saved.
-        - bucket_name: The bucket name.
-        - file_name: The file name (without .csv at the end).
-        - ACL: (Optional) defaults to public-read for neo4J ingestion."""
-        chunks = [df]
-        # Check if the dataframe is bigger than the max allowed size of Neo4J (10Mb)
-        if df.memory_usage(index=False).sum() > 10000000:
-            chunks = self.split_dataframe(df)
-
-        urls = []
-        for chunk, chunk_id in zip(chunks, range(len(chunks))):
-            chunk.to_csv(f"s3://{bucket_name}/{file_name}--{chunk_id}.csv", index=False)
-            self.s3_resource.ObjectAcl(bucket_name, f"{file_name}--{chunk_id}.csv").put(ACL=ACL)
-            location = self.s3_client.get_bucket_location(Bucket=bucket_name)["LocationConstraint"]
-            urls.append("https://s3-%s.amazonaws.com/%s/%s" % (location, bucket_name, f"{file_name}--{chunk_id}.csv"))
-        return urls
-
     def save_metadata(self):
         "Saves the current metadata to S3"
         self.metadata["last_date_ingested"] = f"{self.runtime.year}-{self.runtime.month}-{self.runtime.day}"
-        self.s3.save_json(self.bucket_name, self.metadata_filename, self.metadata)
+        self.save_json(self.bucket_name, self.metadata_filename, self.metadata)
 
     def load_data(self):
         "Loads the data in the S3 bucket from the start date to the end date (if defined)"
@@ -128,7 +110,7 @@ class Ingestor:
             self.end_date = max(dates_to_keep)
         logging.info("Datafiles for ingestion: {}".format(",".join(datafiles_to_keep)))
         for datafile in datafiles_to_keep:
-            tmp_data = self.s3.load_json(self.bucket_name, datafile)
+            tmp_data = self.load_json(self.bucket_name, datafile)
             for root_key in tmp_data:
                 if root_key not in self.scraper_data:
                     self.scraper_data[root_key] = type(tmp_data[root_key])()
