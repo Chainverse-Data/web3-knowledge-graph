@@ -36,9 +36,9 @@ class TokenHoldersIngestor(Ingestor):
 
     def ingest_transfers(self):
         transfer_wallets = self.prepare_transfer_data()
-        urls = self.s3.save_df_as_csv(transfer_wallets, self.bucket_name, f"ingestor_transfers_wallets_{self.asOf}")
+        urls = self.save_df_as_csv(transfer_wallets, self.bucket_name, f"ingestor_transfers_wallets_{self.asOf}")
         self.cyphers.queries.create_wallets(urls)
-        urls = self.s3.save_df_as_csv(self.scraper_data["transfers"], self.bucket_name, f"ingestor_transfers_{self.asOf}")
+        urls = self.save_df_as_csv(self.scraper_data["transfers"], self.bucket_name, f"ingestor_transfers_{self.asOf}")
         self.cyphers.link_or_merge_transfers(urls)
 
     def prepare_token_data(self):
@@ -76,7 +76,7 @@ class TokenHoldersIngestor(Ingestor):
         token_data = self.prepare_token_data()
         for tokenType in token_data:
             logging.info(f"Ingesting : {tokenType}")
-            urls = self.s3.save_df_as_csv(token_data[tokenType], self.bucket_name, f"ingestor_tokens_{tokenType}_{self.asOf}", max_lines=5000)
+            urls = self.save_df_as_csv(token_data[tokenType], self.bucket_name, f"ingestor_tokens_{tokenType}_{self.asOf}", max_lines=5000)
             self.cyphers.create_or_merge_tokens(urls, tokenType)
 
     def prepare_holdings_data(self):
@@ -111,7 +111,7 @@ class TokenHoldersIngestor(Ingestor):
     def ingest_holdings(self):
         logging.info("Ingesting balances data")
         holding_data = self.prepare_holdings_data()
-        urls = self.s3.save_df_as_csv(holding_data, self.bucket_name, f"ingestor_holdings_{self.asOf}", max_lines=5000)
+        urls = self.save_df_as_csv(holding_data, self.bucket_name, f"ingestor_holdings_{self.asOf}", max_lines=5000)
         self.cyphers.link_wallet_tokens(urls)
 
     def run(self):

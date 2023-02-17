@@ -113,7 +113,7 @@ class LastActivityPostProcess(Processor):
         wallets = self.cyphers.get_all_wallets()
         with tqdm_joblib(tqdm(desc="Getting last transactions data", total=len(wallets))):
             data = joblib.Parallel(n_jobs=self.max_thread, backend="threading")(joblib.delayed(self.get_last_tx)(wallet) for wallet in wallets)
-        urls = self.s3.save_json_as_csv(data, self.bucket_name, f"processor_last_transactions-{self.asOf}")
+        urls = self.save_json_as_csv(data, self.bucket_name, f"processor_last_transactions-{self.asOf}")
         self.cyphers.set_last_active_date(urls)
         logging.info("Last transactions done")
 
@@ -122,7 +122,7 @@ class LastActivityPostProcess(Processor):
         wallets = self.cyphers.get_all_wallets_without_first_tx()
         with tqdm_joblib(tqdm(desc="Getting first transactions data", total=len(wallets))):
             data = joblib.Parallel(n_jobs=self.max_thread, backend="threading")(joblib.delayed(self.get_fisrt_tx)(wallet) for wallet in wallets)
-        urls = self.s3.save_json_as_csv(data, self.bucket_name, f"processor_first_transactions-{self.asOf}")
+        urls = self.save_json_as_csv(data, self.bucket_name, f"processor_first_transactions-{self.asOf}")
         self.cyphers.set_first_active_date(urls)
         logging.info("first transactions done")
 

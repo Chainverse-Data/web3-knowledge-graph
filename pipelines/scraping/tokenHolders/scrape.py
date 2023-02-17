@@ -7,7 +7,6 @@ from tqdm import tqdm
 from ..helpers import Scraper
 from .cyphers import TokenHoldersCypher
 import logging
-from ..helpers import tqdm_joblib
 
 DEBUG = os.environ.get("DEBUG", False)
 # I have to add try except statements to this because the overall api calls from alchemy have a 1/20000 chance of SSL failure.
@@ -21,11 +20,7 @@ class TokenHolderScraper(Scraper):
         self.wallets_last_block = self.metadata.get("wallets_last_block", {})
         self.alchemy_api_url = "https://eth-mainnet.g.alchemy.com/v2/{}".format(os.environ["ALCHEMY_API_KEY"])
         self.get_current_block()
-        self.max_thread = multiprocessing.cpu_count() * 2
         self.important_only = os.environ.get("IMPORTANT_WALLETS", False)
-        if DEBUG:
-            self.max_thread = multiprocessing.cpu_count() - 1
-        os.environ["NUMEXPR_MAX_THREADS"] = str(self.max_thread)
 
     def get_current_block(self):
         headers = {"Content-Type": "application/json"}
@@ -73,9 +68,7 @@ class TokenHolderScraper(Scraper):
         self.data["assets"] = {}
         self.data["tokens"] = {}
         self.data["transfers"] = []
-        logging.info("Multithreaded scraping launching!")
-        with tqdm_joblib(tqdm(desc="Getting transactions data", total=len(wallets))):
-            data = joblib.Parallel(n_jobs=self.max_thread, backend="threading")(joblib.delayed(self.job_get_transactions)(wallet) for wallet in wallets)
+        data = self.parallel_process(self.job_get_transactions, wallets, description="Getting all the transactions")
         for item in tqdm(data):
             wallet, assets, tokens, transactions = item
             self.data["assets"][wallet] = assets
@@ -94,8 +87,7 @@ class TokenHolderScraper(Scraper):
                     "hash": transaction["hash"]
                 }
                 self.data["transfers"].append(tmp)
-        with tqdm_joblib(tqdm(desc="Getting balances data", total=len(wallets))):
-            data = joblib.Parallel(n_jobs=self.max_thread, backend="threading")(joblib.delayed(self.job_get_balances)(wallet) for wallet in wallets)
+        data = self.parallel_process(self.job_get_balances, wallets, description="Getting all the balances")
         for item in tqdm(data):
             wallet, balances = item
             self.data["balances"][wallet] = balances

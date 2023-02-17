@@ -111,13 +111,13 @@ class TwitterPostProcess(Processor):
             self.bad_handles.update(set_items)
 
         logging.info(f"Grabbed the data of {len(users)} users from the API")
-        node_info_urls = self.s3.save_json_as_csv(users, self.bucket_name, f"processor_twitter_data_{self.asOf}")
+        node_info_urls = self.save_json_as_csv(users, self.bucket_name, f"processor_twitter_data_{self.asOf}")
         self.cyphers.add_twitter_node_info(node_info_urls)
 
         # add trash labels to bad handle nodes
         bad_handles = [{"handle": x} for x in self.bad_handles]
         logging.info(f"Found {len(bad_handles)} bad handles")
-        trash_info_urls = self.s3.save_json_as_csv(
+        trash_info_urls = self.save_json_as_csv(
             bad_handles, self.bucket_name, f"processor_twitter_trash_{self.asOf}"
         )
         self.cyphers.add_trash_labels(trash_info_urls)

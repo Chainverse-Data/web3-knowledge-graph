@@ -138,14 +138,14 @@ class DaoHausIngestor(Ingestor):
         logging.info("Ingesting daos and tokens...")
         daos_df, tokens_df, summoners_df = self.prepare_daos_and_tokens_data()
         
-        urls = self.s3.save_df_as_csv(daos_df, self.bucket_name, f"ingestor_daos_{self.asOf}")
+        urls = self.save_df_as_csv(daos_df, self.bucket_name, f"ingestor_daos_{self.asOf}")
         self.cyphers.create_or_merge_daos(urls)
         
-        urls = self.s3.save_df_as_csv(summoners_df, self.bucket_name, f"ingestor_summoners_{self.asOf}")
+        urls = self.save_df_as_csv(summoners_df, self.bucket_name, f"ingestor_summoners_{self.asOf}")
         self.cyphers.create_or_merge_wallets(urls)
         self.cyphers.link_or_merge_summoners(urls)
 
-        urls = self.s3.save_df_as_csv(tokens_df, self.bucket_name, f"ingestor_tokens_{self.asOf}")
+        urls = self.save_df_as_csv(tokens_df, self.bucket_name, f"ingestor_tokens_{self.asOf}")
         self.cyphers.create_or_merge_tokens(urls)
         self.cyphers.link_or_merge_tokens(urls)
 
@@ -153,20 +153,20 @@ class DaoHausIngestor(Ingestor):
         logging.info("Ingesting members...")
         members_df, wallets_df = self.prepare_members_data()
 
-        urls = self.s3.save_df_as_csv(wallets_df, self.bucket_name, f"ingestor_members_wallets_{self.asOf}")
+        urls = self.save_df_as_csv(wallets_df, self.bucket_name, f"ingestor_members_wallets_{self.asOf}")
         self.cyphers.create_or_merge_wallets(urls)
 
-        urls = self.s3.save_df_as_csv(members_df, self.bucket_name, f"ingestor_members_{self.asOf}")
+        urls = self.save_df_as_csv(members_df, self.bucket_name, f"ingestor_members_{self.asOf}")
         self.cyphers.link_or_merge_members(urls)
 
     def ingest_proposals(self):
         logging.info("Ingesting proposals...")
         proposals_df, wallets_df = self.prepare_proposals_data()
 
-        urls = self.s3.save_df_as_csv(wallets_df, self.bucket_name, f"ingestor_proposals_wallets_{self.asOf}")
+        urls = self.save_df_as_csv(wallets_df, self.bucket_name, f"ingestor_proposals_wallets_{self.asOf}")
         self.cyphers.create_or_merge_wallets(urls)
 
-        urls = self.s3.save_df_as_csv(proposals_df, self.bucket_name, f"ingestor_proposals_{self.asOf}")
+        urls = self.save_df_as_csv(proposals_df, self.bucket_name, f"ingestor_proposals_{self.asOf}")
         self.cyphers.create_or_merge_proposals(urls)
         self.cyphers.link_or_merge_proposals(urls)
         self.cyphers.link_or_merge_applicants(urls)
@@ -175,18 +175,18 @@ class DaoHausIngestor(Ingestor):
         self.cyphers.link_or_merge_sponsors(urls)
 
         tmp_df = proposals_df[proposals_df["tributeOffered"] != "0"]
-        urls = self.s3.save_df_as_csv(tmp_df, self.bucket_name, f"ingestor_tributes_{self.asOf}")
+        urls = self.save_df_as_csv(tmp_df, self.bucket_name, f"ingestor_tributes_{self.asOf}")
         self.cyphers.link_or_merge_tributes(urls)
 
         tmp_df = proposals_df[proposals_df["paymentRequested"] != "0"]
-        urls = self.s3.save_df_as_csv(tmp_df, self.bucket_name, f"ingestor_payments_{self.asOf}")
+        urls = self.save_df_as_csv(tmp_df, self.bucket_name, f"ingestor_payments_{self.asOf}")
         self.cyphers.link_or_merge_payments(urls)
 
     def ingest_votes(self):
         logging.info("Ingesting votes...")
         votes_df = self.prepare_votes_data()
 
-        urls = self.s3.save_df_as_csv(votes_df, self.bucket_name, f"ingestor_votes_{self.asOf}")
+        urls = self.save_df_as_csv(votes_df, self.bucket_name, f"ingestor_votes_{self.asOf}")
         self.cyphers.link_or_merge_voters(urls)
         self.cyphers.link_or_merge_votes(urls)
 

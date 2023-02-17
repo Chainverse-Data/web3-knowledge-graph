@@ -1,17 +1,9 @@
 from ..helpers import Scraper
-from ..helpers import tqdm_joblib, get_ens_info, str2bool
+from ..helpers import get_ens_info
 from .helpers.query_strings import spaces_query, proposals_query, votes_query, proposal_status_query
 import json
 import logging
-import tqdm
-import os
-import re
-import multiprocessing
-import joblib
-import argparse
-import math
 import time
-
 
 class SnapshotScraper(Scraper):
     def __init__(self, bucket_name="snapshot", allow_override=False):
@@ -59,11 +51,7 @@ class SnapshotScraper(Scraper):
             raw_spaces.extend(results)
             offset += self.space_limit
         logging.info(f"Total Spaces aquired: {len(raw_spaces)}")
-
-        with tqdm_joblib(tqdm.tqdm(desc="Getting ENS Data", total=len(raw_spaces))) as progress_bar:
-            ens_list = joblib.Parallel(n_jobs=multiprocessing.cpu_count() - 1)(
-                joblib.delayed(get_ens_info)(space["id"]) for space in raw_spaces
-            )
+        ens_list = self.parallel_process(get_ens_info, raw_spaces, description="Getting information about ENS holders")
         for i in range(len(raw_spaces)):
             if ens_list[i] is not None:
                 raw_spaces[i]["ens"] = ens_list[i]
@@ -110,11 +98,9 @@ class SnapshotScraper(Scraper):
     def get_votes(self):
         logging.info("Getting votes...")
         proposal_ids = list(self.open_proposals.union(set([proposal["id"] for proposal in self.data["proposals"]])))
-        with tqdm_joblib(tqdm.tqdm(desc="Getting Votes Data", total=math.ceil(len(proposal_ids) / 5))) as progress_bar:
-            raw_votes = joblib.Parallel(n_jobs=2, backend="threading")(
-                joblib.delayed(self.scrape_votes)(proposal_ids[i : i + 5]) for i in range(0, len(proposal_ids), 5)
-            )
-
+        
+        proposals = [proposal_ids[i : i + 5] for i in range(0, len(proposal_ids), 5)]
+        raw_votes = self.parallel_process(self.scrape_votes, proposals, description="Getting all the votes")
         votes = [vote for votes in raw_votes for vote in votes]
         logging.info(f"Total Votes: {len(votes)}")
         self.data["votes"] = votes
