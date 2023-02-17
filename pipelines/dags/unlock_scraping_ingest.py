@@ -7,11 +7,11 @@ from airflow.models import Variable
 
 dag = DAG(
     "unlock_scraping_and_ingest",
-    description="Scrapes the latest Unlcok data, and ingest them into the neo4J instance.",
+    description="Scrapes the latest Unlock data, and ingest them into the neo4J instance.",
     default_args={
         "start_date": days_ago(2),
-        "owner": "Leo Blondel",
-        "email": ["leo@blondel.ninja"],
+        "owner": "Isaac Duke",
+        "email": ["isaac@chainversedata.com"],
         "schedule_interval": "@daily"
     },
     max_active_runs=1,
@@ -35,6 +35,7 @@ ecs_awslogs_stream_prefix = f"ecs/{ecs_task_image}"
 
 # Get the container's ENV vars from Airflow Variables
 env_vars = [
+    {"name": "GRAPH_API_KEY", "value": Variable.get("GRAPH_API_KEY")},
     {"name": "ETHERSCAN_API_KEY", "value": Variable.get("ETHERSCAN_API_KEY")},
     {"name": "ALCHEMY_API_KEY", "value": Variable.get("ALCHEMY_API_KEY")},
     {"name": "ALLOW_OVERRIDE", "value": Variable.get("ALLOW_OVERRIDE")},
