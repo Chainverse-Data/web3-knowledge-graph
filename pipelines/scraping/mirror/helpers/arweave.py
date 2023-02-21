@@ -17,6 +17,7 @@ DEBUG = os.environ.get("DEBUG", False)
     
 class MirrorScraperHelper(Multiprocessing):
     def __init__(self, step = 400):
+        Multiprocessing.__init__(self)
         self.step = step
     
     def get_transations(self, query_string, counter=0):
