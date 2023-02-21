@@ -25,8 +25,7 @@ class TwitterRelationsProcessor(Processor):
         self.now = datetime.datetime.now()
         self.timestamp = self.now.strftime("%Y_%m_%d_%H%M%S")
         logging.info(self.timestamp)
-        self.bucket = 'jordan-test-twitter-rels'
-        super().__init__("twitter-rels")
+        super().__init__("twitter-relations")
 
     def extract_handles(self, val):
         matches = re.findall(r'@\w+', val)
