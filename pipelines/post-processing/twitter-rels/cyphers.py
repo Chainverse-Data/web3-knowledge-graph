@@ -5,7 +5,7 @@ import pandas as pd
 
 from ...helpers import Indexes, Constraints
 from ...helpers import Cypher
-from ...helpers import count_query_logging
+from ...helpers import count_query_logging, get_query_logging
 
 
 class TwitterRelsCyphers(Cypher):
@@ -20,41 +20,59 @@ class TwitterRelsCyphers(Cypher):
         constraint = Constraints()
         constraint.website()
 
+    @get_query_logging
     def get_bios(self):
         ingestTime = datetime.now()
         oneMonthAgo = ingestTime - timedelta(days=30)
         query = f"""
-        MATCH (twitter:Twitter)
-        WHERE NOT twitter.bio IS NULL
-        AND twitter.lastProcessingDateBio IS NULL
-        RETURN distinct twitter.userId as userId, twitter.bio as bio 
-        UNION 
-        MATCH (twitter:Twitter)
-        WHERE twitter.bio IS NULL 
-        AND twitter.lastProcessingDateBio > datetime(epochMillis: {oneMonthAgo.timestamp()})
-        WITH twitter.userId as userId, twitter.bio as bio
-        RETURN distinct userId, bio
+            MATCH (twitter:Twitter)
+            WHERE NOT twitter.bio IS NULL
+            AND twitter.lastProcessingDateBio IS NULL
+            RETURN distinct twitter.userId as userId, twitter.bio as bio 
+            UNION 
+            MATCH (twitter:Twitter)
+            WHERE twitter.bio IS NULL 
+            AND twitter.lastProcessingDateBio > datetime(epochMillis: {oneMonthAgo.timestamp()})
+            WITH twitter.userId as userId, twitter.bio as bio
+            RETURN distinct userId, bio
         """
-        results = pd.DataFrame(query)
+        results = self.query(query)
         return results
 
-    def get_websites(self):
-        ingestTime = datetime.now()
-        twoMonthsAgo = ingestTime - timedelta(days=60)
-        query = f"""
-        MATCH (twitter:Twitter)
-        WHERE NOT twitter.website IS NULL
-        AND twitter.lastProcesingDateWebsite IS NULL
-        RETURN distinct twitter.userId as userId, twitter.website as website 
-        UNION 
-        MATCH (twitter:Twitter)
-        WHERE twitter.website IS NULL 
-        AND twitter.lastProcessingDateWebsite > datetime(epochMillis: {twoMonthsAgo.timestamp()})
-        WITH twitter.userId as userId, twitter.website as website
-        RETURN distinct userId, website
-        """
-        results = pd.DataFrame(query)
-        return results
+    ## collects twitter accounts with websites that have no link between twitter & website
+    @get_query_logging
+    def get_twitter_websites(self):
+        query = """
+        MATCH 
+            (t:Twitter)
+        WHERE 
+            t.website is not null 
+        AND NOT 
+            (t)-[:HAS_WEBSITE]->()
+        RETURN distinct
+            t.userId as userId,
+            t.website as website
+            """
+        results = self.query(query)
+        return results 
+
+    # def get_websites(self):
+    #     ingestTime = datetime.now()
+    #     twoMonthsAgo = ingestTime - timedelta(days=60)
+    #     query = f"""
+    #         MATCH (twitter:Twitter)
+    #         WHERE NOT twitter.website IS NULL
+    #         AND twitter.lastProcesingDateWebsite IS NULL
+    #         RETURN distinct twitter.userId as userId, twitter.website as website 
+    #         UNION 
+    #         MATCH (twitter:Twitter)
+    #         WHERE twitter.website IS NULL 
+    #         AND twitter.lastProcessingDateWebsite > datetime(epochMillis: {twoMonthsAgo.timestamp()})
+    #         WITH twitter.userId as userId, twitter.website as website
+    #         RETURN distinct userId, website
+    #     """
+    #     results = self.query(query)
+    #     return results
     
     def delete_lame_rels(self):
         query = """
@@ -106,6 +124,7 @@ class TwitterRelsCyphers(Cypher):
         return count 
 
     ## collects twitter accounts with websites that have no link between twitter & website
+    @get_query_logging
     def get_twitter_websites(self):
         query = """
         MATCH 
@@ -119,12 +138,7 @@ class TwitterRelsCyphers(Cypher):
             t.website as website
             """
         results = self.query(query)
-        results_df = pd.DataFrame(results)
-        len_df = len(results_df)
-        logging.info(f"Okay I collected {len_df} websites.")
-        logging.info(results_df.head(5))
-
-        return results_df 
+        return results 
 
     @count_query_logging
     def create_domains(self, urls):

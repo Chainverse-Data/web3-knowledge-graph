@@ -34,7 +34,7 @@ class TwitterRelsProcessor(Processor):
         return [match.strip() for match in matches]
 
     def extract_accounts_from_bio(self):
-        bios = self.cyphers.get_bios()
+        bios = pd.DataFrame.from_dict(self.cyphers.get_bios())
         bios = bios.dropna(subset=['bio'])
         bios['handles'] = bios['bio'].apply(self.extract_handles)
         bios = bios.dropna(subset=['handles'])
@@ -48,13 +48,7 @@ class TwitterRelsProcessor(Processor):
     def ingest_references(self):
         bios = self.extract_accounts_from_bio()
         self.cyphers.ingest_references(bios)
-
         return None 
-
-    def get_websites(self):
-        websites_df = self.cyphers.get_twitter_websites()
-
-        return websites_df
 
     def extract_website_data(self, url, counter=0):
         if counter > 10:
@@ -70,34 +64,35 @@ class TwitterRelsProcessor(Processor):
             return self.extract_website_data(url, counter=counter+1) 
     
     def create_website_csvs(self, website_df):
-        results_list = list()
-        for index, row in tqdm(website_df.iterrows(), total=len(website_df)):
-            userId = row[0]
-            tco_link = row[1]
-            website_data = self.extract_website_data(tco_link)
-            row_dict = dict()
+        twitter_accounts = self.cyphers.get_twitter_websites()
+        results = []
+        for account in tqdm(twitter_accounts):
+            userId = account["userId"]
+            original_url = account["website"]
+            website_data = self.extract_website_data(original_url)
             url = website_data['url']
-            original_url = website_data['original_url']
             domain = website_data['domain']
             if url:
-                row_dict['userId'] = userId 
-                row_dict['original_url'] = original_url 
-                row_dict['domain'] = domain 
-                row_dict['url'] = url 
-                results_list.append(row_dict)
-        results_df = pd.DataFrame(results_list)
+                result = {
+                    "userId": userId,
+                    "original_url": original_url,
+                    "domain": domain,
+                    "url": url
+                }
+                results.append(result)
+        results_df = pd.DataFrame(results)
         fname = "websites_" + self.asOf
         urls = self.s3.save_df_as_csv(results_df, bucket_name=self.bucket_name, file_name=fname, ACL='public-read', max_lines=10000, max_size=10000000)
 
         return urls 
 
-    def get_websites(self):
-        logging.info("Collecting websites....")
-        websites = self.cyphers.get_twitter_websites()
-        logging.info("Getting website data, saving to S3...")
-        urls = self.create_csv(website_df=websites)
-        logging.info("Damn. That took awhile. Got all of the websites though")
-        return urls 
+    # def get_websites(self):
+    #     logging.info("Collecting websites....")
+    #     websites = self.cyphers.get_twitter_websites()
+    #     logging.info("Getting website data, saving to S3...")
+    #     urls = self.create_csv(website_df=websites)
+    #     logging.info("Damn. That took awhile. Got all of the websites though")
+    #     return urls 
 
     def ingest_websites(self):
         logging.info("ingesting twitter / website / domain data")
@@ -118,5 +113,3 @@ class TwitterRelsProcessor(Processor):
 if __name__ == "__main__":
     processor = TwitterRelsProcessor()
     processor.run()
-
-
