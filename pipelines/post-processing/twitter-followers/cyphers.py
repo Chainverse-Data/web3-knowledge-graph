@@ -4,7 +4,7 @@ from ...helpers import count_query_logging, get_query_logging
 from ...helpers import Queries
 
 
-class TwitterFollowerCyphers(Cypher):
+class TwitterFollowersCyphers(Cypher):
     def __init__(self, database=None):
         super().__init__(database)
         self.queries = Queries()
@@ -12,10 +12,10 @@ class TwitterFollowerCyphers(Cypher):
     @get_query_logging
     def get_high_rep_handles(self):
         query = """
-                    match (w:Wallet)-[r:HAS_ALIAS]-(a:Alias)-[:HAS_ALIAS]-(t:Twitter)
-                    optional match (w)-[:_HAS_CONTEXT]->(context:_Context)
-                    with t, count(distinct(context)) as reputation
-                    return distinct t.userId, t.handle, reputation order by reputation desc
+                    MATCH (w:Wallet)-[:HAS_ALIAS]-(a:Alias)-[:HAS_ALIAS]-(t:Twitter)
+                    OPTIONAL MATCH (w)-[:_HAS_CONTEXT]->(context:_Context)
+                    WITH t, count(distinct(context)) as reputation
+                    RETURN distinct t.userId, t.handle, reputation order by reputation desc
                 """
         results = self.query(query)
         return results
@@ -28,7 +28,7 @@ class TwitterFollowerCyphers(Cypher):
             query = f"""
                         MATCH (w:Wallet)-[:HAS_ALIAS]-(:Alias)-[:HAS_ALIAS]-(t:Twitter)
                         WHERE NOT t:Trash and exists(t.userId)
-                        return t
+                        RETURN t
                         SKIP {offset} LIMIT {limit}
                     """
             x = self.query(query)
@@ -37,8 +37,8 @@ class TwitterFollowerCyphers(Cypher):
             results.extend(x)
             offset += limit
 
-        twitter = [y.get("t") for y in results]
-        return twitter
+        twitters = [y.get("t") for y in results]
+        return twitters
 
     @get_query_logging
     def get_wallet_handles(self, limit=2000):
@@ -48,7 +48,7 @@ class TwitterFollowerCyphers(Cypher):
             query = f"""
                         MATCH (w:Wallet)-[:HAS_ACCOUNT]-(t:Twitter)
                         WHERE NOT t:Trash
-                        return t
+                        RETURN t
                         SKIP {offset} LIMIT {limit}
                     """
             x = self.query(query)
@@ -134,8 +134,11 @@ class TwitterFollowerCyphers(Cypher):
                         MATCH (f:Twitter {{handle: toLower(twitter.follower)}}), (e:Twitter {{handle: toLower(twitter.handle)}})
                         MERGE (f)-[r:FOLLOWS]->(e)
                         ON CREATE SET
-                            r.asOf = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
-                        return count(r)
+                            r.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
+                            r.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
+                        ON MATCH SET
+                            r.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
+                        RETURN count(r)
             """
             count += self.query(query)[0].value()
         return count

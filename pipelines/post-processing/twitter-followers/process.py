@@ -1,26 +1,24 @@
 import logging
 from ..helpers import Processor
-from .cyphers import TwitterFollowerCyphers
+from .cyphers import TwitterFollowersCyphers
 from datetime import datetime, timedelta
 import os
-import re
-import requests
-import json
 import time
 import tqdm
 
+DEBUG = os.environ.get("DEBUG", False)
 
-class TwitterFollowPostProcess(Processor):
+class TwitterFollowersPostProcess(Processor):
     """This class reads from the Neo4J instance for Twitter nodes to call the Twitter API and retreive extra infos"""
 
     def __init__(self):
-        self.cyphers = TwitterFollowerCyphers()
+        self.cyphers = TwitterFollowersCyphers()
         super().__init__("twitter")
         self.cutoff = datetime.now() - timedelta(days=20)
 
         self.items = []
         self.bearer_tokens = os.environ.get("TWITTER_BEARER_TOKEN").split(",")
-        self.i = 0
+        self.current_bearer_token_index = 0
         self.metadata["following"] = self.metadata.get("following", [])
         self.metadata["followers"] = self.metadata.get("followers", [])
 
@@ -28,18 +26,16 @@ class TwitterFollowPostProcess(Processor):
         if retries > 10:
             return {"data": []}
         headers = {
-            "Authorization": f"Bearer {self.bearer_tokens[self.i]}",
+            "Authorization": f"Bearer {self.bearer_tokens[self.current_bearer_token_index]}",
         }
-        x = requests.get(
-            url,
-            headers=headers,
-        )
-        resp = json.loads(x.text)
-        head = dict(x.headers)
-        if "data" not in resp and "title" not in resp:
-            return resp
+        response = self.get_request(url, headers=headers, decode=False, json=False, ignore_retries=True)
+        data = response.json()
+        head = dict(response.headers)
 
-        if "data" not in resp and resp["title"] == "Too Many Requests":
+        if "data" not in data and "title" not in data:
+            return data
+
+        if "data" not in data and data["title"] == "Too Many Requests":
             end_time = head["x-rate-limit-reset"]
             epoch_time = int(time.time())
             time_to_wait = int(end_time) - epoch_time
@@ -47,9 +43,9 @@ class TwitterFollowPostProcess(Processor):
             time.sleep(time_to_wait)
             return self.twitter_api_call(url, retries=retries + 1)
 
-        self.i += 1
-        self.i %= len(self.bearer_tokens)
-        return resp
+        self.current_bearer_token_index += 1
+        self.current_bearer_token_index %= len(self.bearer_tokens)
+        return data
 
     def get_twitter_handles(self):
         logging.info("Getting twitter handles")
@@ -60,12 +56,16 @@ class TwitterFollowPostProcess(Processor):
         results.extend(self.cyphers.get_entity_handles())
         results.extend(self.cyphers.get_token_handles())
 
+        if DEBUG:
+            results = results[:10]
         for entry in results:
             self.items.append({"id": entry.get("userId"), "handle": entry.get("handle")})
         logging.info(f"Found {len(self.items)} twitter handles")
 
     def get_high_rep_handles(self):
         results = self.cyphers.get_high_rep_handles()
+        if DEBUG:
+            results = results[:100]
         for entry in results:
             self.items.append(
                 {"id": entry.get("t.userId"), "handle": entry.get("t.handle"), "rep": entry.get("reputation")}
@@ -78,7 +78,7 @@ class TwitterFollowPostProcess(Processor):
         follower_url = "https://api.twitter.com/2/users/{}/followers?max_results=1000{}&user.fields=username"
         results = []
         if self.metadata.get("followers", None):
-            results = self.s3.load_csv(self.bucket_name, "twitter_followers.csv").to_dict("records")
+            results = self.load_csv(self.bucket_name, "twitter_followers.csv").to_dict("records")
             logging.info(f"Loaded {len(results)} followers from S3")
 
         for idx, entry in tqdm.tqdm(enumerate(self.items), total=len(self.items), desc="Getting followers"):
@@ -93,7 +93,7 @@ class TwitterFollowPostProcess(Processor):
                     }
                 )
             if idx % 100:  # Save every 500
-                self.s3.save_full_json_as_csv(results, self.bucket_name, "twitter_followers")
+                self.save_json_as_csv(results, self.bucket_name, "twitter_followers")
                 self.save_metadata()
             self.metadata["followers"].append(entry.get("id"))
         return results
@@ -103,7 +103,7 @@ class TwitterFollowPostProcess(Processor):
         following_url = "https://api.twitter.com/2/users/{}/following?max_results=1000{}&user.fields=username"
         results = []
         if self.metadata.get("following", None):
-            results = self.s3.load_csv(self.bucket_name, "twitter_following.csv").to_dict("records")
+            results = self.load_csv(self.bucket_name, "twitter_following.csv").to_dict("records")
             logging.info(f"Loaded {len(results)} following from S3")
 
         for idx, entry in tqdm.tqdm(enumerate(self.items), total=len(self.items), desc="Getting following"):
@@ -119,7 +119,7 @@ class TwitterFollowPostProcess(Processor):
                 )
             self.metadata["following"].append(entry.get("id"))
             if idx % 500:
-                self.s3.save_full_json_as_csv(results, self.bucket_name, "twitter_following")
+                self.save_json_as_csv(results, self.bucket_name, "twitter_following")
                 self.save_metadata()
         return results
 
@@ -137,7 +137,7 @@ class TwitterFollowPostProcess(Processor):
             if "data" not in resp:
                 break
             results.extend(resp.get("data"))
-            if len(results) >= 5000:
+            if DEBUG and len(results) >= 5000:
                 break
             meta = resp.get("meta", {})
             if meta.get("next_token", None):
@@ -157,19 +157,19 @@ class TwitterFollowPostProcess(Processor):
         for handle in all_handles:
             all_handle_list.append({"handle": handle, "profileUrl": f"https://twitter.com/{handle}"})
 
-        handle_urls = self.s3.save_json_as_csv(all_handle_list, self.bucket_name, "twitter_follow_handles.csv")
+        handle_urls = self.save_json_as_csv(all_handle_list, self.bucket_name, "twitter_follow_handles.csv")
         self.cyphers.create_or_merge_twitter_nodes(handle_urls)
 
-        follower_urls = self.s3.save_json_as_csv(data, self.bucket_name, "twitter_followers.csv")
+        follower_urls = self.save_json_as_csv(data, self.bucket_name, "twitter_followers.csv")
         self.cyphers.merge_follow_relationships(follower_urls)
 
     def run(self):
         self.get_high_rep_handles()
-        # followers = self.get_following()
+        followers = self.get_following()
         following = self.get_followers()
         self.handle_ingestion(followers + following)
 
 
 if __name__ == "__main__":
-    processor = TwitterFollowPostProcess()
+    processor = TwitterFollowersPostProcess()
     processor.run()
