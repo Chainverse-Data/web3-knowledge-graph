@@ -1,6 +1,5 @@
 import logging
 import pandas as pd
-from tqdm import tqdm
 from ..helpers import Processor
 from .cyphers import TwitterRelationsCyphers
 from ...helpers import S3Utils
@@ -10,9 +9,12 @@ import os
 import re
 import requests as r
 import datetime
-import json
 import time
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
+
+DEBUG = os.environ.get("DEBUG", False)
 
 class TwitterRelationsProcessor(Processor):
     """This class reads from the Neo4J instance for Twitter nodes to call the Twitter API and retreive extra infos"""
@@ -30,50 +32,52 @@ class TwitterRelationsProcessor(Processor):
         matches = re.findall(r'@\w+', val)
         if not matches:
             return None 
-            
-        return [match.strip() for match in matches]
+        handles = [match.strip().replace("@", "") for match in matches]
+        return handles
 
     def extract_accounts_from_bio(self):
-        bios = pd.DataFrame.from_dict(self.cyphers.get_bios())
-        bios = bios.dropna(subset=['bio'])
-        bios['handles'] = bios['bio'].apply(self.extract_handles)
-        bios = bios.dropna(subset=['handles'])
-        len_bios = len(bios)
-        exploded_bios = bios.explode('handles')
-        logging.info(f"nice, you have {len_bios} rows")
-
-        return exploded_bios 
+        accounts = self.cyphers.get_bios()
+        accounts = [{"handle": account["handle"], "bio": account["bio"]} for account in accounts]
+        accounts_df = pd.DataFrame.from_dict(accounts)
+        accounts_df = accounts_df.dropna(subset=['bio'])
+        accounts_df['metionned_handle'] = accounts_df['bio'].apply(self.extract_handles)
+        accounts_df = accounts_df.dropna(subset=['metionned_handle'])
+        accounts_df = accounts_df.explode('metionned_handle')
+        logging.info(f"nice, you have {len(accounts_df)} rows")
+        return accounts_df 
     
     def process_references(self):
         bios = self.extract_accounts_from_bio()
         urls = self.save_df_as_csv(bios, self.bucket_name, "processing_bios_handles_refs_" + self.asOf)
-        print(urls)
-        # self.cyphers.ingest_references(urls)
-        return None 
+        self.cyphers.create_metionned_handles(urls)
+        self.cyphers.ingest_references(urls)
 
     def extract_website_data(self, account, counter=0):
         if counter > 5:
             return None
-        time.sleep(counter * 10)
+        time.sleep(counter)
         try:
-            response = r.head(account["website"], allow_redirects=True, timeout=10)
+            response = r.head(account["website"], allow_redirects=True, timeout=10, verify=False)
             parsed_url = urlparse(response.url)
             url_string = urlunparse(parsed_url)
             hostname = parsed_url.hostname
             
             result = {
-                    "userId": account["userId"],
+                    "handle": account["handle"],
                     "original_url": account["website"],
                     "domain": hostname,
                     "url": url_string
                 }
             return result
         except Exception as e:
+            # logging.error("Error getting the URL for: {}. \n {}".format(account["website"], e))
             return self.extract_website_data(account, counter=counter+1) 
     
     def process_websites(self):
         logging.info("Extracting urls and domains for websites")
         twitter_accounts = self.cyphers.get_twitter_websites()
+        if DEBUG:
+            twitter_accounts = twitter_accounts[:100]
         results = self.parallel_process(self.extract_website_data, twitter_accounts, "Extracting URLs and domains from twitter accounts bios")
         results = [result for result in results if result]
         fname = "websites_" + self.asOf
