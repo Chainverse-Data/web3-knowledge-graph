@@ -8,7 +8,7 @@ from ...helpers import Cypher
 from ...helpers import count_query_logging, get_query_logging
 
 
-class TwitterRelsCyphers(Cypher):
+class TwitterRelationsCyphers(Cypher):
     def __init__(self, database=None):
         super().__init__(database)
     
@@ -154,6 +154,7 @@ class TwitterRelsCyphers(Cypher):
             ON CREATE
                 SET
                     domain.createdDt = ingestDate,
+                    domain.lastUpdateDt = ingestDate,
                     domain.uuid = apoc.create.uuid()
             RETURN 
                 COUNT(DISTINCT(domain))
@@ -202,3 +203,21 @@ class TwitterRelsCyphers(Cypher):
             count += self.query(link_website_domain_query)[0].value()
 
         return count 
+
+    @count_query_logging
+    def link_twitter_websites(self, urls):
+        count = 0
+        for url in urls:
+            query = f"""
+                WITH datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')) as ingestDate
+                LOAD CSV WITH HEADERS FROM {url} as websites
+                MATCH (website:Website {{url: websites.url}})
+                MATCH (twitter:Twitter {{userId: userId}})
+                MERGE (twitter)-[edge:HAS_WEBSITE]->(website)
+                ON CREATE SET edge.createdDt = ingestDate,
+                              edge.lastUpdateDt = ingestDate
+                ON MATCH SET edge.lastUpdateDt = ingestDate
+                RETURN count(edge)
+            """
+            count += self.query(query).value()[0]
+        return count
