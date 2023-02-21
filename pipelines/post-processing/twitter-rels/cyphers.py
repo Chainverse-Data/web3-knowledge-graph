@@ -2,28 +2,38 @@ import logging
 from datetime import datetime
 from datetime import timedelta
 import pandas as pd
+
+from ...helpers import Indexes, Constraints
 from ...helpers import Cypher
-from ...helpers import count_query_logging, get_query_logging
+from ...helpers import count_query_logging
 
 
 class TwitterRelsCyphers(Cypher):
     def __init__(self, database=None):
         super().__init__(database)
+    
+    def create_indexes(self):
+        index = Indexes()
+        index.website()
+
+    def create_constraints(self):
+        constraint = Constraints()
+        constraint.website()
 
     def get_bios(self):
         ingestTime = datetime.now()
         oneMonthAgo = ingestTime - timedelta(days=30)
         query = f"""
-        match (twitter:Twitter)
-        where not twitter.bio is null
-        and twitter.lastProcessingDateBio is null
-        return distinct twitter.userId as userId, twitter.bio as bio 
-        union 
-        match (twitter:Twitter)
-        where twitter.bio is null 
-        and twitter.lastProcessingDateBio > datetime(epochMillis: {oneMonthAgo.timestamp()})
-        with twitter.userId as userId, twitter.bio as bio
-        return distinct userId, bio
+        MATCH (twitter:Twitter)
+        WHERE NOT twitter.bio IS NULL
+        AND twitter.lastProcessingDateBio IS NULL
+        RETURN distinct twitter.userId as userId, twitter.bio as bio 
+        UNION 
+        MATCH (twitter:Twitter)
+        WHERE twitter.bio IS NULL 
+        AND twitter.lastProcessingDateBio > datetime(epochMillis: {oneMonthAgo.timestamp()})
+        WITH twitter.userId as userId, twitter.bio as bio
+        RETURN distinct userId, bio
         """
         results = pd.DataFrame(query)
         return results
@@ -32,16 +42,16 @@ class TwitterRelsCyphers(Cypher):
         ingestTime = datetime.now()
         twoMonthsAgo = ingestTime - timedelta(days=60)
         query = f"""
-        match (twitter:Twitter)
-        where not twitter.website is null
-        and twitter.lastProcesingDateWebsite is null
-        return distinct twitter.userId as userId, twitter.website as website 
-        union 
-        match (twitter:Twitter)
-        where twitter.website is null 
-        and twitter.lastProcessingDateWebsite > datetime(epochMillis: {twoMonthsAgo.timestamp()})
-        with twitter.userId as userId, twitter.website as website
-        return distinct userId, website
+        MATCH (twitter:Twitter)
+        WHERE NOT twitter.website IS NULL
+        AND twitter.lastProcesingDateWebsite IS NULL
+        RETURN distinct twitter.userId as userId, twitter.website as website 
+        UNION 
+        MATCH (twitter:Twitter)
+        WHERE twitter.website IS NULL 
+        AND twitter.lastProcessingDateWebsite > datetime(epochMillis: {twoMonthsAgo.timestamp()})
+        WITH twitter.userId as userId, twitter.website as website
+        RETURN distinct userId, website
         """
         results = pd.DataFrame(query)
         return results
@@ -49,11 +59,11 @@ class TwitterRelsCyphers(Cypher):
     def delete_lame_rels(self):
         query = """
         call apoc.periodic.commit('
-        match (t:Twitter)-[r:TEAM|AVATAR|BEEP]->(t1:Twitter)
-        with r
-        limit 10000
-        delete r
-        return count(*)
+            MATCH (t1:Twitter)-[r:TEAM|AVATAR|BEEP]->(t2:Twitter)
+            WITH r
+            LIMIT 10000
+            DELETE r
+            RETURN count(*)
         ') 
         yield executions
         """
@@ -67,28 +77,28 @@ class TwitterRelsCyphers(Cypher):
             handle = row['handles']
             handle = handle.replace("@", "")
             create_handle = f"""
-            merge
+            MERGE
                 (t:Twitter {{handle: "{handle}"}})
-            on create
-                set 
+            ON CREATE
+                SET 
                     t.uuid = apoc.create.uuid(),
                     t.createdDt = timestamp(),
                     t.lastUpdateDt = timestamp()
-            on match
-                set
+            ON MATCH
+                SET
                     t.lastUpdateDt = timestamp()
-            return
+            RETURN
                 count(t)
             """
             count += self.query(create_handle)[0].value()
             query = f"""
-            match (t:Twitter)
-            where id(t) = {twitterId}
-            match (tt:Twitter)
-            where tt.handle = '{handle}'
-            with t, tt
-            merge (t)-[r:IDENTIFIES_WITH]->(tt)
-            return count(distinct(t))
+            MATCH (t:Twitter)
+            WHERE id(t) = {twitterId}
+            MATCH (tt:Twitter)
+            WHERE tt.handle = '{handle}'
+            WITH t, tt
+            MERGE (t)-[r:IDENTIFIES_WITH]->(tt)
+            RETURN count(distinct(t))
             """
             count += self.query(query)[0].value()
             logging.info(f"""logged {count} records...""")
@@ -98,13 +108,13 @@ class TwitterRelsCyphers(Cypher):
     ## collects twitter accounts with websites that have no link between twitter & website
     def get_twitter_websites(self):
         query = """
-        match 
+        MATCH 
             (t:Twitter)
-        where 
+        WHERE 
             t.website is not null 
-        and not 
+        AND NOT 
             (t)-[:HAS_WEBSITE]->()
-        return distinct
+        RETURN distinct
             t.userId as userId,
             t.website as website
             """
@@ -178,25 +188,3 @@ class TwitterRelsCyphers(Cypher):
             count += self.query(link_website_domain_query)[0].value()
 
         return count 
-
-
-            
-            
-            
-            """
-
-
-
-
-
-
-        
-        
-
-
-    def run(self):
-        #self.cyphers.delete_lame_rels()
-       # self.ingest_stuff()
-        logging.info("Ingesting websites")
-        self.get_websites()
-

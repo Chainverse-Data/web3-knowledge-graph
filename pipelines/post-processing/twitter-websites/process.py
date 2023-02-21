@@ -1,20 +1,18 @@
 import logging
 from ..helpers import Processor
-from .cyphers import WebsiteCyphers
+from .cyphers import TwitterWebsiteCyphers
 from datetime import datetime, timedelta
-import os
 import re
 import tqdm
 
 
-class WebsitePostProcess(Processor):
+class TwitterWebsitePostProcess(Processor):
     """This class reads from the Neo4J instance for Twitter nodes to call the Twitter API and retreive extra infos"""
 
     def __init__(self):
-        self.cyphers = WebsiteCyphers()
-        super().__init__("websites")
+        self.cyphers = TwitterWebsiteCyphers()
+        super().__init__("twitter-websites")
         self.cutoff = datetime.now() - timedelta(days=30)
-        self.full_job = bool(os.environ.get("FULL_WEBSITE_JOB", False))
 
     @staticmethod
     def extract_urls(text):
@@ -22,12 +20,8 @@ class WebsitePostProcess(Processor):
         return re.findall(url_pattern, text)
 
     def get_twitter_data(self):
-        if self.full_job:
-            twitter_handles = self.cyphers.get_all_twitter()
-        else:
-            twitter_handles = self.cyphers.get_recent_twitter(self.cutoff)
+        twitter_handles = self.cyphers.get_all_twitter()
         logging.info(f"Found {len(twitter_handles)} twitter handles")
-
         return twitter_handles
 
     def get_websites(self, twitter_handles):
@@ -43,8 +37,7 @@ class WebsitePostProcess(Processor):
 
     def handle_ingestion(self, websites):
         urls = self.s3.save_json_as_csv(websites, self.bucket_name, f"websites_{self.asOf}")
-        self.cyphers.create_website(urls)
-        self.cyphers.link_twitter_website(urls)
+        self.cyphers.set_website(urls)
 
     def run(self):
         twitter_handles = self.get_twitter_data()
@@ -53,5 +46,5 @@ class WebsitePostProcess(Processor):
 
 
 if __name__ == "__main__":
-    processor = WebsitePostProcess()
+    processor = TwitterWebsitePostProcess()
     processor.run()
