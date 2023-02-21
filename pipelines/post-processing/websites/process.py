@@ -16,12 +16,6 @@ class WebsitePostProcess(Processor):
         self.cutoff = datetime.now() - timedelta(days=30)
         self.full_job = bool(os.environ.get("FULL_WEBSITE_JOB", False))
 
-        self.batch_size = 100
-        self.split_size = 10000
-        self.headers = {
-            "Authorization": f"Bearer {os.environ.get('TWITTER_BEARER_TOKEN')}",
-        }
-
     @staticmethod
     def extract_urls(text):
         url_pattern = re.compile(r"(https?://\S+)")
