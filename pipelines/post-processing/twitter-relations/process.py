@@ -78,7 +78,19 @@ class TwitterRelationsProcessor(Processor):
         twitter_accounts = self.cyphers.get_twitter_websites()
         if DEBUG:
             twitter_accounts = twitter_accounts[:100]
-        results = self.parallel_process(self.extract_website_data, twitter_accounts, "Extracting URLs and domains from twitter accounts bios")
+        accounts = []
+        for account in twitter_accounts:
+            if account["website"]:
+                accounts.append({
+                    "handle": account["handle"],
+                    "website": account["website"]
+                })
+            if account["website_bio"]:
+                accounts.append({
+                    "handle": account["handle"],
+                    "website": account["website_bio"]
+                })
+        results = self.parallel_process(self.extract_website_data, accounts, "Extracting URLs and domains from twitter accounts bios")
         results = [result for result in results if result]
         fname = "websites_" + self.asOf
         urls = self.s3.save_json_as_csv(results, bucket_name=self.bucket_name, file_name=fname, ACL='public-read', max_lines=10000, max_size=10000000)

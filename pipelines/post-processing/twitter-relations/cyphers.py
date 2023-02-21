@@ -85,9 +85,11 @@ class TwitterRelationsCyphers(Cypher):
         query = """
             MATCH (t:Twitter)
             WHERE t.website is not null 
-            AND NOT (t)-[:HAS_WEBSITE]->(:Website)
-            RETURN distinct t.handle as handle, t.website as website
+            OR t.website_bio is not null
+            RETURN distinct t.handle as handle, t.website as website, t.website_bio as website_bio
         """
+        if DEBUG:
+            query += " LIMIT 100"
         results = self.query(query)
         return results 
 

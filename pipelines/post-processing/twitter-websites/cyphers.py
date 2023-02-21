@@ -48,7 +48,7 @@ class TwitterWebsiteCyphers(Cypher):
             query = f"""
                         LOAD CSV WITH HEADERS FROM '{url}' AS websites
                         MATCH (twitter:Twitter {{handle: websites.handle}})
-                        SET twitter.website = websites.url
+                        SET twitter.website_bio = websites.url
                         RETURN count(twitter)
                 """
             count += self.query(query)[0].value()
