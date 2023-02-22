@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 import os
 import time
 from tqdm import tqdm
+import numpy as np
 
 DEBUG = os.environ.get("DEBUG", False)
 
@@ -20,16 +21,34 @@ class TwitterFollowersPostProcess(Processor):
         self.data = {}
         self.items = []
         self.bearer_tokens = os.environ.get("TWITTER_BEARER_TOKEN").split(",")
-        self.current_bearer_token_index = 0
+        self.bearer_tokens_rate_limit = {}
         self.metadata["followers"] = self.metadata.get("followers", {})
         for account in self.metadata["followers"]:
             self.metadata["followers"][account] = datetime.fromtimestamp(self.metadata["followers"][account])
 
+    def get_bearer_token(self):
+        bearer_token = None
+        while not bearer_token:
+            token = np.random.choice(self.bearer_tokens)
+            end_time = self.bearer_tokens_rate_limit.get(token, None)
+            if end_time:
+                epoch_time = int(time.time())
+                time_to_wait = int(end_time) - epoch_time
+                if time_to_wait < 0:
+                    bearer_token = token
+                    self.bearer_tokens_rate_limit[token] = None
+            else:
+                bearer_token = token
+        return bearer_token
+
     def twitter_api_call(self, url, userId, pagination_token=None, results=[], retries=0):
         if retries > 10:
             return None
+        
+        bearer_token = self.get_bearer_token()
+        
         headers = {
-            "Authorization": f"Bearer {self.bearer_tokens[self.current_bearer_token_index]}",
+            "Authorization": f"Bearer {bearer_token}",
         }
 
         if pagination_token:
@@ -43,14 +62,12 @@ class TwitterFollowersPostProcess(Processor):
         if "data" not in data and "title" not in data:
             return results
 
-        if data["title"] == "Too Many Requests":
+        if data.get("title", None) == "Too Many Requests":
             head = dict(response.headers)
             end_time = head["x-rate-limit-reset"]
-            epoch_time = int(time.time())
-            time_to_wait = int(end_time) - epoch_time
-            logging.warning(f"Rate limit exceeded. Waiting {time_to_wait} seconds.")
-            time.sleep(time_to_wait)
-            return self.twitter_api_call(url, userId, pagination_token=pagination_token, results=results, retries=retries + 1)
+            self.bearer_tokens_rate_limit[bearer_token] = end_time
+            logging.warning(f"Rate limit exceeded for a token.")
+            return self.twitter_api_call(url, userId, pagination_token=pagination_token, results=results, retries=retries)
 
         results.extend(data.get("data"))
         
@@ -60,8 +77,6 @@ class TwitterFollowersPostProcess(Processor):
         else:
             return results
 
-        self.current_bearer_token_index += 1
-        self.current_bearer_token_index %= len(self.bearer_tokens)
         return self.twitter_api_call(url, userId, pagination_token=pagination_token, results=results, retries=retries)
 
     def get_twitter_handles(self):
@@ -74,7 +89,7 @@ class TwitterFollowersPostProcess(Processor):
         results.extend(self.cyphers.get_token_handles())
 
         if DEBUG:
-            results = results[:10]
+            results = results[:3]
         for entry in results:
             self.items.append({"userId": entry.get("userId"), "handle": entry.get("handle")})
         logging.info(f"Found {len(self.items)} twitter handles")
@@ -83,7 +98,7 @@ class TwitterFollowersPostProcess(Processor):
         accounts = []
         results = self.cyphers.get_high_rep_handles()
         if DEBUG:
-            results = results[:10]
+            results = results[:3]
         for entry in results:
             accounts.append(
                 {"userId": entry.get("t.userId"), "handle": entry.get("t.handle"), "rep": entry.get("reputation")}
