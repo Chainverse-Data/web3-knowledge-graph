@@ -18,10 +18,9 @@ class UnlockIngestor(Ingestor):
         "This function ingests the unlock data loaded in self.data"
         logging.info("Ingesting lock data...")
         locks_data = self.process_locks()
-
         urls = self.s3.save_json_as_csv(locks_data, self.bucket_name, f"ingestor_locks_{self.asOf}")
-        self.cyphers.create_or_merge_locks(urls)
-        self.cyphers.link_or_merge_locks_to_keys(urls)
+
+        return urls
 
     def process_locks(self):
         logging.info("Processing locks data...")
@@ -48,10 +47,9 @@ class UnlockIngestor(Ingestor):
         "This function ingests the managers data loaded in self.data"
         logging.info("Ingesting managers data...")
         managers_data = self.process_managers()
-
         urls = self.s3.save_json_as_csv(managers_data, self.bucket_name, f"ingestor_managers_{self.asOf}")
-        self.cyphers.create_unlock_managers_wallets(urls)
-        self.cyphers.link_or_merge_managers_to_locks(urls)
+        
+        return urls
     
     def process_managers(self):
         logging.info("Processing managers data...")
@@ -72,9 +70,9 @@ class UnlockIngestor(Ingestor):
         "This function ingests the keys data loaded in self.data"
         logging.info("Ingesting keys data...")
         keys_data = self.process_keys() 
-
         urls = self.s3.save_json_as_csv(keys_data, self.bucket_name, f"ingestor_keys_{self.asOf}")
-        self.cyphers.create_or_merge_keys(urls)
+        
+        return urls
 
     def process_keys(self):
         logging.info("Processing keys data...")
@@ -82,15 +80,16 @@ class UnlockIngestor(Ingestor):
         
         for key in self.scraper_data["keys"]:
             if key["address"] != self.nullAddress and utils.is_valid_address(key["address"]):
-                tmp = {
-                    "id": key["id"].lower(),
-                    "contractAddress": key["address"].lower(),
-                    "expiration": dt.datetime.fromtimestamp(key["expiration"]),
-                    "tokenUri": key["tokenURI"].lower(),
-                    "createdAt": dt.datetime.fromtimestamp(key["createdAt"]),
-                    "network": key["network"].lower(),
-                }
-
+                try:
+                    tmp = {
+                        "id": key["id"].lower(),
+                        "contractAddress": key["address"].lower(),
+                        "tokenUri": key["tokenURI"],
+                        "createdAt": dt.datetime.fromtimestamp(int(key["createdAt"])),
+                        "network": key["network"].lower(),
+                    }
+                except Exception as e:
+                    logging.error(f"Issue with tmp : {e}")    
                 keys_data.append(tmp)
 
         return keys_data
@@ -98,34 +97,45 @@ class UnlockIngestor(Ingestor):
     def ingest_holders(self):
         "This function ingests the holders loaded in self.data"
         logging.info("Ingesting holders data...")    
-
         holders_data = self.process_holders()
-
         urls = self.s3.save_json_as_csv(holders_data, self.bucket_name, f"ingestor_holders_{self.asOf}")
-        self.cyphers.create_unlock_holders_wallets(urls)
-        self.cyphers.link_or_merge_holders_to_locks(urls)
-        self.cyphers.link_or_merge_holders_to_keys(urls)
+
+        return urls
 
     def process_holders(self):
         logging.info("Processing holders data...")
         holders_data = []
 
         for holder in self.scraper_data["holders"]:
-            if holder["tokenAddress"] != self.nullAddress  and utils.is_valid_address(holder["address"]):
+            if holder["tokenAddress"] != self.nullAddress and utils.is_valid_address(holder["address"]):
                 tmp = {
                     "address": holder["address"].lower(),
-                    "keyId": holder["keyId"].lower(),       
+                    "keyId": (holder["keyId"].lower()).split('-')[0],       
                     "contractAddress": holder["tokenAddress"].lower()
                 }
                 holders_data.append(tmp)
 
         return holders_data
 
+    def create_nodes_and_edges(self, locks_urls, managers_urls, keys_urls, holders_urls):
+        #nodes
+        self.cyphers.create_or_merge_locks(locks_urls)
+        self.cyphers.create_unlock_managers_wallets(managers_urls)
+        self.cyphers.create_or_merge_keys(keys_urls)
+        self.cyphers.create_unlock_holders_wallets(holders_urls)
+        
+        #edges
+        self.cyphers.link_or_merge_managers_to_locks(managers_urls)
+        self.cyphers.link_or_merge_locks_to_keys(locks_urls)
+        self.cyphers.link_or_merge_holders_to_locks(holders_urls)
+        self.cyphers.link_or_merge_holders_to_keys(holders_urls)
+
     def run(self):
-        self.ingest_locks()
-        self.ingest_managers()
-        self.ingest_keys()
-        self.ingest_holders()
+        locks_urls = self.ingest_locks()
+        managers_urls = self.ingest_managers()
+        keys_urls = self.ingest_keys()
+        holders_urls = self.ingest_holders()
+        self.create_nodes_and_edges(locks_urls, managers_urls, keys_urls, holders_urls)
         self.save_metadata()
 
 if __name__ == "__main__":

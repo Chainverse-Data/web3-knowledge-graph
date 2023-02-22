@@ -37,7 +37,9 @@ class UnlockCyphers(Cypher):
                         lock.ingestedBy = '{self.UPDATED_ID}'
                     RETURN count(lock)
                     """
+
             count += self.query(query)[0].value()
+
         return count
     
     @count_query_logging
@@ -60,7 +62,9 @@ class UnlockCyphers(Cypher):
                         key.ingestedBy = '{self.UPDATED_ID}'
                     RETURN count(key)
                     """
+
             count += self.query(query)[0].value()
+
         return count
 
     @count_query_logging
@@ -71,12 +75,13 @@ class UnlockCyphers(Cypher):
                     LOAD CSV WITH HEADERS FROM '{url}' AS managers
                     MATCH (wallet:Wallet {{address: managers.address}})
                     MATCH (lock:Nft:ERC721:Lock {{address: managers.lock}})
-                    WITH wallet, lock, managers
+                    WITH wallet, lock
                     MERGE (wallet)-[r:CREATED]->(lock)
                     ON CREATE SET r.createdDt =  datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
                     ON MATCH SET r.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
                     RETURN count(r)
                     """
+
             count += self.query(query)[0].value()
 
         return count
@@ -86,16 +91,18 @@ class UnlockCyphers(Cypher):
         count = 0
         for url in urls:
             query = f""" 
-                    LOAD CSV WITH HEADERS FROM '{url}' as keys
-                    MATCH (lock:Nft:ERC721:Lock {{contractAddress: keys.contractAddress}})
-                    MATCH (key:Nft:ERC721:Instance {{contractAddress: keys.contractAddress}})
-                    WITH lock, key, keys
+                    LOAD CSV WITH HEADERS FROM '{url}' AS locks
+                    MATCH (lock:Nft:ERC721:Lock {{address: locks.address}})
+                    MATCH (key:Nft:ERC721:Instance {{contractAddress: locks.contractAddress}})
+                    WITH lock, key
                     MERGE (lock)-[r:HAS_KEY]->(key)
                     ON CREATE SET r.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
                     ON MATCH SET r.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
                     RETURN count(r)
                     """
+            
             count += self.query(query)[0].value()
+
         return count
 
     @count_query_logging
@@ -104,15 +111,17 @@ class UnlockCyphers(Cypher):
         for url in urls:
             query = f"""
                     LOAD CSV WITH HEADERS FROM '{url}' AS holders
-                    MATCH (wallet:Wallet {{contractAddress: holders.contractAddress}})
-                    MATCH (lock:Nft:ERC721:Lock {{contractAddress holders.contractAddress}})
-                    WITH wallet, lock, holders
+                    MATCH (wallet:Wallet {{address: holders.address}})
+                    MATCH (lock:Nft:ERC721:Lock {{address: holders.keyId}})
+                    WITH wallet, lock
                     MERGE (wallet)-[r:HOLDS]->(lock)
                     ON CREATE SET r.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
                     ON MATCH SET r.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
                     RETURN count(r)                   
                     """
+            
             count += self.query(query)[0].value()
+
         return count
 
     @count_query_logging
@@ -120,23 +129,18 @@ class UnlockCyphers(Cypher):
         count = 0
         for url in urls:
             query = f"""
-                    LOAD CSV WITH HEADERS FROM {url} AS keys
-                    MATCH (wallet: Wallet {{contractAddress: keys.contractAddress}})
-                    MATCH (key:Nft:ERC721:Instance {{contractAddress: keys.contractAddress}})
-                    WITH wallet, key, keys
+                    LOAD CSV WITH HEADERS FROM '{url}' AS holders
+                    MATCH (wallet:Wallet {{address: holders.address}})
+                    MATCH (key:Nft:ERC721:Instance {{contractAddress: holders.contractAddress}})
+                    WITH wallet, key
                     MERGE (wallet)-[r:HOLDS_INSTANCE]->(key)
                     ON CREATE SET r.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
                     ON MATCH SET r.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
                     RETURN count(r)
                     """
+            
             count += self.query(query)[0].value()
+
         return count
-            
-            
-
-
-            
-
-
 
         
