@@ -133,7 +133,7 @@ class UnlockCyphers(Cypher):
                     MATCH (wallet:Wallet {{address: holders.address}})
                     MATCH (key:Nft:ERC721:Instance {{contractAddress: holders.contractAddress}})
                     WITH wallet, key
-                    MERGE (wallet)-[r:HOLDS_INSTANCE]->(key)
+                    MERGE (wallet)-[r:HOLDS]->(key)
                     ON CREATE SET r.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
                     ON MATCH SET r.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
                     RETURN count(r)
