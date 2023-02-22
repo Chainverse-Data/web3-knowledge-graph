@@ -117,7 +117,7 @@ class UnlockScraper(Scraper):
                     self.data["locks"].append(locks_tmp)
                 for lc in result["locks"]:
                     for manager in lc["LockManagers"]:
-                        managers_tmp = {"lock": lc["tokenAddress"], "address": manager["address"].lower()}
+                        managers_tmp = {"lock": lc["address"], "address": manager["address"].lower()}
                         self.data["managers"].append(managers_tmp)
                 for l in result["locks"]:
                     address = l["tokenAddress"]
@@ -148,6 +148,7 @@ class UnlockScraper(Scraper):
         logging.info(f"Getting locks for {network} from {graph_url}")
         skip = 0
         cutoff_block = self.metadata.get(f"{network}_cutoff_block", 0)
+        result = dict()
 
         while True:
             if skip > 5000:
@@ -180,9 +181,12 @@ class UnlockScraper(Scraper):
                     """
             )
             result = self.call_the_graph_api(graph_url, locks_query, variables)
-            if result["locks"] == []:
+            if result is not None and "locks" in result and result["locks"] == []:
                 logging.info(f"Finished scraping {network} locks")
                 logging.info(f"Current lock count: {len(self.data['locks'])}")
+                break
+            elif result is None:
+                logging.error("The Graph API call returned a NoneType result")
                 break
             for l in result["locks"]:
                 locks_tmp = {
@@ -199,7 +203,7 @@ class UnlockScraper(Scraper):
                 self.data["locks"].append(locks_tmp)
             for lc in result["locks"]:
                 for manager in lc["lockManagers"]:
-                    managers_tmp = {"lock": lc["tokenAddress"], "address": manager.lower()}
+                    managers_tmp = {"lock": lc["address"], "address": manager.lower()}
                     self.data["managers"].append(managers_tmp)
             for l in result["locks"]:
                 address = l["tokenAddress"]
