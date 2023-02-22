@@ -126,12 +126,30 @@ class TwitterFollowersCyphers(Cypher):
         return count
 
     @count_query_logging
-    def merge_follow_relationships(self, urls):
+    def merge_followers_relationships(self, urls):
         count = 0
         for url in urls:
             query = f"""
                         LOAD CSV WITH HEADERS FROM '{url}' as twitter
                         MATCH (f:Twitter {{handle: toLower(twitter.follower)}}), (e:Twitter {{handle: toLower(twitter.handle)}})
+                        MERGE (f)-[r:FOLLOWS]->(e)
+                        ON CREATE SET
+                            r.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
+                            r.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
+                        ON MATCH SET
+                            r.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
+                        RETURN count(r)
+            """
+            count += self.query(query)[0].value()
+        return count
+
+    @count_query_logging
+    def merge_following_relationships(self, urls):
+        count = 0
+        for url in urls:
+            query = f"""
+                        LOAD CSV WITH HEADERS FROM '{url}' as twitter
+                        MATCH (f:Twitter {{handle: toLower(twitter.handle)}}), (e:Twitter {{handle: toLower(twitter.follower)}})
                         MERGE (f)-[r:FOLLOWS]->(e)
                         ON CREATE SET
                             r.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),

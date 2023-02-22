@@ -22,12 +22,8 @@ class TwitterPostProcess(Processor):
         self.split_size = 10000
         self.bad_handles = set()
         self.bearer_tokens = os.environ.get("TWITTER_BEARER_TOKEN").split(",")
-        self.i = 0
-
-        self.headers = {
-            "Authorization": f"Bearer {os.environ.get('TWITTER_BEARER_TOKEN').split(',')[0]}",
-        }
-
+        self.bearer_token_index = 0
+        
     def filter_batch(self, batch):
         rex = re.compile("^[A-Za-z0-9_]{1,15}$")
         new_batch = []
@@ -47,7 +43,7 @@ class TwitterPostProcess(Processor):
 
         twitter_handles_batch = ",".join(batch)
         headers = {
-            "Authorization": f"Bearer {self.bearer_tokens[self.i]}",
+            "Authorization": f"Bearer {self.bearer_tokens[self.bearer_token_index]}",
         }
         x = requests.get(
             f"https://api.twitter.com/2/users/by?usernames={twitter_handles_batch}&user.fields=description,id,location,name,public_metrics,verified,profile_image_url,url&expansions=pinned_tweet_id&tweet.fields=geo,lang",
@@ -63,8 +59,8 @@ class TwitterPostProcess(Processor):
             time.sleep(time_to_wait)
             return self.get_user_response(batch, retries=retries + 1)
 
-        self.i += 1
-        self.i %= len(self.bearer_tokens)
+        self.bearer_token_index += 1
+        self.bearer_token_index %= len(self.bearer_tokens)
 
         return resp
 
