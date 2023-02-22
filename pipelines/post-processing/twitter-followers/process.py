@@ -4,7 +4,7 @@ from .cyphers import TwitterFollowersCyphers
 from datetime import datetime, timedelta
 import os
 import time
-import tqdm
+from tqdm import tqdm
 
 DEBUG = os.environ.get("DEBUG", False)
 
@@ -14,13 +14,13 @@ class TwitterFollowersPostProcess(Processor):
     def __init__(self):
         self.cyphers = TwitterFollowersCyphers()
         super().__init__("twitter")
-        self.cutoff = datetime.now() - timedelta(days=20)
+        self.cutoff = datetime.now() - timedelta(days=30)
 
         self.items = []
         self.bearer_tokens = os.environ.get("TWITTER_BEARER_TOKEN").split(",")
         self.current_bearer_token_index = 0
-        self.metadata["following"] = self.metadata.get("following", [])
-        self.metadata["followers"] = self.metadata.get("followers", [])
+        self.metadata["following"] = self.metadata.get("following", {})
+        self.metadata["followers"] = self.metadata.get("followers", {})
 
     def twitter_api_call(self, url, retries=0):
         if retries > 10:
@@ -59,16 +59,16 @@ class TwitterFollowersPostProcess(Processor):
         if DEBUG:
             results = results[:10]
         for entry in results:
-            self.items.append({"id": entry.get("userId"), "handle": entry.get("handle")})
+            self.items.append({"userId": entry.get("userId"), "handle": entry.get("handle")})
         logging.info(f"Found {len(self.items)} twitter handles")
 
     def get_high_rep_handles(self):
         results = self.cyphers.get_high_rep_handles()
         if DEBUG:
-            results = results[:100]
+            results = results[:10]
         for entry in results:
             self.items.append(
-                {"id": entry.get("t.userId"), "handle": entry.get("t.handle"), "rep": entry.get("reputation")}
+                {"userId": entry.get("t.userId"), "handle": entry.get("t.handle"), "rep": entry.get("reputation")}
             )
 
         logging.info(f"Found {len(self.items)} twitter handles")
@@ -77,12 +77,10 @@ class TwitterFollowersPostProcess(Processor):
         logging.info("Getting followers")
         follower_url = "https://api.twitter.com/2/users/{}/followers?max_results=1000{}&user.fields=username"
         results = []
-        if self.metadata.get("followers", None):
-            results = self.load_csv(self.bucket_name, "twitter_followers.csv").to_dict("records")
-            logging.info(f"Loaded {len(results)} followers from S3")
 
-        for idx, entry in tqdm.tqdm(enumerate(self.items), total=len(self.items), desc="Getting followers"):
-            if entry.get("id") in self.metadata["followers"]:
+        for idx, entry in tqdm(enumerate(self.items), total=len(self.items), desc="Getting followers"):
+            userId = entry.get("userId")
+            if userId in self.metadata["followers"]:
                 continue
             items = self.handle_user(entry, follower_url)
             for follower in items:
@@ -102,9 +100,6 @@ class TwitterFollowersPostProcess(Processor):
         logging.info("Getting following")
         following_url = "https://api.twitter.com/2/users/{}/following?max_results=1000{}&user.fields=username"
         results = []
-        if self.metadata.get("following", None):
-            results = self.load_csv(self.bucket_name, "twitter_following.csv").to_dict("records")
-            logging.info(f"Loaded {len(results)} following from S3")
 
         for idx, entry in tqdm.tqdm(enumerate(self.items), total=len(self.items), desc="Getting following"):
             if entry.get("id") in self.metadata["following"]:

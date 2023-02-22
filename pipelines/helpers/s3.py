@@ -69,7 +69,6 @@ class S3Utils:
         return self.save_df_as_csv(df, bucket_name, file_name, ACL=ACL, max_lines=max_lines, max_size=max_size)
 
     def save_full_json_as_csv(self, data, bucket_name, file_name, ACL="public-read"):
-
         df = pd.DataFrame.from_dict(data)
         df.to_csv(f"s3://{bucket_name}/{file_name}.csv", index=False)
         self.s3_resource.ObjectAcl(bucket_name, f"{file_name}.csv").put(ACL=ACL)
@@ -79,8 +78,11 @@ class S3Utils:
 
     def load_csv(self, bucket_name, file_name):
         """Convenience function to retrieve a S3 saved CSV loaded as a pandas dataframe."""
-        df = pd.read_csv(f"s3://{bucket_name}/{file_name}", lineterminator="\n")
-        return df
+        try:
+            df = pd.read_csv(f"s3://{bucket_name}/{file_name}", lineterminator="\n")
+            return df
+        except:
+            return None
 
     # def set_object_private(BUCKET, file_name, resource):
     #     object_acl = resource.ObjectAcl(BUCKET, file_name)
