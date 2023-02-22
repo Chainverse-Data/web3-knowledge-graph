@@ -26,7 +26,7 @@ class UnlockCyphers(Cypher):
         for url in urls:
             query = f"""
                     LOAD CSV WITH HEADERS FROM '{url}' AS locks
-                    MERGE(lock:Nft:ERC721:Lock {{address: locks.address}})
+                    MERGE(lock:Nft:ERC721:Lock {{contractAddress: locks.address}})
                     ON CREATE SET lock.uuid = apoc.create.uuid(),
                         lock.name = locks.name,
                         lock.price = toIntegerOrNull(locks.price),
@@ -74,7 +74,7 @@ class UnlockCyphers(Cypher):
             query = f"""
                     LOAD CSV WITH HEADERS FROM '{url}' AS managers
                     MATCH (wallet:Wallet {{address: managers.address}})
-                    MATCH (lock:Nft:ERC721:Lock {{address: managers.lock}})
+                    MATCH (lock:Nft:ERC721:Lock {{contractAddress: managers.lock}})
                     WITH wallet, lock
                     MERGE (wallet)-[r:CREATED]->(lock)
                     ON CREATE SET r.createdDt =  datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
@@ -92,7 +92,7 @@ class UnlockCyphers(Cypher):
         for url in urls:
             query = f""" 
                     LOAD CSV WITH HEADERS FROM '{url}' AS locks
-                    MATCH (lock:Nft:ERC721:Lock {{address: locks.address}})
+                    MATCH (lock:Nft:ERC721:Lock {{contractAddress: locks.address}})
                     MATCH (key:Nft:ERC721:Instance {{contractAddress: locks.contractAddress}})
                     WITH lock, key
                     MERGE (lock)-[r:HAS_KEY]->(key)
@@ -112,7 +112,7 @@ class UnlockCyphers(Cypher):
             query = f"""
                     LOAD CSV WITH HEADERS FROM '{url}' AS holders
                     MATCH (wallet:Wallet {{address: holders.address}})
-                    MATCH (lock:Nft:ERC721:Lock {{address: holders.keyId}})
+                    MATCH (lock:Nft:ERC721:Lock {{contractAddress: holders.keyId}})
                     WITH wallet, lock
                     MERGE (wallet)-[r:HOLDS]->(lock)
                     ON CREATE SET r.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
