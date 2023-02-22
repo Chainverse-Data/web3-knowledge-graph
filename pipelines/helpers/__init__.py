@@ -5,4 +5,7 @@ from .cypher import Cypher
 from .requests import Requests
 from .queries import Queries
 from .multiprocessing import Multiprocessing
+from .utils import Utils
+from .web3Utils import Web3Utils
+from .base import Base
 from .decorators import *

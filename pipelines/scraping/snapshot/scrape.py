@@ -1,5 +1,4 @@
 from ..helpers import Scraper
-from ..helpers import get_ens_info
 from .helpers.query_strings import spaces_query, proposals_query, votes_query, proposal_status_query
 import json
 import logging
@@ -51,7 +50,7 @@ class SnapshotScraper(Scraper):
             raw_spaces.extend(results)
             offset += self.space_limit
         logging.info(f"Total Spaces aquired: {len(raw_spaces)}")
-        ens_list = self.parallel_process(get_ens_info, raw_spaces, description="Getting information about ENS holders")
+        ens_list = self.parallel_process(self.get_ens_info, raw_spaces, description="Getting information about ENS holders")
         for i in range(len(raw_spaces)):
             if ens_list[i] is not None:
                 raw_spaces[i]["ens"] = ens_list[i]

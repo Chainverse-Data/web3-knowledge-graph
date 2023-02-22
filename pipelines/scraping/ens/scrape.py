@@ -17,7 +17,7 @@ class EnsScraper(Scraper):
     def get_all_ens(self):
         logging.info("Getting all ENS...")
         self.data["ens"] = []
-        ens_list = self.parallel_process(self.get_ens_info, self.data["owner_addresses"], description="Getting all ENS NFTs owners")
+        ens_list = self.parallel_process(self.get_ens_nft_info, self.data["owner_addresses"], description="Getting all ENS NFTs owners")
 
         self.data["ens"] = [item for sublist in ens_list for item in sublist]
 
@@ -39,7 +39,7 @@ class EnsScraper(Scraper):
             logging.error("An exception occured getting the name")
         return None
 
-    def get_ens_info(self, address):
+    def get_ens_nft_info(self, address):
         token_list = []
         url = "https://eth-mainnet.g.alchemy.com/nft/v2/{}/getNFTs?owner={}&contractAddresses[]=0x57f1887a8BF19b14fC0dF6Fd9B2acc9Af147eA85&withMetadata=true".format(
             os.environ["ALCHEMY_API_KEY"], address

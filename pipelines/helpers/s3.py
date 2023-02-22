@@ -1,4 +1,8 @@
 import chunk
+import datetime
+import math
+import re
+import sys
 import boto3
 import os
 import logging
@@ -13,6 +17,26 @@ class S3Utils:
     def __init__(self):
         self.s3_client = boto3.client("s3")
         self.s3_resource = boto3.resource("s3")
+
+    def get_size(self, obj, seen=None):
+        """Recursively finds size of objects"""
+        size = sys.getsizeof(obj)
+        if seen is None:
+            seen = set()
+        obj_id = id(obj)
+        if obj_id in seen:
+            return 0
+        # Important mark as seen *before* entering recursion to gracefully handle
+        # self-referential objects
+        seen.add(obj_id)
+        if isinstance(obj, dict):
+            size += sum([self.get_size(v, seen) for v in obj.values()])
+            size += sum([self.get_size(k, seen) for k in obj.keys()])
+        elif hasattr(obj, '__dict__'):
+            size += self.get_size(obj.__dict__, seen)
+        elif hasattr(obj, '__iter__') and not isinstance(obj, (str, bytes, bytearray)):
+            size += sum([self.get_size(i, seen) for i in obj])
+        return size
 
     def save_json(self, bucket_name, filename, data):
         "This will save the data field to the S3 bucket set during initialization. The data must be a JSON compliant python object."
@@ -132,3 +156,82 @@ class S3Utils:
         else:
             logging.info(f"Using existing bucket: {bucket_name}")
         return boto3.resource("s3").Bucket(bucket_name)
+
+    def read_metadata(self):
+        "Access the S3 bucket to read the metadata and returns a dictionary that corresponds to the saved JSON object"
+        logging.info("Loading the metadata from S3 ...")
+        if "REINITIALIZE" in os.environ and os.environ["REINITIALIZE"] == "1":
+            return {}
+        if self.check_if_file_exists(self.bucket_name, self.metadata_filename):
+            return self.load_json(self.bucket_name, self.metadata_filename)
+        else:
+            return {}
+
+    def save_metadata(self):
+        "Saves the current metadata to S3"
+        logging.info("Saving the metadata to S3 ...")
+        self.save_json(self.bucket_name, self.metadata_filename, self.metadata)
+
+    def save_data(self, chunk_prefix=""):
+        "Saves the current data to S3. This will take care of chunking the data to less than 5Gb for AWS S3 requierements."
+        logging.info("Saving the results to S3 ...")
+        logging.info("Measuring data size...")
+        data_size = self.get_size(self.data)
+        logging.info(f"Data size: {data_size}")
+        if data_size > self.S3_max_size:
+            n_chunks = math.ceil(data_size / self.S3_max_size)
+            logging.info(f"Data is too big: {data_size}, chuking it to {n_chunks} chunks ...")
+            len_data = {}
+            for key in self.data:
+                len_data[key] = math.ceil(len(self.data[key])/n_chunks)
+            for i in range(n_chunks):
+                data_chunk = {}
+                for key in self.data:
+                    if type(self.data[key]) == dict:
+                        data_chunk[key] = {}
+                        chunk_keys = list(self.data[key].keys())[i*len_data[key]:min((i+1)*len_data[key], len(self.data[key]))]
+                        for chunk_key in chunk_keys:
+                            data_chunk[key][chunk_key] = self.data[key][chunk_key]
+                    else:
+                        data_chunk[key] = self.data[key][i*len_data[key]:min((i+1)*len_data[key], len(self.data[key]))]
+                filename = self.data_filename + f"_{chunk_prefix}{i}.json"
+                logging.info(f"Saving chunk {i}...")
+                self.save_json(self.bucket_name, filename, data_chunk)
+        else:
+            self.save_json(self.bucket_name, self.data_filename + f"_{chunk_prefix}.json", self.data)
+
+    def load_data(self):
+        "Loads the data in the S3 bucket from the start date to the end date (if defined)"
+        logging.info("Collecting data files")
+        datafiles = []
+        for el in map(lambda x: (x.bucket_name, x.key), self.bucket.objects.all()):
+            if "data_" in el[1]:
+                datafiles.append(el[1])
+        get_date = re.compile("data_([0-9]*-[0-9]*-[0-9]*).*")
+        dates = [datetime.strptime(get_date.match(key).group(1), "%Y-%m-%d") for key in datafiles]
+        datafiles_to_keep = []
+        dates_to_keep = []
+        for datafile, date in sorted(zip(datafiles, dates), key=lambda el: el[1]):
+            if not self.start_date:
+                self.start_date = date
+            if date >= self.start_date:
+                if self.end_date and date >= self.end_date:
+                    break
+                datafiles_to_keep.append(datafile)
+                dates_to_keep.append(date)
+        if len(dates_to_keep) == 0:
+            logging.error("No data file found that match the current date range")
+            sys.exit(1)
+        if not self.end_date:
+            self.end_date = max(dates_to_keep)
+        logging.info("Datafiles for ingestion: {}".format(",".join(datafiles_to_keep)))
+        for datafile in datafiles_to_keep:
+            tmp_data = self.load_json(self.bucket_name, datafile)
+            for root_key in tmp_data:
+                if root_key not in self.scraper_data:
+                    self.scraper_data[root_key] = type(tmp_data[root_key])()
+                if type(tmp_data[root_key]) == dict:
+                    self.scraper_data[root_key] = dict(self.scraper_data[root_key], **tmp_data[root_key])
+                if type(tmp_data[root_key]) == list:
+                    self.scraper_data[root_key] += tmp_data[root_key]
+        logging.info("Data files loaded")

@@ -1,8 +1,6 @@
 import time
 from ..helpers import Scraper
-from ..helpers import str2bool
 import os
-import argparse
 import gql 
 import logging 
 from dotenv import load_dotenv
