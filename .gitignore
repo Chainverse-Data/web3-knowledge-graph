@@ -7,3 +7,4 @@ testing/
 .vscode
 notebooks
 .python-version
+.gitkeep
