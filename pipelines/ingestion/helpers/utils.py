@@ -3,6 +3,7 @@ import joblib
 import os
 from pathlib import Path
 import argparse
+import re
 
 
 @contextlib.contextmanager
@@ -37,3 +38,9 @@ def str2bool(v):
         return False
     else:
         raise argparse.ArgumentTypeError("Boolean value expected.")
+
+def is_valid_address(address):
+    check = re.compile("^0x[a-fA-F0-9]{40}$")
+    if check.match(address):
+        return True
+    return False

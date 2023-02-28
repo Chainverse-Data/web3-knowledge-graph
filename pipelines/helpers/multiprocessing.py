@@ -8,7 +8,7 @@ DEBUG = os.environ.get("DEBUG", False)
 
 class Multiprocessing:
     def __init__(self) -> None:
-        self.max_thread = multiprocessing.cpu_count() * 2
+        self.max_thread = max(8, multiprocessing.cpu_count() * 2)
         if DEBUG:
             self.max_thread = multiprocessing.cpu_count() - 1
         os.environ["NUMEXPR_MAX_THREADS"] = str(self.max_thread)
