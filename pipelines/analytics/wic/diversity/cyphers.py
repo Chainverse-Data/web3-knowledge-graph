@@ -30,8 +30,8 @@ class DiversityCyphers(WICCypher):
     @count_query_logging
     def connect_collectors_to_articles(self, context):
         connect_collectors = f"""
-            MATCH (article)-[:_HAS_CONTEXT]-(wic:_Wic:_{self.subgraph_name}:_Context:_{context})
-            MATCH (collector)-[:HOLDS]-(nft:ERC721)-[:HAS_NFT]-(article)
+            MATCH (article:Article)-[:_HAS_CONTEXT]-(wic:_Wic:_{self.subgraph_name}:_Context:_{context})
+            MATCH (collector:Wallet)-[:HOLDS]->(nft:ERC721)<-[:HAS_NFT]-(article)
             WITH collector, wic
             MERGE (collector)-[context:_HAS_CONTEXT]->(wic)
             SET context._context = "Collector"
