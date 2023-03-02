@@ -10,7 +10,7 @@ dag = DAG(
     "github_post_processing",
     description="Gets the github data from the API for github accounts.",
     default_args={
-        "start_date": pendulum.datetime(2022, 12, 1, tz="UTC"),
+        "start_date": days_ago(2),
         "owner": "Leo Blondel",
         "retries": 3        
     },

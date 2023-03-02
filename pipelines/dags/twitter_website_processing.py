@@ -10,7 +10,7 @@ dag = DAG(
     "twitter_website_processing",
     description="Extract twitter websites from bios and API results.",
     default_args={
-        "start_date": pendulum.datetime(2022, 12, 1, tz="UTC"),
+        "start_date": days_ago(2),
         "owner": "Leo Blondel",
         "retries": 3        
     },
