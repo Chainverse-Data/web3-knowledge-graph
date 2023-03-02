@@ -50,7 +50,7 @@ env_vars = [
     {"name": "NEO_URI", "value": Variable.get("NEO_URI")},
     {"name": "NEO_PASSWORD", "value": Variable.get("NEO_PASSWORD")},
     {"name": "TWITTER_BEARER_TOKEN", "value": Variable.get("TWITTER_BEARER_TOKEN")},
-    {"name": "FULL_TWITTER_JOB", "value": 2},
+    {"name": "FULL_TWITTER_JOB", "value": "2"},
 ]
 
 network_configuration={
