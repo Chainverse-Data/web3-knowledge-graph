@@ -15,10 +15,6 @@ class TwitterWebsiteCyphers(Cypher):
         index = Indexes()
         index.website()
 
-    def create_constraints(self):
-        constraint = Constraints()
-        constraint.website()
-
     @get_query_logging
     def get_all_twitter(self, interval=10000):
         offset = 0
