@@ -28,7 +28,7 @@ ecs_security_group = Variable.get("MWAA_VPC_SECURITY_GROUPS") # str(ssm.get_para
 # pipelines-medium: 1CPU 8Gb RAM
 # pipelines-large: 2CPU 16Gb RAM
 # pipelines-xl: 8CPU 32Gb RAM
-ecs_task_definition_processing = "pipelines-large"
+ecs_task_definition_processing = "pipelines-highcpu"
 ecs_awslogs_group_processing = f"/ecs/{ecs_task_definition_processing}"
 
 ecs_task_image = "data-pipelines"
