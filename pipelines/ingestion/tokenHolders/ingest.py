@@ -100,7 +100,7 @@ class TokenHoldersIngestor(Ingestor):
                         else:
                             numericBalance = int(balance["tokenBalance"], 16)
                             if numericBalance > 10**9:
-                                numericBalance /= 10**18
+                                numericBalance = numericBalance // 10**18
                         data.append({
                             "address": wallet,
                             "contractAddress": contractAddress,
