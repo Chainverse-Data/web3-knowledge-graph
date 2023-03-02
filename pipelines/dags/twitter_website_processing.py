@@ -77,7 +77,7 @@ twitter_website_extraction_task = ECSOperator(
         "containerOverrides": [
             {
                 "name": "data-pipelines",
-                "command": ["python3", "-m", "pipelines.post-processing.twitter-website.process"],
+                "command": ["python3", "-m", "pipelines.post-processing.twitter-websites.process"],
                 "environment": env_vars
             },
         ],
