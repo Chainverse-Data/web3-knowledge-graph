@@ -27,7 +27,7 @@ class UnlockScraper(Scraper):
         }
 
         self.headers = {"accept": "application/json", "content-type": "application/json"}
-        self.polygon_api_url = f"https://polygon-mainnet.g.alchemy.com/v2/{os.environ['ALCHEMY_API_POLYGON_KEY']}"
+        self.polygon_api_url = f"https://polygon-mainnet.g.alchemy.com/v2/{os.environ['ALCHEMY_API_KEY_POLYGON']}"
 
         self.interval = 1000
         self.data["locks"] = []

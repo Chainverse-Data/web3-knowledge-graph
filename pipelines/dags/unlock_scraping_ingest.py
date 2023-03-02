@@ -49,6 +49,7 @@ env_vars = [
     {"name": "NEO_USERNAME", "value": Variable.get("NEO_USERNAME")},
     {"name": "NEO_URI", "value": Variable.get("NEO_URI")},
     {"name": "NEO_PASSWORD", "value": Variable.get("NEO_PASSWORD")},
+    {"name": "ALCHEMY_API_KEY_POLYGON", "value": Variable.get("ALCHEMY_API_KEY_POLYGON")},
 ]
 
 network_configuration={
