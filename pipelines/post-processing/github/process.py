@@ -150,57 +150,49 @@ class GithubProcessor(Processor):
 
     def ingest_github_data(self):
 
-        # users = [self.data["users"][handle] for handle in self.data["users"]]
-        # users_urls = self.save_json_as_csv(users, self.bucket_name, f"processor_users_{self.asOf}")
+        users = [self.data["users"][handle] for handle in self.data["users"]]
+        users_urls = self.save_json_as_csv(users, self.bucket_name, f"processor_users_{self.asOf}")
 
-        # emails = [{"handle": user["login"], "email":user["email"]} for user in users if user["email"]]
-        # emails_urls = self.save_json_as_csv(emails, self.bucket_name, f"processor_emails_{self.asOf}")
+        emails = [{"handle": user["login"], "email":user["email"]} for user in users if user["email"]]
+        emails_urls = self.save_json_as_csv(emails, self.bucket_name, f"processor_emails_{self.asOf}")
 
-        # twitters = [{"handle": user["login"], "twitter":user["twitter_username"]} for user in users if user["twitter_username"]]
-        # twitters_urls = self.save_json_as_csv(twitters, self.bucket_name, f"processor_twitters_{self.asOf}")
+        twitters = [{"handle": user["login"], "twitter":user["twitter_username"]} for user in users if user["twitter_username"]]
+        twitters_urls = self.save_json_as_csv(twitters, self.bucket_name, f"processor_twitters_{self.asOf}")
 
 
-        # repositories = [self.data["repositories"][handle] for handle in self.data["repositories"]]
-        # repositories_urls = self.save_json_as_csv(repositories, self.bucket_name, f"processor_repositories_{self.asOf}")
+        repositories = [self.data["repositories"][handle] for handle in self.data["repositories"]]
+        repositories_urls = self.save_json_as_csv(repositories, self.bucket_name, f"processor_repositories_{self.asOf}")
 
-        # followers = []
-        # for user in self.data["users"]:
-        #     if "followers_handles" in self.data["users"][user]:
-        #         for follower in self.data["users"][user]["followers_handles"]:
-        #             followers.append({
-        #                 "handle": user,
-        #                 "follower": follower
-        #             })
-        # followers_urls = self.save_json_as_csv(followers, self.bucket_name, f"processor_followers_{self.asOf}")
+        followers = []
+        for user in self.data["users"]:
+            if "followers_handles" in self.data["users"][user]:
+                for follower in self.data["users"][user]["followers_handles"]:
+                    followers.append({
+                        "handle": user,
+                        "follower": follower
+                    })
+        followers_urls = self.save_json_as_csv(followers, self.bucket_name, f"processor_followers_{self.asOf}")
         
-        # contributors = []
-        # for repo in self.data["repositories"]:
-        #     if "contributors_handles" in self.data["repositories"][repo]:
-        #         for contributor in self.data["repositories"][repo]["contributors_handles"]:
-        #             contributors.append({
-        #                 "full_name": repo,
-        #                 "contributor": contributor
-        #             })
-        # contributors_urls = self.save_json_as_csv(contributors, self.bucket_name, f"processor_contributors_{self.asOf}")
+        contributors = []
+        for repo in self.data["repositories"]:
+            if "contributors_handles" in self.data["repositories"][repo]:
+                for contributor in self.data["repositories"][repo]["contributors_handles"]:
+                    contributors.append({
+                        "full_name": repo,
+                        "contributor": contributor
+                    })
+        contributors_urls = self.save_json_as_csv(contributors, self.bucket_name, f"processor_contributors_{self.asOf}")
 
-        # subscribers = []
-        # for repo in self.data["repositories"]:
-        #     if "subscribers_handles" in self.data["repositories"][repo]:
-        #         for subscriber in self.data["repositories"][repo]["subscribers_handles"]:
-        #             subscribers.append({
-        #                 "full_name": repo,
-        #                 "subscriber": subscriber
-        #             })
-        # subscribers_urls = self.save_json_as_csv(subscribers, self.bucket_name, f"processor_subscribers_{self.asOf}")
+        subscribers = []
+        for repo in self.data["repositories"]:
+            if "subscribers_handles" in self.data["repositories"][repo]:
+                for subscriber in self.data["repositories"][repo]["subscribers_handles"]:
+                    subscribers.append({
+                        "full_name": repo,
+                        "subscriber": subscriber
+                    })
+        subscribers_urls = self.save_json_as_csv(subscribers, self.bucket_name, f"processor_subscribers_{self.asOf}")
         
-        users_urls = ["https://xqua-dmd-test-github-processing.s3.eu-west-3.amazonaws.com/processor_users_2023-3-2--0.csv"]
-        repositories_urls = ["https://xqua-dmd-test-github-processing.s3.eu-west-3.amazonaws.com/processor_repositories_2023-3-2--0.csv"]
-        followers_urls = ["https://xqua-dmd-test-github-processing.s3.eu-west-3.amazonaws.com/processor_followers_2023-3-2--0.csv"]
-        contributors_urls = ["https://xqua-dmd-test-github-processing.s3.eu-west-3.amazonaws.com/processor_contributors_2023-3-2--0.csv"]
-        subscribers_urls = ["https://xqua-dmd-test-github-processing.s3.eu-west-3.amazonaws.com/processor_subscribers_2023-3-2--0.csv"]
-        emails_urls = ["https://xqua-dmd-test-github-processing.s3.eu-west-3.amazonaws.com/processor_emails_2023-3-2--0.csv"]
-        twitters_urls = ["https://xqua-dmd-test-github-processing.s3.eu-west-3.amazonaws.com/processor_twitters_2023-3-2--0.csv"]
-
         self.cyphers.create_or_merge_users(users_urls)
         self.cyphers.create_or_merge_repositories(repositories_urls)
         self.cyphers.link_followers(followers_urls)
@@ -213,7 +205,7 @@ class GithubProcessor(Processor):
         self.cyphers.link_twitter(twitters_urls)
 
     def run(self):
-        # self.process_github_accounts()
+        self.process_github_accounts()
         self.ingest_github_data()
 
 

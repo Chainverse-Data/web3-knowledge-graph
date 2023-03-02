@@ -73,7 +73,7 @@ class Scraper(Requests, S3Utils, Multiprocessing):
         logging.info("Saving the metadata to S3 ...")
         self.save_json(self.bucket_name, self.metadata_filename, self.metadata)
 
-    def save_data(self, chunk_prefix=""):
+    def save_data(self, chunk_prefix=0):
         "Saves the current data to S3. This will take care of chuking the data to less than 5Gb for AWS S3 requierements."
         logging.info("Saving the results to S3 ...")
         logging.info("Measuring data size...")
