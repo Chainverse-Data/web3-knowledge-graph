@@ -200,5 +200,28 @@ wic_protocol_politicians = ECSOperator(
     awslogs_stream_prefix=ecs_awslogs_stream_prefix
 )
 
+wic_early_adopters = ECSOperator(
+    task_id="wic_early_adopters",
+    dag=dag,
+    aws_conn_id="aws_ecs",
+    cluster=ecs_cluster,
+    task_definition=ecs_task_definition_processing,
+    region_name="us-east-2",
+    launch_type="FARGATE",
+    overrides={
+        "containerOverrides": [
+            {
+                "name": "data-pipelines",
+                "command": ["python3", "-m", "pipelines.analytics.wic.early-adopters.analyze"],
+                "environment": env_vars
+            },
+        ],
+    },
+    network_configuration=network_configuration,
+    awslogs_group=ecs_awslogs_group_processing,
+    awslogs_stream_prefix=ecs_awslogs_stream_prefix
+)
 
-wic_incentive_farming >> [wic_creators_collectors, wic_developers, wic_diversity, wic_ecosystem_development, wic_protocol_politicians]
+
+
+wic_incentive_farming >> [wic_creators_collectors, wic_developers, wic_diversity, wic_ecosystem_development, wic_protocol_politicians, wic_early_adopters]
