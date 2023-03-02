@@ -11,7 +11,8 @@ DEBUG = os.environ.get("DEBUG", False)
 class MultisigScraper(Scraper):
     def __init__(self, bucket_name="multisig", allow_override=False):
         super().__init__(bucket_name, allow_override=allow_override)
-        self.graph_url = "https://gateway.thegraph.com/api/{}/subgraphs/id/3oPKQiPKyD1obYpi5zXBy6HoPdYoDgxXptKrZ8GC3N1N".format(os.environ["GRAPH_API_KEY"])
+        # self.graph_url = "https://gateway.thegraph.com/api/{}/subgraphs/id/3oPKQiPKyD1obYpi5zXBy6HoPdYoDgxXptKrZ8GC3N1N".format(os.environ["GRAPH_API_KEY"])
+        self.graph_url = "https://api.thegraph.com/subgraphs/name/multis/multisig-mainnet"
         self.cutoff_timestamp = self.metadata.get("cutoff_timestamp", 0)
         self.interval = 1000
         self.data["multisig"] = []
@@ -61,8 +62,8 @@ class MultisigScraper(Scraper):
                             stamp
                             factory
                             owners
-                            threshold
-                            version
+                            balanceEther
+    		                required
                         }
                         transactions(first: $first, skip: $skip, orderBy: stamp, orderDirection:desc, where:{stamp_gt: $cutoff}) {
                             stamp
@@ -84,11 +85,11 @@ class MultisigScraper(Scraper):
                         tmp = {
                             "multisig": wallet["id"],
                             "ownerAddress": owner,
-                            "threshold": int(wallet["threshold"]),
+                            "threshold": int(wallet["required"]),
                             "occurDt": int(wallet["stamp"]),
                             "network": wallet["network"],
                             "factory": wallet["factory"],
-                            "version": wallet["version"],
+                            # "version": wallet["version"],
                             "creator": wallet["creator"], 
                             "timestamp": wallet["stamp"]
                         }
