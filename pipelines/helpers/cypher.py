@@ -24,7 +24,7 @@ class Cypher:
         uris = [uri.strip() for uri in os.environ["NEO_URI"].split(',')]
         usernames = [uri.strip() for uri in os.environ["NEO_USERNAME"].split(',')]
         passwords = [uri.strip() for uri in os.environ["NEO_PASSWORD"].split(',')]
-        assert(len(uris) == len(usernames) == len(passwords), "The variables NEO_URI NEO_USERNAME and NEO_PASSWORD must have the same length")
+        assert len(uris) == len(usernames) == len(passwords), "The variables NEO_URI, NEO_PASSWORD and NEO_USERNAME must have the same length"
         neo4j_drivers = []
         for uri, username, password in zip(uris, usernames, passwords):
             neo4j_driver = self.get_driver(uri, username, password)

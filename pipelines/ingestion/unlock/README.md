@@ -4,7 +4,6 @@ This ingestor will take care of data obtained by the Unlock scraper.
 
 # Ontology
 
-
 # Nodes 
 
 ## Lock 
@@ -43,8 +42,6 @@ An individual subscription, associated with a lock.
 - `createdDt`
 - `uuid`
 
-
-- 
 ## Manager and Holder
 Manger created the lock. Holder holds key issued by Lock.
 

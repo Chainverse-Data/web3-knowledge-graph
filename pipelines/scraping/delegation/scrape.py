@@ -64,23 +64,6 @@ class DelegationScraper(Scraper):
         self.data["tokenHolders"] = []
         self.interval = 1000
 
-    def call_the_graph_api(self, graph_url, query, variables, result_name, counter=0):
-        time.sleep(counter)
-        if counter > 20:
-            return None
-
-        transport = AIOHTTPTransport(url=graph_url)
-        client = gql.Client(transport=transport, fetch_schema_from_transport=True)
-        try:
-            result = client.execute(query, variables)
-            if result.get(result_name, None) == None:
-                logging.error(f"The Graph API did not return {result_name}, counter: {counter}")
-                return self.call_the_graph_api(graph_url, query, variables, result_name, counter=counter + 1)
-        except Exception as e:
-            logging.error(f"An exception occured getting The Graph API {e} counter: {counter} client: {client}")
-            return self.call_the_graph_api(graph_url, query, variables, result_name, counter=counter + 1)
-        return result
-
     def get_delegation_events(self):
         logging.info("Getting delegation events")
         for entry in tqdm(self.graph_urls):
