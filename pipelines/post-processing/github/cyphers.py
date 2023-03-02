@@ -162,7 +162,7 @@ class GithubCypher(Cypher):
                 LOAD CSV WITH HEADERS FROM '{url}' AS data
                 MATCH (handle:Github:Account {{handle: toLower(data.handle)}})
                 MATCH (follower:Github:Account {{handle: toLower(data.follower)}})
-                MERGE (follower)-[edge:IS_FOLLOWING]->(handle)
+                MERGE (follower)-[edge:FOLLOWS]->(handle)
                 RETURN count(edge)
             """
             count += self.query(query)[0].value()
@@ -176,7 +176,7 @@ class GithubCypher(Cypher):
                 LOAD CSV WITH HEADERS FROM '{url}' AS data
                 MATCH (handle:Github:Account {{handle: toLower(data.owner)}})
                 MATCH (repo:Github:Repository {{full_name: data.full_name}})
-                MERGE (handle)-[edge:IS_OWNER]->(repo)
+                MERGE (handle)-[edge:OWNER]->(repo)
                 RETURN count(edge)
             """
             count += self.query(query)[0].value()
@@ -190,7 +190,7 @@ class GithubCypher(Cypher):
                 LOAD CSV WITH HEADERS FROM '{url}' AS data
                 MATCH (handle:Github:Account {{handle: toLower(data.contributor)}})
                 MATCH (repo:Github:Repository {{full_name: data.full_name}})
-                MERGE (handle)-[edge:IS_CONTRIBUTOR]->(repo)
+                MERGE (handle)-[edge:CONTRIBUTOR]->(repo)
                 RETURN count(edge)
             """
             count += self.query(query)[0].value()
@@ -204,7 +204,7 @@ class GithubCypher(Cypher):
                 LOAD CSV WITH HEADERS FROM '{url}' AS data
                 MATCH (handle:Github:Account {{handle: toLower(data.subscriber)}})
                 MATCH (repo:Github:Repository {{full_name: data.full_name}})
-                MERGE (handle)-[edge:IS_SUBSCRIBER]->(repo)
+                MERGE (handle)-[edge:SUBSCRIBER]->(repo)
                 RETURN count(edge)
             """
             count += self.query(query)[0].value()

@@ -27,11 +27,11 @@ class LastActivityCyphers(Cypher):
     def get_all_wallets_without_first_tx(self):
         query = """
             MATCH (wallet:Wallet)
-            WHERE wallet.ethereumLastTxDate IS NOT NULL
-            OR wallet.polygonLastTxDate IS NOT NULL 
-            OR wallet.optimisimLastTxDate IS NOT NULL 
-            OR wallet.arbitrumLastTxDate IS NOT NULL 
-            OR wallet.solanaLastTxDate IS NOT NULL 
+            WHERE wallet.ethereumLastTxDate IS NULL
+            OR wallet.polygonLastTxDate IS NULL 
+            OR wallet.optimisimLastTxDate IS NULL 
+            OR wallet.arbitrumLastTxDate IS NULL 
+            OR wallet.solanaLastTxDate IS NULL 
             RETURN wallet.address
         """
         if DEBUG:

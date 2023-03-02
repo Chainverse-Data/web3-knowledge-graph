@@ -14,9 +14,9 @@ Nodes:
   - Twitter:Account
   - Email:Account
 Edges:
-  - (Github:Account)-[IS_FOLLOWING]->(Github:Account)
-  - (Github:Account)-[IS_OWNER]->(Github:Repository)
-  - (Github:Account)-[IS_CONTRIBUTOR]->(Github:Repository)
-  - (Github:Account)-[IS_SUBSCRIBER]->(Github:Repository)
+  - (Github:Account)-[FOLLOWS]->(Github:Account)
+  - (Github:Account)-[OWNER]->(Github:Repository)
+  - (Github:Account)-[CONTRIBUTOR]->(Github:Repository)
+  - (Github:Account)-[SUBSCRIBER]->(Github:Repository)
   - (Github:Account)-[HAS_ACCOUNT]->(Email:Account)
   - (Github:Account)-[HAS_ACCOUNT]->(Twitter:Account)
