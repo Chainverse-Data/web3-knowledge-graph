@@ -186,7 +186,7 @@ class TokenHolderScraper(Scraper):
     def run(self):
         self.get_all_wallets_in_db()
         chunk_id = 0
-        chunk_size = 100000
+        chunk_size = 50000
         for i in tqdm(range(0, len(self.wallet_list), chunk_size)):
             logging.info(f"Now scraping wallet chunk: {chunk_id}")
             self.get_transactions_assets_balances(self.wallet_list[i:i+chunk_size])
