@@ -43,7 +43,7 @@ class TokenMetadataPostProcess(Processor):
     def get_alchemy_ERC721_metadata(self, node):
         url = self.alchemy_nft_api_url.format(os.environ['ALCHEMY_API_KEY'], node["address"])
         response_data = self.get_request(url, headers=self.headers, json=True)
-        if not response_data:
+        if type(response_data) != dict:
             result = {}
         else:
             result = response_data
@@ -78,7 +78,7 @@ class TokenMetadataPostProcess(Processor):
             "params": [node['address']]
         }
         response_data = self.post_request(self.alchemy_api_url, json=payload, headers=self.headers, return_json=True)
-        if not response_data:
+        if type(response_data) != dict:
             result = {}
         else:
             result = response_data.get("result", {})
