@@ -18,7 +18,7 @@ Edges:
 
 # Bucket
 
-This ingestor reads and writes from the following bucket: `gitcoin`
+This ingestor reads and writes from the following bucket: `farcaster`
 
 # Metadata
 
