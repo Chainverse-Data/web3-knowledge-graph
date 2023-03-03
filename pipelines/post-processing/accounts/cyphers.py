@@ -39,6 +39,7 @@ class AccountsCyphers(Cypher):
         query = f"""
             CALL apoc.periodic.commit("
                 MATCH (wallet:Wallet)-[:HAS_ALIAS]-(alias:Alias)-[:HAS_ALIAS]-(twitter:Twitter)
+                WHERE NOT (wallet)-[:HAS_ACCOUNT]-(twitter)
                 WITH wallet, twitter LIMIT 10000 
                 MERGE (twitter)-[r:HAS_ACCOUNT]->(wallet)
                 SET r.citation = 'Twitter - self-attested in tweet or bio.'
@@ -52,7 +53,7 @@ class AccountsCyphers(Cypher):
     def link_wallet_github_accounts(self):
         query = f"""
             CALL apoc.periodic.commit("
-                MATCH (wallet:Wallet)-[:HAS_WALLET]-(g:Github)
+                MATCH (wallet:Wallet)<-[:HAS_WALLET]-(g:Github)
                 WHERE NOT (wallet)-[:HAS_ACCOUNT]->(g)
                 WITH wallet, g LIMIT 10000
                 MERGE (wallet)-[r:HAS_ACCOUNT]->(g)

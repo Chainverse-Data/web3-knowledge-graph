@@ -97,7 +97,7 @@ class GitcoinCyphers(Cypher):
         for url in urls:
             query = f"""
                         LOAD CSV WITH HEADERS FROM '{url}' AS grant_tags
-                        MATCH (grant:Gitcoin:{{id: grant_tags.grantId}}), (tag:Tag {{label: toLower(grant_tags.label)}})
+                        MATCH (grant:Gitcoin:Grant {{id: grant_tags.grantId}}), (tag:Tag {{label: toLower(grant_tags.label)}})
                         WITH grant, tag, grant_tags
                         MERGE (grant)-[edge:HAS_TAG]->(tag)
                         ON CREATE set edge.uuid = apoc.create.uuid(),
@@ -142,7 +142,7 @@ class GitcoinCyphers(Cypher):
 
             query = f"""
                     LOAD CSV WITH HEADERS FROM '{url}' AS members
-                    MATCH (grant:Gitcoin:{{id: members.grantId}}), (member:Gitcoin:Account {{id: members.userId}})
+                    MATCH (grant:Gitcoin:Grant {{id: members.grantId}}), (member:Gitcoin:Account {{id: members.userId}})
                     WITH grant, member, members
                     MERGE (member)-[edge:MEMBER_OF]->(grant)
                     ON CREATE set edge.uuid = apoc.create.uuid(),
@@ -170,7 +170,7 @@ class GitcoinCyphers(Cypher):
         for url in urls:
             query = f"""
                     LOAD CSV WITH HEADERS FROM '{url}' AS admin_wallets
-                    MATCH (grant:Gitcoin:{{id: admin_wallets.grantId}}), (wallet:Wallet {{address: admin_wallets.address}})
+                    MATCH (grant:Gitcoin:Grant {{id: admin_wallets.grantId}}), (wallet:Wallet {{address: admin_wallets.address}})
                     WITH grant, wallet, admin_wallets
                     MERGE (wallet)-[edge:IS_ADMIN]->(grant)
                     ON CREATE set edge.uuid = apoc.create.uuid(),
@@ -198,7 +198,7 @@ class GitcoinCyphers(Cypher):
         for url in urls:
             query = f"""
                     LOAD CSV WITH HEADERS FROM '{url}' AS twitter_accounts
-                    MATCH (twitter:Twitter {{handle: twitter_accounts.handle}}), (grant:Gitcoin:Grant:Event {{id: twitter_accounts.grantId}})
+                    MATCH (twitter:Twitter {{handle: twitter_accounts.handle}}), (grant:Gitcoin:Grant {{id: twitter_accounts.grantId}})
                     WITH twitter, grant, twitter_accounts
                     MERGE (grant)-[edge:HAS_ACCOUNT]->(twitter)
                     ON CREATE set edge.uuid = apoc.create.uuid(),
@@ -226,7 +226,7 @@ class GitcoinCyphers(Cypher):
         for url in urls:
             query = f"""
                     LOAD CSV WITH HEADERS FROM '{url}' AS donations
-                    MATCH (grant:Gitcoin:-[is_admin:IS_ADMIN]-(admin_wallet:Wallet {{address: donations.destination}})
+                    MATCH (grant:Gitcoin:Grant {{id: donations.grantId}} )<-[is_admin:IS_ADMIN]-(admin_wallet:Wallet {{address: donations.destination}})
                     OPTIONAL MATCH (donor:Wallet {{address: donations.donor}})
                     WITH grant, donor, donations
                     MERGE (donor)-[donation:DONATION {{txHash: donations.txHash}}]->(grant)

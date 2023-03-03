@@ -12,7 +12,7 @@ class Requests:
     def __init__(self) -> None:
         pass
 
-    def get_request(self, url, params=None, headers=None, allow_redirects=True, decode=True, json=False, ignore_retries=False, counter=0):
+    def get_request(self, url, params=None, headers=None, allow_redirects=True, decode=True, json=False, ignore_retries=False, counter=0, max_counter=10):
         """This makes a GET request to a url and return the data.
         It can take params and headers as parameters following python's request library.
         The method returns the raw request content, you must then parse the content with the correct parser."""
@@ -28,7 +28,7 @@ class Requests:
             if "403 Forbidden" in r.content.decode("UTF-8") and not ignore_retries:
                 logging.error(f"Status code not 200: {r.status_code} Retrying in {counter*10}s (counter = {counter})...")
                 return self.get_request(url, params=params, headers=headers, allow_redirects=allow_redirects, counter=counter + 1)
-            if decode:
+            if not json and decode:
                 return r.content.decode("UTF-8")
             if json:
                 return r.json()
