@@ -1,5 +1,4 @@
-import chunk
-import datetime
+from datetime import datetime
 import math
 import re
 import sys
@@ -7,11 +6,8 @@ import boto3
 import os
 import logging
 import json
-import boto3
 from botocore.exceptions import ClientError
 import pandas as pd
-from tqdm import tqdm
-
 
 class S3Utils:
     def __init__(self):
