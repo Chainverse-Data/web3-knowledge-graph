@@ -105,32 +105,3 @@ class TwitterCyphers(Cypher):
 
             count += self.query(query)[0].value()
         return count
-
-    @count_query_logging
-    def add_trash_labels(self, urls):
-        count = 0
-        for url in urls:
-            query = f"""
-                        LOAD CSV WITH HEADERS FROM '{url}' AS twitter
-                        MATCH (t:Twitter {{handle: twitter.handle}})
-                        SET t:Trash
-                        return count(t)
-                    """
-
-            count += self.query(query)[0].value()
-        return count
-
-    @count_query_logging
-    def merge_twitter_ens_relationships(self, urls):
-        count = 0
-        for url in urls:
-            query = f"""
-                        LOAD CSV WITH HEADERS FROM '{url}' AS twitter
-                        MATCH (t:Twitter {{handle: twitter.handle}})
-                        MATCH (a:Alias {{name: toLower(twitter.ens)}})
-                        MERGE (t)-[r:HAS_ALIAS]->(a)
-                        return count(r)
-                    """
-
-            count += self.query(query)[0].value()
-        return count
