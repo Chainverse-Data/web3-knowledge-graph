@@ -34,13 +34,13 @@ class TokenHoldersCyphers(Cypher):
                 MERGE (wallet)-[edge:HOLDS]->(token)
                 ON CREATE set edge.uuid = apoc.create.uuid(),
                     edge.balance = holdings.balance,
-                    edge.numericBalance = toFloat(holdings.numericBalance),
+                    edge.numericBalance = toFloatOrNull(holdings.numericBalance),
                     edge.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                     edge.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                     edge.ingestedBy = "{self.CREATED_ID}"
                 ON MATCH set edge.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                     edge.balance = holdings.balance,
-                    edge.numericBalance = toFloat(holdings.numericBalance),
+                    edge.numericBalance = toFloatOrNull(holdings.numericBalance),
                     edge.ingestedBy = "{self.UPDATED_ID}"
                 return count(edge)
             """

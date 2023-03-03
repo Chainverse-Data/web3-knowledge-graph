@@ -105,7 +105,7 @@ class TokenHoldersIngestor(Ingestor):
                             "address": wallet,
                             "contractAddress": contractAddress,
                             "balance": balance["tokenBalance"],
-                            "numericBalance": numericBalance
+                            "numericBalance": str(numericBalance)
                         })
         data = pd.DataFrame.from_dict(data)
         return data
