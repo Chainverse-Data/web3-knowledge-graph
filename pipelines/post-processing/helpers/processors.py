@@ -19,8 +19,8 @@ class Processor(Requests, S3Utils, Multiprocessing):
             self.cyphers
         except:
             raise ValueError("Cyphers have not been instanciated to self.cyphers")
-        if not bucket_name:
-            raise ValueError("bucket_name is not defined!")
+        # if bucket_name:
+            # raise ValueError("bucket_name is not defined!")
         self.bucket_name = os.environ["AWS_BUCKET_PREFIX"] + bucket_name
         self.bucket = self.create_or_get_bucket(self.bucket_name)
 
