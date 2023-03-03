@@ -75,6 +75,7 @@ class TokenMetadataCyphers(Cypher):
                     token.collectionName = tokens.collectionName,
                     token.safelistRequestStatus = tokens.safelistRequestStatus,
                     token.imageUrl = tokens.imageUrl,
+                    token.openSeaName = tokens.openSeaName,
                     token.openSeaDescription = tokens.openSeaDescription,
                     token.externalUrl = tokens.externalUrl,
                     token.twitterUsername = tokens.twitterUsername,
