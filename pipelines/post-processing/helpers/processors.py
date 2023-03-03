@@ -4,15 +4,11 @@ import requests
 from datetime import datetime
 import os
 
-from ...helpers import S3Utils
-from ...helpers import Requests
-from ...helpers import Multiprocessing
+from ...helpers import Base
 
-class Processor(Requests, S3Utils, Multiprocessing):
+class Processor(Base):
     def __init__(self, bucket_name):
-        Requests.__init__(self)
-        S3Utils.__init__(self)
-        Multiprocessing.__init__(self)
+        Base.__init__(self)
         self.runtime = datetime.now()
         self.asOf = f"{self.runtime.year}-{self.runtime.month}-{self.runtime.day}"
         try:
@@ -27,19 +23,25 @@ class Processor(Requests, S3Utils, Multiprocessing):
         self.metadata_filename = "processor_metadata.json"
         self.metadata = self.read_metadata()
 
-    def read_metadata(self):
-        "Access the S3 bucket to read the metadata and returns a dictionary that corresponds to the saved JSON object"
-        if self.check_if_file_exists(self.bucket_name, self.metadata_filename):
-            return self.load_json(self.bucket_name, self.metadata_filename)
-        else:
-            return {}
-
-    def save_metadata(self):
-        "Saves the current metadata to S3"
-        self.save_json(self.bucket_name,
-                          self.metadata_filename, self.metadata)
+        self.start_date = None
+        self.end_date = None
+        self.set_start_end_date()
 
     def run(self):
         "Main function to be called. Every postprocessor must implement its own run function!"
-        raise NotImplementedError(
-            "ERROR: the run function has not been implemented!")
+        raise NotImplementedError("ERROR: the run function has not been implemented!")
+
+    def set_start_end_date(self):
+        "Sets the start and end date from either params, env or metadata"
+        if not self.start_date and "INGEST_FROM_DATE" in os.environ and os.environ["INGEST_FROM_DATE"].strip():
+            self.start_date = os.environ["INGEST_FROM_DATE"]
+        else:
+            if "last_date_ingested" in self.metadata:
+                self.start_date = self.metadata["last_date_ingested"]
+        if not self.end_date and "INGEST_TO_DATE" in os.environ and os.environ["INGEST_TO_DATE"].strip():
+            self.end_date = os.environ["INGEST_TO_DATE"]
+        # Converting to python datetime object for easy filtering
+        if self.start_date:
+            self.start_date = datetime.strptime(self.start_date, "%Y-%m-%d")
+        if self.end_date:
+            self.end_date = datetime.strptime(self.end_date, "%Y-%m-%d")
