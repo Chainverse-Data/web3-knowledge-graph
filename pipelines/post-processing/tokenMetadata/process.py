@@ -1,4 +1,6 @@
 import logging
+
+from tqdm import tqdm
 from ..helpers import Processor
 from .cyphers import TokenMetadataCyphers
 import os
@@ -14,26 +16,29 @@ class TokenMetadataPostProcess(Processor):
             "accept": "application/json",
             "content-type": "application/json"
         }
+        self.chunk_size = 10000
 
     def get_tokens_ERC721_metadata(self):
         logging.info("Starting ERC721 Metadata extraction")
         tokens = self.cyphers.get_empty_ERC721_tokens()
-        results = self.parallel_process(self.get_alchemy_ERC721_metadata, tokens, description="Getting all ERC721 Metadata")
-        metadata_urls = self.save_json_as_csv(results, self.bucket_name, f"token_ERC721_metadata_{self.asOf}")
-        self.cyphers.add_ERC721_token_node_metadata(metadata_urls)
-        deployers = [{"address": result["address"], "contractDeployer": result["contractDeployer"]} for result in results if result["contractDeployer"]]
-        deployers_wallets = [{"address": result["contractDeployer"]} for result in results if result["contractDeployer"]]
-        deployers_urls = self.save_json_as_csv(deployers, self.bucket_name, f"token_ERC721_deployers_{self.asOf}")
-        deployers_wallets_urls = self.save_json_as_csv(deployers_wallets, self.bucket_name, f"token_ERC721_deployers_wallets_{self.asOf}")
-        self.cyphers.queries.create_wallets(deployers_wallets_urls)
-        self.cyphers.add_ERC721_deployers(deployers_urls)
+        for i in tqdm(range(0, len(tokens), self.chunk_size)):
+            results = self.parallel_process(self.get_alchemy_ERC721_metadata, tokens[i: i+self.chunk_size], description="Getting all ERC721 Metadata")
+            metadata_urls = self.save_json_as_csv(results, self.bucket_name, f"token_ERC721_metadata_{self.asOf}")
+            self.cyphers.add_ERC721_token_node_metadata(metadata_urls)
+            deployers = [{"address": result["address"], "contractDeployer": result["contractDeployer"]} for result in results if result["contractDeployer"]]
+            deployers_wallets = [{"address": result["contractDeployer"]} for result in results if result["contractDeployer"]]
+            deployers_urls = self.save_json_as_csv(deployers, self.bucket_name, f"token_ERC721_deployers_{self.asOf}")
+            deployers_wallets_urls = self.save_json_as_csv(deployers_wallets, self.bucket_name, f"token_ERC721_deployers_wallets_{self.asOf}")
+            self.cyphers.queries.create_wallets(deployers_wallets_urls)
+            self.cyphers.add_ERC721_deployers(deployers_urls)
 
     def get_tokens_ERC20_metadata(self):
         logging.info("Starting ERC20 Metadata extraction")
         tokens = self.cyphers.get_empty_ERC20_tokens()
-        results = self.parallel_process(self.get_alchemy_ERC20_metadata, tokens, description="Getting all ERC20 metadata")
-        metadata_urls = self.save_json_as_csv(results, self.bucket_name, f"token_ERC20_metadata_{self.asOf}")
-        self.cyphers.add_ERC20_token_node_metadata(metadata_urls)
+        for i in tqdm(range(0, len(tokens), self.chunk_size)):
+            results = self.parallel_process(self.get_alchemy_ERC20_metadata, tokens[i: i+self.chunk_size], description="Getting all ERC20 metadata")
+            metadata_urls = self.save_json_as_csv(results, self.bucket_name, f"token_ERC20_metadata_{self.asOf}")
+            self.cyphers.add_ERC20_token_node_metadata(metadata_urls)
 
     def get_alchemy_ERC721_metadata(self, node):
         url = self.alchemy_nft_api_url.format(os.environ['ALCHEMY_API_KEY'], node["address"])
