@@ -9,6 +9,10 @@ class FarcasterCyphers(Cypher):
         super().__init__()
         self.queries = Queries()
 
+    def create_indexes(self):
+        query = "CREATE INDEX UniqueFarcasterID IF NOT EXISTS FOR (n:Farcaster) ON (n.id)"
+        self.query(query)
+
     def create_farcaster_wallets(self, urls):
         count = self.queries.create_wallets(urls)
         return count
