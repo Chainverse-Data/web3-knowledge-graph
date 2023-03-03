@@ -48,7 +48,15 @@ class TwitterWebsiteCyphers(Cypher):
             query = f"""
                         LOAD CSV WITH HEADERS FROM '{url}' AS websites
                         MATCH (twitter:Twitter {{handle: websites.handle}})
+<<<<<<< HEAD
+<<<<<<< HEAD
                         SET twitter.website_bio = websites.url
+=======
+                        SET twitter.website = websites.url
+>>>>>>> 5c6cede (fixed twitter websites)
+=======
+                        SET twitter.website_bio = websites.url
+>>>>>>> 2f6db6f (added DAG)
                         RETURN count(twitter)
                 """
             count += self.query(query)[0].value()
