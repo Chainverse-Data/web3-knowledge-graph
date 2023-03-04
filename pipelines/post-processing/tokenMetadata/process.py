@@ -54,7 +54,10 @@ class TokenMetadataPostProcess(Processor):
         node['description'] = result.get("description", None)
         node['tokenUri_gateway'] = result.get("tokenUri", {}).get("gateway", None)
         node['tokenUri_raw'] = result.get("tokenUri", {}).get("raw", None)
-        node['image'] = result.get("metadata", {}).get("image", None)
+        if type(result.get("metadata", None)) == dict:
+            node['image'] = result.get("metadata", {}).get("image", None)
+        else:
+            node['image'] = None
         node['timeLastUpdated'] = result.get("timeLastUpdated", None)
         node['symbol'] = result.get("contractMetadata", {}).get("symbol", None)
         node['totalSupply'] = result.get("contractMetadata", {}).get("totalSupply", None)
@@ -82,10 +85,12 @@ class TokenMetadataPostProcess(Processor):
             result = {}
         else:
             result = response_data.get("result", {})
-        node['name'] = result.get("name", "")
-        node['symbol'] = result.get("symbol", "")
-        node['decimals'] = result.get("decimals", "")
-        node['logo'] = result.get("logo", "")
+            node['metadataScraped'] = True
+        node['metadataScraped'] = result.get("metadataScraped", None)
+        node['name'] = result.get("name", None)
+        node['symbol'] = result.get("symbol", None)
+        node['decimals'] = result.get("decimals", None)
+        node['logo'] = result.get("logo", None)
         return node
 
     def run(self):

@@ -15,7 +15,7 @@ class TokenMetadataCyphers(Cypher):
     def get_empty_ERC20_tokens(self):
         token_node_query = f"""
             MATCH (token:Token:ERC20) 
-            WHERE token.address IS NOT NULL AND (token.name IS NULL OR token.logo IS NULL OR token.symbol IS NULL) 
+            WHERE token.address IS NOT NULL AND token.metadataScraped IS NULL
             RETURN token 
         """
         if DEBUG:
@@ -44,7 +44,8 @@ class TokenMetadataCyphers(Cypher):
             query = f"""
                 LOAD CSV WITH HEADERS FROM '{url}' AS tokens
                 MATCH (t:Token:ERC20 {{address: tokens.address}})
-                SET t.name = tokens.name,
+                SET t.metadataScraped = tokens.metadataScraped,
+                    t.name = tokens.name,
                     t.symbol = tokens.symbol,
                     t.decimals = toInteger(tokens.decimals),
                     t.logo = tokens.logo,
