@@ -9,7 +9,7 @@ class CreatorsCollectorsCypher(WICCypher):
         benchmark_query = """
             MATCH (w:Wallet)-[r:AUTHOR]->(a:Article:Mirror)
             WITH w, count(distinct(a)) AS articles
-            RETURN apoc.agg.percentiles(articles, [.5])[0] AS benchmark
+            RETURN apoc.agg.percentiles(articles, [.75])[0] AS benchmark
         """
         benchmark = self.query(benchmark_query)[0].value()
         return benchmark
@@ -35,7 +35,7 @@ class CreatorsCollectorsCypher(WICCypher):
             MATCH (w:Wallet)-[r:HOLDS]->(t:Token)
             WHERE t.contractAddress IN {addresses}
             WITH w, count(distinct(t)) AS collections
-            RETURN apoc.agg.percentiles(collections, [.5])[0] AS benchmark
+            RETURN apoc.agg.percentiles(collections, [.1])[0] AS benchmark
         """
         benchmark = self.query(benchmark_query)[0].value()
         return benchmark
