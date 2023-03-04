@@ -6,7 +6,7 @@ from airflow.contrib.operators.ecs_operator import ECSOperator
 from airflow.models import Variable
 
 dag = DAG(
-    "token_holdings_scraping_and_ingest",
+    "token_metadata_processing",
     description="Scrapes the latest Gitcoin data, and ingest them into the neo4J instance.",
     default_args={
         "start_date": days_ago(2),
