@@ -28,6 +28,7 @@ class LastActivityPostProcess(Processor):
             "arbitrum": ["external","erc20","erc721","erc1155","specialnft"],
             "polygon": ["external","internal","erc20","erc721","erc1155","specialnft"]
         }
+        self.chunk_size = 100000
 
     def alchemy_API_call(self, payload, chain, key, counter=0):
         if counter > 10:
@@ -102,21 +103,23 @@ class LastActivityPostProcess(Processor):
     def process_last_transactions(self):
         logging.info("Processing last transaction for all wallets")
         wallets = self.cyphers.get_all_wallets()
-        data = self.parallel_process(self.get_last_tx, wallets, description="Getting last transactions data")
-        for chain in self.alchemy_endpoints:
-            tmp = [{"address": element["address"], "date": element[chain]} for element in data if element[chain]]
-            urls = self.save_json_as_csv(tmp, self.bucket_name, f"processor_last_transactions_{chain}-{self.asOf}")
-            self.cyphers.set_last_active_date(urls, chain)
+        for i in tqdm(range(0, len(wallets), self.chunk_size), position=0, desc="Wallet chunks"):
+            data = self.parallel_process(self.get_last_tx, wallets[i: i+self.chunk_size], description="Getting last transactions data")
+            for chain in self.alchemy_endpoints:
+                tmp = [{"address": element["address"], "date": element[chain]} for element in data if element[chain]]
+                urls = self.save_json_as_csv(tmp, self.bucket_name, f"processor_last_transactions_{chain}-{self.asOf}_{i}")
+                self.cyphers.set_last_active_date(urls, chain)
         logging.info("Last transactions done")
 
     def process_first_transactions(self):
         logging.info("Processing first transaction for all wallets")
         wallets = self.cyphers.get_all_wallets_without_first_tx()
-        data = self.parallel_process(self.get_fisrt_tx, wallets, description="Getting first transactions data")
-        for chain in self.alchemy_endpoints:
-            tmp = [{"address": element["address"], "date": element[chain]} for element in data if element[chain]]
-            urls = self.save_json_as_csv(tmp, self.bucket_name, f"processor_first_transactions_{chain}-{self.asOf}")
-            self.cyphers.set_first_active_date(urls, chain)
+        for i in tqdm(range(0, len(wallets), self.chunk_size), position=0, desc="Wallet chunks"):
+            data = self.parallel_process(self.get_fisrt_tx, wallets[i: i+self.chunk_size], description="Getting first transactions data")
+            for chain in self.alchemy_endpoints:
+                tmp = [{"address": element["address"], "date": element[chain]} for element in data if element[chain]]
+                urls = self.save_json_as_csv(tmp, self.bucket_name, f"processor_first_transactions_{chain}-{self.asOf}_{i}")
+                self.cyphers.set_first_active_date(urls, chain)
         logging.info("first transactions done")
 
     def run(self):
