@@ -37,7 +37,7 @@ class PropHouseScraper(Scraper):
                     }
                 }
             """
-        result = self.call_the_graph_api(self.graph_url, comm_query, None, [counter=])
+        result = self.call_the_graph_api(self.graph_url, comm_query, None, ["communities"])
         self.data["communities"] = result["communities"]
         logging.info(f"Found {len(self.data['communities'])} communities")
 
