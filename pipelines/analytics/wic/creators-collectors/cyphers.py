@@ -57,6 +57,27 @@ class CreatorsCollectorsCypher(WICCypher):
         count = self.query(connect)[0].value()
         return count 
     
+    def three_letter_ens(self, context):
+        query = f"""
+        match 
+            (wic:_Wic:_{self.subgraph_name}:_Context:_{context})
+        match 
+            (wallet:Wallet)-[:HAS_ALIAS]-(alias:Alias:Ens)
+        with 
+            wallet, split(alias.name, ".ens")[0] as ens_name, wic
+        where 
+            size(ens_name) = 3 
+        with 
+            wallet, wic 
+        merge
+            (wallet)-[con:_HAS_CONTEXT]->(wic)
+        return
+            count(con)
+        """
+        count = self.query(query)[0].value() 
+
+        return count
+    
 
 
 
