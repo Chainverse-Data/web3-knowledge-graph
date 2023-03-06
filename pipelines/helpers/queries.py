@@ -58,12 +58,30 @@ class Queries(Cypher):
         return count
 
     @count_query_logging
-    def create_or_merge_alias(self, urls):
+    def create_or_merge_emails(self, urls):
+        count = 0
+        for url in urls:
+            query = f"""
+                LOAD CSV WITH HEADERS FROM '{url}' AS emails
+                MERGE (email:Email:Account {{email: emails.email}})
+                ON CREATE SET   link.uuid = apoc.create.uuid(),
+                                email.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
+                                email.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
+                                email.ingestedBy = "{self.CREATED_ID}"
+                ON MATCH SET    email.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
+                                email.ingestedBy = "{self.UPDATED_ID}"
+                RETURN count(email)
+            """
+            count += self.query(query)[0].value()
+        return count
+
+    @count_query_logging
+    def create_or_merge_ens_alias(self, urls):
         count = 0
         for url in tqdm(urls):
             query = f"""
                     LOAD CSV WITH HEADERS FROM '{url}' AS alias
-                    MERGE (a:Alias {{name: toLower(alias.name)}})
+                    MERGE (a:Alias:Ens {{name: toLower(alias.name)}})
                     ON CREATE set a.uuid = apoc.create.uuid(),
                         a.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                         a.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
