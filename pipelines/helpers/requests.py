@@ -5,6 +5,7 @@ import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 import gql
 from gql.transport.aiohttp import AIOHTTPTransport, log as gql_log
+
 gql_log.setLevel(logging.WARNING)
 
 class Requests:
@@ -54,19 +55,20 @@ class Requests:
             logging.error(f"An unrecoverable exception occurred: {e}")
             return self.post_request(url, data=data, json=json, headers=headers, counter=counter + 1)
 
-    def call_the_graph_api(self, graph_url, query, variables, result_name, counter=0):
+    def call_the_graph_api(self, graph_url, query, variables, result_names, counter=0):
         time.sleep(counter)
         if counter > 10:
             time.sleep(counter)
             return None
-
+        gql_query =  gql.gql(query)
         transport = AIOHTTPTransport(url=graph_url)
         client = gql.Client(transport=transport, fetch_schema_from_transport=True)
         try:
-            result = client.execute(query, variables)
-            if result.get(result_name, None) == None:
-                logging.error(f"The Graph API did not return {result_name}, counter: {counter}")
-                return self.call_the_graph_api(graph_url, query, variables, result_name, counter=counter + 1)
+            result = client.execute(gql_query, variables)
+            for result_name in result_names:
+                if result.get(result_name, None) == None:
+                    logging.error(f"The Graph API did not return {result_name}, counter: {counter}")
+                    return self.call_the_graph_api(graph_url, query, variables, result_name, counter=counter + 1)
         except Exception as e:
             logging.error(f"An exception occured getting The Graph API {e} counter: {counter} client: {client}")
             return self.call_the_graph_api(graph_url, query, variables, result_name, counter=counter + 1)

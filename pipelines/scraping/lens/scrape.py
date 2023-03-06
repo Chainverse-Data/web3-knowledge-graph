@@ -1,10 +1,5 @@
-import time
 from ..helpers import Scraper
-import gql
 import logging
-from gql.transport.aiohttp import AIOHTTPTransport, log as gql_log
-
-gql_log.setLevel(logging.WARNING)
 
 
 class LensScraper(Scraper):
@@ -17,23 +12,6 @@ class LensScraper(Scraper):
         self.interval = 1000
         self.data["profiles"] = []
 
-    def call_the_graph_api(self, graph_url, query, variables, counter=0):
-        time.sleep(counter)
-        if counter > 20:
-            return None
-
-        transport = AIOHTTPTransport(url=graph_url)
-        client = gql.Client(transport=transport, fetch_schema_from_transport=True)
-        try:
-            result = client.execute(query, variables)
-            if result.get("profiles", None) == None:
-                logging.error(f"The Graph API did not return profiles, counter: {counter}")
-                return self.call_the_graph_api(graph_url, query, variables, counter=counter + 1)
-        except Exception as e:
-            logging.error(f"An exception occured getting The Graph API {e} counter: {counter} client: {client}")
-            return self.call_the_graph_api(graph_url, query, variables, counter=counter + 1)
-        return result
-
     def get_profiles(self):
         logging.info(f"Getting profiles from {self.graph_url}...")
         skip = 0
@@ -45,8 +23,7 @@ class LensScraper(Scraper):
                 cutoff_date = self.data["profiles"][-1]["createdOn"]
             variables = {"first": 1000, "skip": skip, "cutoff": cutoff_date}
 
-            profiles_query = gql.gql(
-                """
+            profiles_query = """
                 query($first: Int!, $skip: Int!, $cutoff: BigInt!) {
                     profiles (first: $first, skip: $skip, orderBy: createdOn, orderDirection: asc, where: {createdOn_gt: $cutoff}) {
                         id
@@ -58,8 +35,7 @@ class LensScraper(Scraper):
                         }
                     }
                     """
-            )
-            result = self.call_the_graph_api(self.graph_url, profiles_query, variables)
+            result = self.call_the_graph_api(self.graph_url, profiles_query, variables, ["profiles"])
             if result["profiles"] == []:
                 logging.info(f"Got {len(self.data['profiles'])} profiles, ending scrape")
                 break

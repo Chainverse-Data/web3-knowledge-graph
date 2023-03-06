@@ -1,11 +1,7 @@
-import time
 from ..helpers import Scraper
 import os
-import gql
 import logging
-from gql.transport.aiohttp import AIOHTTPTransport, log as gql_log
 
-gql_log.setLevel(logging.WARNING)
 DEBUG = os.environ.get("DEBUG", False)
 
 class MultisigScraper(Scraper):
@@ -18,26 +14,6 @@ class MultisigScraper(Scraper):
         self.data["multisig"] = []
         self.data["transactions"] = []
 
-    def call_the_graph_api(self, query, variables, counter=0):
-        time.sleep(counter)
-        if counter > 20:
-            return None
-
-        transport = AIOHTTPTransport(url=self.graph_url)
-        client = gql.Client(transport=transport, fetch_schema_from_transport=True)
-        try:
-            result = client.execute(query, variable_values=variables)
-            if result.get("wallets", None) == None:
-                logging.error(f"theGraph API did not return wallets {result} counter: {counter}")
-                return self.call_the_graph_api(query, variables, counter=counter+1)
-            if result.get("transactions", None) == None:
-                logging.error(f"theGraph API did not return transactions {result} counter: {counter}")
-                return self.call_the_graph_api(query, variables, counter=counter+1)
-        except Exception as e:
-            logging.error(f"An exception occurred getting the graph API {e} counter: {counter} client: {client}")
-            return self.call_the_graph_api(query, variables, counter=counter+1)
-        return result
-        
     def get_multisig_and_transactions(self):
         skip = 0
         wallets = ["init"]
@@ -53,8 +29,7 @@ class MultisigScraper(Scraper):
                 if req > max_req:
                     break
             variables = {"first": self.interval, "skip": skip, "cutoff": self.cutoff_timestamp}
-            query = gql.gql(
-                """query($first: Int!, $skip: Int!, $cutoff: BigInt!) {
+            query = """query($first: Int!, $skip: Int!, $cutoff: BigInt!) {
                         wallets(first: $first, skip: $skip, orderBy: stamp, orderDirection:desc, where:{stamp_gt: $cutoff}) {
                             id
                             creator
@@ -75,8 +50,8 @@ class MultisigScraper(Scraper):
                             destination
                         }
                     }"""
-            )
-            result = self.call_the_graph_api(query, variables)
+
+            result = self.call_the_graph_api(self.graph_url, query, variables, ["wallets", "transactions"])
             if result != None:
                 wallets = result["wallets"]
                 transactions = result["transactions"]
