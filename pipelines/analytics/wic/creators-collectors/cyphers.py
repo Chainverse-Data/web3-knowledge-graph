@@ -64,7 +64,7 @@ class CreatorsCollectorsCypher(WICCypher):
         match 
             (wallet:Wallet)-[:HAS_ALIAS]-(alias:Alias:Ens)
         with 
-            wallet, split(alias.name, ".ens")[0] as ens_name, wic
+            wallet, split(alias.name, ".eth")[0] as ens_name, wic
         where 
             size(ens_name) = 3 
         with 
@@ -78,10 +78,33 @@ class CreatorsCollectorsCypher(WICCypher):
 
         return count
     
+    def sudo_power_users(self, urls):
+        count = 0
+        for url in urls:
+            create_wallets = f"""
+            load csv with headers from '{url}' as sudo
+            merge (wallet:Wallet {{address: sudo.address}})
+            return count(wallet)
+            """
+            count += self.query(create_wallets)[0].value()
 
+        return count
 
+    def connect_sudo_power_users(self, context, urls):
+        count = 0
+        for url in urls: 
+            query = f"""
+            load csv with headers from '{url}' as sudo
+            match (wallet:Wallet {{address: sudo.address}})
+            match (wic:_Wic:_{self.subgraph_name}:_{context})
+            with wallet, wic
+            merge (wallet)-[r:_HAS_CONTEXT->(wic)
+            set r._context = {{round(tofloat(sudo.total_volume), 4)}}
+            return count(*)
+            """
+            count += self.query(query)[0].value()
 
+        return count 
+        
+        
 
-
-    
-            
