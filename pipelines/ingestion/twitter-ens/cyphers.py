@@ -31,7 +31,7 @@ class TwitterEnsCyphers(Cypher):
 
     @count_query_logging
     def create_or_merge_twitter_alias(self, urls):
-        count = self.queries.create_or_merge_alias(urls)
+        count = self.queries.create_or_merge_ens_alias(urls)
         return count
 
     @count_query_logging

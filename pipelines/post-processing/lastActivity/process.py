@@ -31,13 +31,12 @@ class LastActivityPostProcess(Processor):
         self.chunk_size = 100000
 
     def alchemy_API_call(self, payload, chain, key, counter=0):
-        if counter > 10:
+        if counter > 3:
             time.sleep(counter)
             return []
         headers = {"Content-Type": "application/json"}
         alchemy_api_url = self.alchemy_endpoints[chain]
-        content = self.post_request(alchemy_api_url, data=payload, headers=headers)
-        content = json.loads(content)
+        content = self.post_request(alchemy_api_url, data=payload, headers=headers, return_json=True)
         result = content.get("result", None)
         if not result:
             return self.alchemy_API_call(payload, chain, key, counter=counter+1)

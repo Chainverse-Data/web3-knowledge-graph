@@ -29,7 +29,7 @@ class EnsCyphers(Cypher):
     @count_query_logging
     def create_or_merge_ens_items(self, urls):
         count = 0
-        count += self.queries.create_or_merge_alias(urls)
+        count += self.queries.create_or_merge_ens_alias(urls)
         count += self.queries.create_wallets(urls)
         count += self.queries.create_or_merge_ens_nft(urls)
         # count += self.queries.create_or_merge_transaction(urls)
