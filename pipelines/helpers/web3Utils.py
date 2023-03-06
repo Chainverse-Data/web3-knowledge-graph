@@ -47,6 +47,7 @@ class Web3Utils:
         if counter > max_retry:
             time.sleep(counter * 10)
             return None
+        domain = None
         try:
             domain = self.ns.get_text(name, record)
         except Exception as e:
