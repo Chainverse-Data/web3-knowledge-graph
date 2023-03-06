@@ -83,6 +83,20 @@ class TwitterCyphers(Cypher):
         return twitter
 
     @count_query_logging
+    def add_trash_labels(self, urls):
+        count = 0
+        for url in urls:
+            query = f"""
+                        LOAD CSV WITH HEADERS FROM '{url}' AS twitter
+                        MATCH (t:Twitter {{handle: twitter.handle}})
+                        SET t:Trash
+                        return count(t)
+                    """
+
+            count += self.query(query)[0].value()
+        return count
+
+    @count_query_logging
     def add_twitter_node_info(self, urls):
         count = 0
         for url in urls:
