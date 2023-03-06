@@ -12,7 +12,7 @@ class SpamCyphers(Cypher):
         match
             (token:Token)
         where
-            token.address in {contractAddresses}
+            token.address in $contractAddresses
         and not
             token:SpamContract
         set
@@ -20,7 +20,7 @@ class SpamCyphers(Cypher):
         return 
             count(token)
         """
-        count = self.query(query)[0].value()
+        count = self.query(query, parameters={"contractAddresses": contractAddresses})[0].value()
 
         return count 
 
