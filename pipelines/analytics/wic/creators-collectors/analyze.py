@@ -2,7 +2,6 @@ import logging
 from .. import WICAnalysis
 from .cyphers import CreatorsCollectorsCypher
 import pandas as pd
-from helpers.s3 import save_df_as_csv
 
 
 class CreatorsCollectorsAnalysis(WICAnalysis):
