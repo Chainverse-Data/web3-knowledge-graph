@@ -173,14 +173,15 @@ class DaoHausIngestor(Ingestor):
         self.cyphers.link_or_merge_proposers(urls)
         self.cyphers.link_or_merge_processors(urls)
         self.cyphers.link_or_merge_sponsors(urls)
+        if "tributeOffered" in proposals_df.columns:
+            tmp_df = proposals_df[proposals_df["tributeOffered"] != "0"]
+            urls = self.save_df_as_csv(tmp_df, self.bucket_name, f"ingestor_tributes_{self.asOf}")
+            self.cyphers.link_or_merge_tributes(urls)
 
-        tmp_df = proposals_df[proposals_df["tributeOffered"] != "0"]
-        urls = self.save_df_as_csv(tmp_df, self.bucket_name, f"ingestor_tributes_{self.asOf}")
-        self.cyphers.link_or_merge_tributes(urls)
-
-        tmp_df = proposals_df[proposals_df["paymentRequested"] != "0"]
-        urls = self.save_df_as_csv(tmp_df, self.bucket_name, f"ingestor_payments_{self.asOf}")
-        self.cyphers.link_or_merge_payments(urls)
+        if "paymentRequested" in proposals_df.columns:
+            tmp_df = proposals_df[proposals_df["paymentRequested"] != "0"]
+            urls = self.save_df_as_csv(tmp_df, self.bucket_name, f"ingestor_payments_{self.asOf}")
+            self.cyphers.link_or_merge_payments(urls)
 
     def ingest_votes(self):
         logging.info("Ingesting votes...")
