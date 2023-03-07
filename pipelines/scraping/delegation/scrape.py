@@ -2,10 +2,7 @@ import time
 
 from tqdm import tqdm
 from ..helpers import Scraper
-import gql
 import logging
-from gql.transport.aiohttp import AIOHTTPTransport, log as gql_log
-gql_log.setLevel(logging.WARNING)
 import os
 DEBUG = os.environ.get("DEBUG", False)
 
@@ -74,7 +71,7 @@ class DelegationScraper(Scraper):
             while True:
 
                 variables = {"first": self.interval, "cutoff": cutoff_block}
-                query = gql.gql("""
+                query = """
                     query($first: Int!, $cutoff: BigInt!) {
                         delegateChanges(first: $first, orderBy: blockNumber, orderDirection: asc, where: {blockNumber_gt: $cutoff}) {
                             id
@@ -87,8 +84,8 @@ class DelegationScraper(Scraper):
                             blockTimestamp
                         }
                     }      
-                """)
-                result = self.call_the_graph_api(graph_url, query, variables, "delegateChanges")
+                """
+                result = self.call_the_graph_api(graph_url, query, variables, ["delegateChanges"])
                 if result == None or result["delegateChanges"] == []:
                     break
             
@@ -112,8 +109,7 @@ class DelegationScraper(Scraper):
             entries = []
             while True:
                 variables = {"first": self.interval, "cutoff": cutoff_block}
-                query = gql.gql(
-                    """
+                query = """
                 query($first: Int!, $cutoff: BigInt!) {
                     delegateVotingPowerChanges(first: $first, orderBy: blockNumber, orderDirection: asc, where: {blockNumber_gt: $cutoff}) {
                         id
@@ -129,8 +125,7 @@ class DelegationScraper(Scraper):
                     }
                 }      
                 """
-                )
-                result = self.call_the_graph_api(graph_url, query, variables, "delegateVotingPowerChanges")
+                result = self.call_the_graph_api(graph_url, query, variables, ["delegateVotingPowerChanges"])
                 if result == None or result["delegateVotingPowerChanges"] == []:
                     break
                 entries.extend(result["delegateVotingPowerChanges"])
@@ -153,8 +148,7 @@ class DelegationScraper(Scraper):
             entries = []
             while True:
                 variables = {"first": self.interval, "cutoff": cutoff_block}
-                query = gql.gql(
-                    """
+                query = """
                 query($first: Int!, $cutoff: String!) {
                     delegates(first: $first, orderBy: id, orderDirection: asc, where: {id_gt: $cutoff}) {
                         id
@@ -167,8 +161,7 @@ class DelegationScraper(Scraper):
                     }
                 }      
                 """
-                )
-                result = self.call_the_graph_api(graph_url, query, variables, "delegates")
+                result = self.call_the_graph_api(graph_url, query, variables, ["delegates"])
                 if result == None or result["delegates"] == []:
                     break
                 entries.extend(result["delegates"])
@@ -190,8 +183,7 @@ class DelegationScraper(Scraper):
             entries = []
             while True:
                 variables = {"first": self.interval, "cutoff": cutoff_block}
-                query = gql.gql(
-                    """
+                query = """
                     query($first: Int!, $cutoff: String!) {
                         tokenHolders(first: $first, orderBy: id, orderDirection: asc, where: {id_gt: $cutoff}) {
                             id
@@ -202,8 +194,7 @@ class DelegationScraper(Scraper):
                             }
                         }
                 """
-                )
-                result = self.call_the_graph_api(graph_url, query, variables, "tokenHolders")
+                result = self.call_the_graph_api(graph_url, query, variables, ["tokenHolders"])
                 if result == None or result["tokenHolders"] == []:
                     break
                 entries.extend(result["tokenHolders"])

@@ -10,6 +10,7 @@ class GithubCypher(Cypher):
     def get_all_github_accounts(self):
         query = f"""
             MATCH (github:Github:Account)
+            WHERE github.lastMetadataUpdateDt IS NULL OR github.lastMetadataUpdateDt < datetime() - duration({{days:30}})
             RETURN github.handle as handle
         """
         handles = self.query(query)
@@ -42,6 +43,7 @@ class GithubCypher(Cypher):
                                 user.updated_at = datetime(data.updated_at),
                                 user.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                                 user.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
+                                user.lastMetadataUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                                 user.ingestedBy = "{self.CREATED_ID}"
                 ON MATCH SET    user.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                                 user.avatar_url = data.avatar_url,
@@ -59,6 +61,7 @@ class GithubCypher(Cypher):
                                 user.followers = toInteger(data.followers),
                                 user.following = toInteger(data.following),
                                 user.updated_at = datetime(data.updated_at),
+                                user.lastMetadataUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                                 user.ingestedBy = "{self.UPDATED_ID}"
                 RETURN count(user)
             """

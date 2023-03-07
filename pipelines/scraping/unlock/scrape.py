@@ -1,14 +1,9 @@
 import time
 from ..helpers import Scraper
-import gql
 import os
 import requests
 import logging
 import json
-from gql.transport.aiohttp import AIOHTTPTransport, log as gql_log
-
-
-gql_log.setLevel(logging.WARNING)
 
 class UnlockScraper(Scraper):
     def __init__(self, bucket_name="unlock", allow_override=True): 
@@ -35,23 +30,6 @@ class UnlockScraper(Scraper):
         self.data["keys"] = []
         self.data["holders"] = []
 
-    def call_the_graph_api(self, graph_url, query, variables, counter=0):
-        time.sleep(counter)
-        if counter > 20:
-            return None
-
-        transport = AIOHTTPTransport(url=graph_url)
-        client = gql.Client(transport=transport, fetch_schema_from_transport=True)
-        try:
-            result = client.execute(query, variables)
-            if result.get("locks", None) == None:
-                logging.error(f"The Graph API did not return locks, counter: {counter}")
-                return self.call_the_graph_api(graph_url, query, variables, counter=counter + 1)
-        except Exception as e:
-            logging.error(f"An exception occured getting The Graph API {e} counter: {counter} client: {client}")
-            return self.call_the_graph_api(graph_url, query, variables, counter=counter + 1)
-        return result
-
     def get_locks(self):
         for url in self.graph_urls:
             graph_url = url["url"]
@@ -66,8 +44,7 @@ class UnlockScraper(Scraper):
                     cutoff_block = self.data["locks"][-1]["creationBlock"]
                 variables = {"first": self.interval, "skip": skip, "cutoff": cutoff_block}
 
-                locks_query = gql.gql(
-                    """
+                locks_query = """
                     query($first: Int!, $skip: Int!, $cutoff: BigInt!) {
                         locks(first: $first, skip: $skip, orderBy: creationBlock, orderDirection: asc, where: {creationBlock_gt: $cutoff}) {
                                 id
@@ -96,8 +73,7 @@ class UnlockScraper(Scraper):
                             }
                         }
                         """
-                )
-                result = self.call_the_graph_api(graph_url, locks_query, variables)
+                result = self.call_the_graph_api(graph_url, locks_query, variables, ["locks"])
                 if result["locks"] == []:
                     logging.info(f"Finished scraping {network} locks")
                     logging.info(f"Current lock count: {len(self.data['locks'])}")
@@ -156,8 +132,7 @@ class UnlockScraper(Scraper):
                 cutoff_block = self.data["locks"][-1]["creationBlock"]
             variables = {"first": self.interval, "skip": skip, "cutoff": cutoff_block}
 
-            locks_query = gql.gql(
-                """
+            locks_query = """
                 query($first: Int!, $skip: Int!, $cutoff: BigInt!) {
                     locks(first: $first, skip: $skip, orderBy: createdAtBlock, orderDirection: asc, where: {createdAtBlock_gt: $cutoff}) {
                         id
@@ -179,8 +154,7 @@ class UnlockScraper(Scraper):
                         }
                     }
                     """
-            )
-            result = self.call_the_graph_api(graph_url, locks_query, variables)
+            result = self.call_the_graph_api(graph_url, locks_query, variables, ["locks"])
             if result is not None and "locks" in result and result["locks"] == []:
                 logging.info(f"Finished scraping {network} locks")
                 logging.info(f"Current lock count: {len(self.data['locks'])}")

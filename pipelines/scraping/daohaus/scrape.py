@@ -1,11 +1,7 @@
 from ..helpers import Scraper
 import logging
-import time
 import os
-import gql
 import logging
-from gql.transport.aiohttp import AIOHTTPTransport, log as gql_log
-gql_log.setLevel(logging.WARNING)
 
 DEBUG = os.environ.get("DEBUG", False)
 
@@ -42,26 +38,9 @@ class DAOHausScraper(Scraper):
                     self.last_cutoffs[chain][key] = self.metadata.get("last_cutoffs", {chain: {key: "0"}})[chain][key]
             logging.info(f"Last Cutoffs are: {self.last_cutoffs}")
 
-    def call_the_graph_api(self, query, variables, key, chain, counter=0):
-        time.sleep(counter)
-        if counter > 20:
-            return None
-
-        transport = AIOHTTPTransport(url=self.graph_urls[chain])
-        client = gql.Client(transport=transport, fetch_schema_from_transport=True)
-        try:
-            result = client.execute(query, variable_values=variables)
-            if result.get(key, None) == None:
-                logging.error(f"theGraph API did not return {key}: {result} | counter: {counter}")
-                return self.call_the_graph_api(query, variables, key, chain, counter=counter+1)
-        except Exception as e:
-            logging.error(f"An exception occurred getting the graph API {e} counter: {counter} client: {client}")
-            return self.call_the_graph_api(query, variables, key, chain, counter=counter+1)
-        return result
-    
     def fetch_dao_meta(self):
         logging.info(f"Fetching daoMetas information")
-        query = gql.gql("""
+        query = """
                 query($first: Int!, $cutoff: ID!) {
                     daoMetas(first: $first, orderBy: id, orderDirection:desc, where:{id_gt: $cutoff}) 
                     {
@@ -72,12 +51,12 @@ class DAOHausScraper(Scraper):
                         http
                     }
                 }
-                """)
+                """
         self.fetch_data(query, "daoMetas", "id")
 
     def fetch_moloches(self):
         logging.info(f"Fetching moloches information")
-        query = gql.gql("""
+        query = """
                     query($first: Int!, $cutoff: String!) {
                         moloches(first: $first, orderBy: createdAt, orderDirection:desc, where:{createdAt_gt: $cutoff}) {
                             id
@@ -110,12 +89,12 @@ class DAOHausScraper(Scraper):
                             totalShares
                         }
                     }
-                    """)
+                    """
         self.fetch_data(query, "moloches", "createdAt")
 
     def fetch_token_balances(self):
         logging.info(f"Fetching token balances information")
-        query = gql.gql("""
+        query = """
                 query($first: Int!, $cutoff: ID!) {
                     tokenBalances(first: $first, orderBy: id, orderDirection:desc, where:{id_gt: $cutoff}) 
                     {
@@ -129,12 +108,12 @@ class DAOHausScraper(Scraper):
                         tokenBalance
                     }
                 }
-                """)
+                """
         self.fetch_data(query, "tokenBalances", "id")
 
     def fetch_votes(self):
         logging.info(f"Fetching votes information")
-        query = gql.gql("""
+        query = """
                 query($first: Int!, $cutoff: String!) {
                     votes(first: $first, orderBy: createdAt, orderDirection:desc, where:{createdAt_gt: $cutoff}) 
                     {
@@ -151,12 +130,12 @@ class DAOHausScraper(Scraper):
                         memberPower
                     }
                 }
-                """)
+                """
         self.fetch_data(query, "votes", "createdAt")
 
     def fetch_members(self):
         logging.info(f"Fetching members information")
-        query = gql.gql("""
+        query = """
                 query($first: Int!, $cutoff: String!) {
                     members(first: $first, orderBy: createdAt, orderDirection:desc, where:{createdAt_gt: $cutoff}) 
                     {
@@ -174,12 +153,12 @@ class DAOHausScraper(Scraper):
                         jailed
                     }
                 }
-                """)
+                """
         self.fetch_data(query, "members", "createdAt")
 
     def fetch_proposals(self):
         logging.info(f"Fetching proposals information")
-        query = gql.gql("""
+        query = """
                 query($first: Int!, $cutoff: String!) {
                     proposals(first: $first, orderBy: createdAt, orderDirection:desc, where:{createdAt_gt: $cutoff}) {
                         id
@@ -235,7 +214,7 @@ class DAOHausScraper(Scraper):
                         }
                     }
                 }
-                """)
+                """
         self.fetch_data(query, "proposals", "createdAt")
 
     def fetch_data(self, query, key, cutoff_key):
@@ -253,7 +232,7 @@ class DAOHausScraper(Scraper):
                     if req > max_req:
                         break
                     req += 1
-                result = self.call_the_graph_api(query, variables, key, chain)
+                result = self.call_the_graph_api(self.graph_urls[chain], query, variables, [key])
                 if result != None:
                     data = result.get(key, [])
                     self.data[chain][key] += data

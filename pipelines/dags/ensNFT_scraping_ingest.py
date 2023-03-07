@@ -6,7 +6,7 @@ from airflow.contrib.operators.ecs_operator import ECSOperator
 from airflow.models import Variable
 
 dag = DAG(
-    "ens_scraping_and_ingest",
+    "ensNFT_scraping_and_ingest",
     description="Scrapes the latest Gitcoin data, and ingest them into the neo4J instance.",
     default_args={
         "start_date": days_ago(2),
@@ -60,8 +60,8 @@ network_configuration={
 # There are two fields set here:
 # task_id to give it a name
 # overrides -> command -> to set it to the module command 
-ens_scrape_task = ECSOperator(
-    task_id="ens_scraping",
+ensNFT_scrape_task = ECSOperator(
+    task_id="ensNFT_scraping",
     dag=dag,
     aws_conn_id="aws_ecs",
     cluster=ecs_cluster,
@@ -72,7 +72,7 @@ ens_scrape_task = ECSOperator(
         "containerOverrides": [
             {
                 "name": "data-pipelines",
-                "command": ["python3", "-m", "pipelines.scraping.ens.scrape"],
+                "command": ["python3", "-m", "pipelines.scraping.ensNFT.scrape"],
                 "environment": env_vars
             },
         ],
@@ -82,8 +82,8 @@ ens_scrape_task = ECSOperator(
     awslogs_stream_prefix=ecs_awslogs_stream_prefix
 )
 
-ens_ingest_task = ECSOperator(
-    task_id="ens_ingesting",
+ensNFT_ingest_task = ECSOperator(
+    task_id="ensNFT_ingesting",
     dag=dag,
     aws_conn_id="aws_ecs",
     cluster=ecs_cluster,
@@ -94,7 +94,7 @@ ens_ingest_task = ECSOperator(
         "containerOverrides": [
             {
                 "name": "data-pipelines",
-                "command": ["python3", "-m", "pipelines.ingestion.ens.ingest"],
+                "command": ["python3", "-m", "pipelines.ingestion.ensNFT.ingest"],
                 "environment": env_vars
             },
         ],
@@ -104,4 +104,4 @@ ens_ingest_task = ECSOperator(
     awslogs_stream_prefix=ecs_awslogs_stream_prefix
 )
 
-ens_scrape_task >> ens_ingest_task
+ensNFT_scrape_task >> ensNFT_ingest_task
