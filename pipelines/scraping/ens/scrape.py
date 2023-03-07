@@ -161,6 +161,9 @@ class ENSScraper(Scraper):
             self.data["transfers"].extend(transfers)
         return len(results) > 0
 
+    def get_ens_subdomains(self):
+        pass
+
     def run(self):
         more_data = True
         chunk_id = 0
