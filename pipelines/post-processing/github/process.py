@@ -15,11 +15,13 @@ class GithubProcessor(Processor):
         self.contributor_keys = ["login", "contributions"]
         self.repository_keys = ["id","name","full_name","private","owner","html_url","description","fork","created_at","updated_at","pushed_at","homepage","size","stargazers_count","watchers_count","language","has_issues","has_projects","has_downloads","has_wiki","has_pages","has_discussions","forks_count","mirror_url","archived","disabled","open_issues_count","license","allow_forking","is_template","web_commit_signoff_required","topics","visibility","forks","open_issues","watchers"]
         
+        self.chunk_size = 100
+        super().__init__("github-processing")
+
+    def init_data(self):
         self.data = {}
         self.data["users"] = {}
         self.data["repositories"] = {}
-        
-        super().__init__("github-processing")
 
     def get_headers(self):
         token = np.random.choice(self.github_tokens)
@@ -43,7 +45,7 @@ class GithubProcessor(Processor):
 
     def get_followers(self, handle):
         url = f"https://api.github.com/users/{handle}/followers"
-        followers_raw_data = self.get_request(url, headers=self.get_headers(), decode=False, json=True) 
+        followers_raw_data = self.get_request(url, headers=self.get_headers(), decode=False, json=True, retry_on_404=False) 
         followers_data = []
         if followers_raw_data:
             follower_pbar = tqdm(followers_raw_data, desc="Getting followers information", position=2, leave=False)
@@ -57,7 +59,7 @@ class GithubProcessor(Processor):
         if handle in self.data["users"]:
             return self.data["users"][handle]
         url = f"https://api.github.com/users/{handle}"
-        user_raw_data = self.get_request(url, headers=self.get_headers(), decode=False, json=True)
+        user_raw_data = self.get_request(url, headers=self.get_headers(), decode=False, json=True, retry_on_404=False)
         if user_raw_data:
             user_data = {key: value for (key, value) in user_raw_data.items() if key in self.user_keys}
             if follow_through:
@@ -69,7 +71,7 @@ class GithubProcessor(Processor):
 
     def get_user_repos(self, handle):
         url = f"https://api.github.com/users/{handle}/repos"
-        repos_raw_data = self.get_request(url, headers=self.get_headers(), decode=False, json=True)
+        repos_raw_data = self.get_request(url, headers=self.get_headers(), decode=False, json=True, retry_on_404=False)
         repositories = []
         if repos_raw_data:
             repo_pbar = tqdm(repos_raw_data, position=1, desc="Getting repository information", leave=False)
@@ -85,7 +87,7 @@ class GithubProcessor(Processor):
 
     def get_contributors(self, repository):
         url = f"https://api.github.com/repos/{repository}/contributors"
-        contributors_raw_data = self.get_request(url, headers=self.get_headers(), decode=False, json=True)
+        contributors_raw_data = self.get_request(url, headers=self.get_headers(), decode=False, json=True, retry_on_404=False)
         contributors_data = []
         if contributors_raw_data:
             cont_pbar = tqdm(contributors_raw_data, desc="Getting contributors information", position=2, leave=False)
@@ -98,7 +100,7 @@ class GithubProcessor(Processor):
 
     def get_subscribers(self, repository):
         url = f"https://api.github.com/repos/{repository}/subscribers"
-        subscribers_raw_data = self.get_request(url, headers=self.get_headers(), decode=False, json=True)
+        subscribers_raw_data = self.get_request(url, headers=self.get_headers(), decode=False, json=True, retry_on_404=False)
         subscribers_data = []
         if subscribers_raw_data:
             sub_pbar = tqdm(subscribers_raw_data, desc="Getting subscribers information", position=2, leave=False)
@@ -110,9 +112,9 @@ class GithubProcessor(Processor):
 
     def get_repo_readme(self, repository):
         url = f"https://api.github.com/repos/{repository}/readme"
-        readme_data = self.get_request(url, headers=self.get_headers(), decode=False, json=True)
+        readme_data = self.get_request(url, headers=self.get_headers(), decode=False, json=True, retry_on_404=False)
         if readme_data:
-            readme_file = self.get_request(readme_data["download_url"], decode=True)
+            readme_file = self.get_request(readme_data["download_url"], decode=True, retry_on_404=False)
             if readme_file:
                 return readme_file
             else:
@@ -124,7 +126,7 @@ class GithubProcessor(Processor):
         if repository in self.data["repositories"]:
             return self.data["repositories"][repository]
         url = f"https://api.github.com/repos/{repository}"
-        repos_raw_data = self.get_request(url, headers=self.get_headers(), decode=False, json=True)
+        repos_raw_data = self.get_request(url, headers=self.get_headers(), decode=False, json=True, retry_on_404=False)
         if repos_raw_data:
             repos_raw_data["owner"] = repos_raw_data["owner"]["login"]
             if repos_raw_data["license"]:
@@ -141,8 +143,7 @@ class GithubProcessor(Processor):
             repos_data["readme"] = readme
             self.data["repositories"][repository] = repos_data
 
-    def process_github_accounts(self):
-        handles = self.get_all_handles()
+    def process_github_accounts(self, handles):
         user_pbar = tqdm(handles, desc="Getting neo4J accounts information", position=0)
         for handle in user_pbar:
             user_pbar.set_description(desc=f"Getting neo4J accounts information: {handle}")
@@ -205,9 +206,11 @@ class GithubProcessor(Processor):
         self.cyphers.link_twitter(twitters_urls)
 
     def run(self):
-        self.process_github_accounts()
-        self.ingest_github_data()
-
+        handles = self.get_all_handles()
+        for i in range(0, len(handles), self.chunk_size):
+            self.init_data()
+            self.process_github_accounts(handles[i: i+self.chunk_size])
+            self.ingest_github_data()
 
 if __name__ == '__main__':
     P = GithubProcessor()
