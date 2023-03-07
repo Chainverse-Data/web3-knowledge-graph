@@ -14,8 +14,12 @@ class CreatorsCollectorsAnalysis(WICAnalysis):
                 "MirrorAuthor": self.process_writing
             },
             "BlueChip": {
-                "BlueChipNFTCollections": self.process_NFTs_blue_chip,
-                "ThreeLetterEnsName": self.process_three_ens
+                "BlueChipNFTCollections": self.process_NFTs_blue_chip
+            },"Rarity": {
+                "ThreeLetterEns": self.process_three_ens
+            },
+            "NftMarketplacePowerUsers": {
+                "SudoswapPowerUser": self.process_sudo_power_users 
             }
         }
         self.cyphers = CreatorsCollectorsCypher(self.subgraph_name, self.conditions)
@@ -31,9 +35,8 @@ class CreatorsCollectorsAnalysis(WICAnalysis):
         self.cyphers.cc_writers(context, benchmark)
 
     def process_NFTs_blue_chip(self, context):
-        benchmark = self.cyphers.get_bluechip_benchmark(self.seeds_addresses)
-        logging.info(f"Benchmark value for Blue Chip NFTs: {benchmark}")
-        self.cyphers.cc_blue_chip(self.seeds_addresses, context, benchmark)
+        logging.info("Identifying blue chips...")
+        self.cyphers.cc_blue_chip(self.seeds_addresses, context)
 
     def process_three_ens(self, context):
         logging.info("Identifying wallets that hold three letter ENS Names")
@@ -47,17 +50,15 @@ class CreatorsCollectorsAnalysis(WICAnalysis):
         logging.info("Getting sudo power users wallet addresses...")
         sudo_power_wallets = sudo_users.loc[sudo_users['total_volume'] > sudo_benchmark]
         logging.info("saving power users")
-        urls = self.save_df_as_csv(self, sudo_power_wallets, bucket_name=self.bucket_name, file_name="sudo_power_wallets",
-        max_lines=10000, max_size=10000000)
+        urls = self.save_df_as_csv(sudo_power_wallets, bucket_name=self.bucket_name, file_name=f"sudo_power_wallets_{self.asOf}")
         logging.info("creating power user nodes")
-        self.cyphers.create_sudo_power_users(self.sudo_power_users, urls=urls)
+        self.cyphers.create_sudo_power_users(urls)
         logging.info("connecting power users")
-        self.cyphers.connect_sudo_power_users(self.sudo_power_users, urls=urls)
+        self.cyphers.connect_sudo_power_users(context, urls=urls)
 
 
     def run(self):
-      #  self.process_conditions()
-        self.process_sudo_power_users()
+        self.process_conditions()
 
 if __name__ == "__main__":
     analysis = CreatorsCollectorsAnalysis()
