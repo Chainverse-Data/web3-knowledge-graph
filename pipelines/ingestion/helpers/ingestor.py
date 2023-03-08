@@ -8,7 +8,7 @@ import sys
 from ...helpers import Base
 
 class Ingestor(Base):
-    def __init__(self, bucket_name):
+    def __init__(self, bucket_name, load_data=True):
         Base.__init__(self)
         self.runtime = datetime.now()
         self.asOf = f"{self.runtime.year}-{self.runtime.month}-{self.runtime.day}"
@@ -31,8 +31,9 @@ class Ingestor(Base):
         self.end_date = None
         self.set_start_end_date()
 
-        self.scraper_data = {}
-        self.load_data()
+        if load_data:
+            self.scraper_data = {}
+            self.load_data()
 
         self.ingest_data = {}
 
