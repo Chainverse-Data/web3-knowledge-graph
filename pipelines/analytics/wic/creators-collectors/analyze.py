@@ -13,8 +13,9 @@ class CreatorsCollectorsAnalysis(WICAnalysis):
                 "MirrorAuthor": self.process_writing
             },
             "BlueChip": {
-                "BlueChipGeneric": self.process_NFTs_blue_chip
-            }
+                "BlueChipNFTCollections": self.process_NFTs_blue_chip,
+                "ThreeLetterEnsName": self.process_three_ens
+            },
         }
         self.cyphers = CreatorsCollectorsCypher(self.subgraph_name, self.conditions)
         super().__init__("wic-creators-collectors")
@@ -31,6 +32,10 @@ class CreatorsCollectorsAnalysis(WICAnalysis):
         benchmark = self.cyphers.get_bluechip_benchmark(self.seeds_addresses)
         logging.info(f"Benchmark value for Blue Chip NFTs: {benchmark}")
         self.cyphers.cc_blue_chip(self.seeds_addresses, context, benchmark)
+
+    def process_three_ens(self, context):
+        logging.info("Identifying wallets that hold three letter ENS Names")
+        self.cyphers.three_letter_ens(context)
 
     def run(self):
         self.process_conditions()

@@ -4,6 +4,7 @@ import os
 import re
 import warnings
 import requests
+from ens import ENS
 from web3 import Web3
 from web3.logs import DISCARD
 import eth_utils
@@ -12,6 +13,8 @@ class Web3Utils:
     def __init__(self) -> None:
         self.alchemy_url = f"https://eth-mainnet.g.alchemy.com/v2/{os.environ['ALCHEMY_API_KEY']}"
         self.w3 = Web3(Web3.HTTPProvider(self.alchemy_url))
+        self.ns = ENS.fromWeb3(self.w3)
+        self.text_records = ["avatar", "description", "display", "email", "keywords", "mail", "notice", "location", "phone", "url", "com.github", "com.peepeth", "com.linkedin", "com.twitter", "io.keybase", "org.telegram"]
         if self.w3.isConnected():
             logging.info(f"Web3 is connected!")
         else:
@@ -41,6 +44,46 @@ class Web3Utils:
         event = [abi for abi in contract.abi if abi["type"] == "event" and abi["name"] == name][0]
         decoded_logs = contract.events[event["name"]]().processReceipt(receipt, errors=DISCARD)
         return decoded_logs
+
+    def get_ens_name(self, address, counter=0, max_retry=10):
+        if counter > max_retry:
+            time.sleep(counter * 10)
+            return None
+        try:
+            domain = self.ns.name(address)
+        except Exception as e:
+            logging.error(f"An error occured getting the ens name for address {address}\n{e}")
+            self.get_ens_name(address, counter=counter+1)
+        return domain
+
+    def get_text_record(self, name, record, counter=0, max_retry=10):
+        if counter > max_retry:
+            time.sleep(counter * 10)
+            return None
+        domain = None
+        try:
+            domain = self.ns.get_text(name, record)
+        except Exception as e:
+            logging.error(f"An error occured getting the record {record} for ens name {name}\n{e}")
+            self.get_text_record(name, record, counter=counter+1)
+        return domain
+
+    def get_text_records(self, name, max_retry=10):
+        records = {"name": name}
+        for record in self.text_records:
+            records[record] = self.get_text_record(name, record, max_retry=max_retry)
+        return records
+
+    def get_ens_address(self, name, counter=0, max_retry=10):
+        if counter > max_retry:
+            time.sleep(counter * 10)
+            return None
+        try:
+            address = self.ns.address(name)
+        except Exception as e:
+            logging.error(f"An error occured getting the ens name {name}\n{e}")
+            self.get_ens_address(name, counter=counter+1)
+        return address
 
     def get_ens_info(self, name):
         warnings.filterwarnings("ignore", category=FutureWarning)

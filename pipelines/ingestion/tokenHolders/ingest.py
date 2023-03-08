@@ -119,7 +119,8 @@ class TokenHoldersIngestor(Ingestor):
     def run(self):
         self.ingest_tokens()
         self.ingest_holdings()
-        self.ingest_transfers()
+        if "transfers" in self.scraper_data:
+            self.ingest_transfers()
         self.save_metadata()
 
 if __name__ == '__main__':

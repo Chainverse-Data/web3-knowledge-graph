@@ -63,6 +63,7 @@ class WICCypher(Cypher):
         create_context = f"""
             MERGE (context:_Wic:_Context:_{self.subgraph_name}:_{condition}:_{context})
             SET context._displayName = '{context}'
+            SET context._main = '{self.subgraph_name}'
             WITH context
             MATCH (condition:_Wic:_Condition:_{self.subgraph_name}:_{condition})
             WITH context, condition
