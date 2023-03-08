@@ -1,5 +1,6 @@
 from .. import WICCypher
 from ....helpers import count_query_logging
+import logging 
 
 class CreatorsCollectorsCypher(WICCypher):
     def __init__(self, subgraph_name, conditions, database=None):
@@ -41,7 +42,8 @@ class CreatorsCollectorsCypher(WICCypher):
         """
         count = self.query(connect)[0].value()
         return count 
-    
+
+    @count_query_logging
     def three_letter_ens(self, context):
         query = f"""
         match 
@@ -62,7 +64,7 @@ class CreatorsCollectorsCypher(WICCypher):
         count = self.query(query)[0].value() 
 
         return count
-    
+    @count_query_logging
     def create_sudo_power_users(self, urls):
         count = 0
         for url in urls:
@@ -74,19 +76,23 @@ class CreatorsCollectorsCypher(WICCypher):
             count += self.query(create_wallets)[0].value()
 
         return count
-
+    @count_query_logging
     def connect_sudo_power_users(self, context, urls):
         count = 0
         for url in urls: 
             query = f"""
             load csv with headers from '{url}' as sudo
-            match (wallet:Wallet {{address: sudo.seller}})
+            with collect(distinct(sudo.seller)) as addresses
+            match (wallet:Wallet) 
+            where wallet.address in addresses
+            with wallet
+            match (wallet)
             match (wic:_Wic:_{self.subgraph_name}:_{context})
-            with wallet, wic, sudo
+            with wallet, wic
             merge (wallet)-[r:_HAS_CONTEXT]->(wic)
-            set r.volume = round(tofloat(sudo.total_volume), 4)
-            return count(*)
+            return count(wallet)
             """
+            logging.info(query)
             count += self.query(query)[0].value()
 
         return count 

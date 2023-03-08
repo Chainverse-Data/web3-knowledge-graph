@@ -10,7 +10,7 @@ class CreatorsCollectorsAnalysis(WICAnalysis):
     def __init__(self):
         self.subgraph_name = 'CreatorsCollectors'
         self.conditions = {
-            "Writing": {
+           "Writing": {
                 "MirrorAuthor": self.process_writing
             },
             "BlueChip": {
@@ -25,7 +25,7 @@ class CreatorsCollectorsAnalysis(WICAnalysis):
         self.cyphers = CreatorsCollectorsCypher(self.subgraph_name, self.conditions)
         super().__init__("wic-creators-collectors")
 
-        # TODO: This will need to be automated to avoid relying on this list.
+        ## TODOO This will need to be automated to avoid relying on this list.
         self.seeds_addresses = list(pd.read_csv("pipelines/analytics/wic/creators-collectors/data/seeds.csv")['address'])
         self.sudo_power_users = pd.read_csv('pipelines/analytics/wic/creators-collectors/data/sudo.csv')
 
@@ -54,7 +54,7 @@ class CreatorsCollectorsAnalysis(WICAnalysis):
         logging.info("creating power user nodes")
         self.cyphers.create_sudo_power_users(urls)
         logging.info("connecting power users")
-        self.cyphers.connect_sudo_power_users(context, urls=urls)
+        self.cyphers.connect_sudo_power_users(context, urls)
 
 
     def run(self):
