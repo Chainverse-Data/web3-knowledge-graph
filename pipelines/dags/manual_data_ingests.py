@@ -13,6 +13,7 @@ dag = DAG(
         "owner": "Leo Blondel",
         "retries": 1
     },
+    schedule_interval=None,
     max_active_runs=1,
     dagrun_timeout=timedelta(minutes=10080)
 )
