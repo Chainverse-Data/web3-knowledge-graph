@@ -19,7 +19,8 @@ class CreatorsCollectorsAnalysis(WICAnalysis):
                 "ThreeLetterEns": self.process_three_ens
             },
             "NftMarketplacePowerUsers": {
-                "SudoswapPowerUser": self.process_sudo_power_users 
+                "SudoswapPowerUser": self.process_sudo_power_users,
+                "BlurPowerUser": self.process_blur_power_users
             }
         }
         self.cyphers = CreatorsCollectorsCypher(self.subgraph_name, self.conditions)
@@ -28,6 +29,7 @@ class CreatorsCollectorsAnalysis(WICAnalysis):
         ## TODOO This will need to be automated to avoid relying on this list.
         self.seeds_addresses = list(pd.read_csv("pipelines/analytics/wic/creators-collectors/data/seeds.csv")['address'])
         self.sudo_power_users = pd.read_csv('pipelines/analytics/wic/creators-collectors/data/sudo.csv')
+        self.blur_power_users = pd.read_csv("pipelines/analytics/wic/creators-collectors/data/blur.csv")
 
     def process_writing(self, context):
         benchmark = self.cyphers.get_writers_benchmark()
@@ -56,6 +58,14 @@ class CreatorsCollectorsAnalysis(WICAnalysis):
         logging.info("connecting power users")
         self.cyphers.connect_sudo_power_users(context, urls)
 
+    def process_blur_power_users(self, context):
+        logging.info("Saving power users....")
+        blur_users = self.blur_power_users
+        urls = self.save_df_as_csv(blur_users, bucket_name=self.bucket_name, file_name=f"blur_power_wallets_{self.asOf}")
+        logging.info("creating blur nodes...")
+        self.cyphers.create_blur_power_users(urls)
+        logging.info("connecting blur power users")
+        self.cyphers.connect_blur_power_users(context, urls)
 
     def run(self):
         self.process_conditions()

@@ -76,6 +76,7 @@ class CreatorsCollectorsCypher(WICCypher):
             count += self.query(create_wallets)[0].value()
 
         return count
+
     @count_query_logging
     def connect_sudo_power_users(self, context, urls):
         count = 0
@@ -96,6 +97,42 @@ class CreatorsCollectorsCypher(WICCypher):
             count += self.query(query)[0].value()
 
         return count 
+
+    @count_query_logging
+    def create_blur_power_users(self, urls):
+        count = 0
+        for url in urls:
+            create_wallets = f"""
+            load csv with headers from '{url}' as blur
+            merge (wallet:Wallet {{address: blur.seller}})
+            return count(wallet)
+            """
+            count += self.query(create_wallets)[0].value()
+
+    @count_query_logging
+    def connect_blur_power_users(self, urls, context):
+        count = 0
+        for url in urls: 
+            query = f"""
+            load csv with headers from '{url}' as blur
+            with collect(distinct(blur.seller)) as addresses
+            match (wallet:Wallet) 
+            where wallet.address in addresses
+            with wallet
+            match (wallet)
+            match (wic:_Wic:_{self.subgraph_name}:_{context})
+            with wallet, wic
+            merge (wallet)-[r:_HAS_CONTEXT]->(wic)
+            return count(wallet)
+            """
+            logging.info(query)
+            count += self.query(query)[0].value()
+
+        return count 
+
+
+    
+
         
         
 
