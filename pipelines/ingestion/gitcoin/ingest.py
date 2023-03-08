@@ -57,7 +57,7 @@ class GitCoinIngestor(Ingestor):
                 "types": [el["fields"]["name"] for el in grant["grant_type"]],
                 "tags": [el["fields"]["name"] for el in grant["grant_tags"]],
                 "grant_round": grant_round,
-                "url": f"https://gitcoin.co/{grant['url']}",
+                "url": f"https://gitcoin.co{grant['url']}",
                 "amount": grant["amount_received"],
                 "amountDenomination": "USD",
                 "asOf": self.asOf,
