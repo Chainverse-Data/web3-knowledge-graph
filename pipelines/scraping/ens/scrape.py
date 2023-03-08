@@ -171,7 +171,8 @@ class ENSScraper(Scraper):
             more_data = self.get_ens_domains()
             self.save_data(chunk_prefix=chunk_id)
             self.save_metadata()
-            if DEBUG:
+            chunk_id += 1
+            if DEBUG and chunk_id > 10:
                 break
 
 if __name__ == "__main__":

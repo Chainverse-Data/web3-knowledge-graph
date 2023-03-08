@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import re
 import warnings
 import requests
 from web3 import Web3
@@ -15,6 +16,19 @@ class Web3Utils:
             logging.info(f"Web3 is connected!")
         else:
             raise Exception("Error connecting to Web3")
+
+    def is_valid_address(self, address):
+        check = re.compile("^0x[a-fA-F0-9]{40}$")
+        if check.match(address):
+            return True
+        return False
+
+    def is_zero_address(self, address):
+        if self.is_valid_address(address):
+            if int(address, 16) == 0:
+                return True
+            return False
+        return False
 
     def get_smart_contract(self, address):
         abi_endpoint = f"https://api.etherscan.io/api?module=contract&action=getabi&address={address}&apikey={os.environ['ETHERSCAN_API_KEY']}"
