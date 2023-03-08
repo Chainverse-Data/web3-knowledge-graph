@@ -41,6 +41,8 @@ class LastActivityPostProcess(Processor):
             result = content.get("result", None)
             if not result:
                 return self.alchemy_API_call(payload, chain, key, counter=counter+1)
+        else:
+            return self.alchemy_API_call(payload, chain, key, counter=counter+1)
         return result[key]
 
     def get_block_timestamp(self, block, chain):

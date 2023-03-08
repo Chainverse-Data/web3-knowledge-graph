@@ -405,7 +405,7 @@ class GitcoinCyphers(Cypher):
                     LOAD CSV WITH HEADERS FROM '{url}' AS owners
                     MATCH (user:Gitcoin:Account {{id: owners.id}}), (wallet:Wallet {{address: owners.address}})
                     WITH user, wallet, owners
-                    MERGE (user)-[link:HAS_WALLET]->(wallet)
+                    MERGE (user)-[link:HAS_ACCOUNT]->(wallet)
                     ON CREATE set link.uuid = apoc.create.uuid(),
                         link.citation = owners.citation,
                         link.asOf = owners.asOf,
@@ -489,7 +489,7 @@ class GitcoinCyphers(Cypher):
                     LOAD CSV WITH HEADERS FROM '{url}' AS fullfilers
                     MATCH (user:Gitcoin:Account {{id: fullfilers.id}}), (wallet:Wallet {{address: fullfilers.address}})
                     WITH user, wallet, fullfilers
-                    MERGE (user)-[link:HAS_WALLET]->(wallet)
+                    MERGE (user)-[link:HAS_ACCOUNT]->(wallet)
                     ON CREATE set link.uuid = apoc.create.uuid(),
                         link.citation = fullfilers.citation,
                         link.asOf = fullfilers.asOf,
