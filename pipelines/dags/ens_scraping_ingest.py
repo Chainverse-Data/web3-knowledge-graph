@@ -24,7 +24,7 @@ ecs_subnets = Variable.get("MWAA_VPC_PRIVATE_SUBNETS") # str(ssm.get_parameter(N
 ecs_security_group = Variable.get("MWAA_VPC_SECURITY_GROUPS") # str(ssm.get_parameter(Name='/mwaa/vpc/security_group', WithDecryption=True)['Parameter']['Value'])
 
 # Choose the machine size for the pipeline, if you need to change this for some of the jobs redfine them before each job.
-ecs_task_definition = "pipelines-highcpu"
+ecs_task_definition = "pipelines-medium"
 ecs_task_image = "data-pipelines"
 ecs_awslogs_group = f"/ecs/{ecs_task_definition}"
 ecs_awslogs_stream_prefix = f"ecs/{ecs_task_image}"

@@ -70,8 +70,8 @@ class Requests:
             for result_name in result_names:
                 if result.get(result_name, None) == None:
                     logging.error(f"The Graph API did not return {result_name}, counter: {counter}")
-                    return self.call_the_graph_api(graph_url, query, variables, result_name, counter=counter + 1)
+                    return self.call_the_graph_api(graph_url, query, variables, result_names, counter=counter + 1)
         except Exception as e:
             logging.error(f"An exception occured getting The Graph API {e} counter: {counter} client: {client}")
-            return self.call_the_graph_api(graph_url, query, variables, result_name, counter=counter + 1)
+            return self.call_the_graph_api(graph_url, query, variables, result_names, counter=counter + 1)
         return result
