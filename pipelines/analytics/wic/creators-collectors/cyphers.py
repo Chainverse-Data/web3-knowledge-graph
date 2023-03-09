@@ -104,18 +104,19 @@ class CreatorsCollectorsCypher(WICCypher):
         for url in urls:
             create_wallets = f"""
             load csv with headers from '{url}' as blur
-            merge (wallet:Wallet {{address: blur.seller}})
-            return count(wallet)
+            merge (wallet:Wallet {{address: blur.address}})
+            return count(distinct(wallet))
             """
+            logging.info(create_wallets)
             count += self.query(create_wallets)[0].value()
 
     @count_query_logging
-    def connect_blur_power_users(self, urls, context):
+    def connect_blur_power_users(self, context, urls):
         count = 0
         for url in urls: 
             query = f"""
             load csv with headers from '{url}' as blur
-            with collect(distinct(blur.seller)) as addresses
+            with collect(distinct(blur.address)) as addresses
             match (wallet:Wallet) 
             where wallet.address in addresses
             with wallet

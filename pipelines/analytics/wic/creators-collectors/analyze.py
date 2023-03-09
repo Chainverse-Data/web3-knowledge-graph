@@ -12,11 +12,11 @@ class CreatorsCollectorsAnalysis(WICAnalysis):
         self.conditions = {
            "Writing": {
                 "MirrorAuthor": self.process_writing
-            },
+           },
             "BlueChip": {
-                "BlueChipNFTCollections": self.process_NFTs_blue_chip
-            },"Rarity": {
-                "ThreeLetterEns": self.process_three_ens
+               "BlueChipNFTCollections": self.process_NFTs_blue_chip
+           },"Rarity": {
+               "ThreeLetterEns": self.process_three_ens
             },
             "NftMarketplacePowerUsers": {
                 "SudoswapPowerUser": self.process_sudo_power_users,
@@ -47,6 +47,7 @@ class CreatorsCollectorsAnalysis(WICAnalysis):
     def process_sudo_power_users(self, context):
         logging.info("Getting benchmark for sudo power users")
         sudo_users = self.sudo_power_users
+        sudo_users = sudo_users.dropna(subset=['seller'])
         sudo_benchmark = sudo_users['total_volume'].quantile(0.8)
         logging.info(f"Benchmark value for Sudoswap power users: {sudo_benchmark}")
         logging.info("Getting sudo power users wallet addresses...")
@@ -61,7 +62,10 @@ class CreatorsCollectorsAnalysis(WICAnalysis):
     def process_blur_power_users(self, context):
         logging.info("Saving power users....")
         blur_users = self.blur_power_users
+        blur_users = blur_users.dropna(subset=['address'])
+        logging.info(blur_users.head(5))
         urls = self.save_df_as_csv(blur_users, bucket_name=self.bucket_name, file_name=f"blur_power_wallets_{self.asOf}")
+        logging.info(urls)
         logging.info("creating blur nodes...")
         self.cyphers.create_blur_power_users(urls)
         logging.info("connecting blur power users")
