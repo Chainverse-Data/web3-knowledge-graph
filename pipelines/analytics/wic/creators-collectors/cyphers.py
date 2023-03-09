@@ -109,6 +109,7 @@ class CreatorsCollectorsCypher(WICCypher):
             """
             logging.info(create_wallets)
             count += self.query(create_wallets)[0].value()
+        return count
 
     @count_query_logging
     def connect_blur_power_users(self, context, urls):
@@ -130,6 +131,40 @@ class CreatorsCollectorsCypher(WICCypher):
             count += self.query(query)[0].value()
 
         return count 
+        
+    @count_query_logging
+    def create_nft_borrowers(self, context, urls):
+        count = 0 
+        for url in urls:
+            create_wallets = f"""
+            load csv with headers from '{url}' as borrower
+            merge (wallet:Wallet {{address: borrower.address}})
+            return count(distinct(wallet))
+            """
+            logging.info(create_wallets)
+            count += self.query(create_wallets)[0].value()
+    @count_query_logging
+    def connect_nft_borrowers(self, context, urls):
+        count = 0 
+        for url in urls:
+            connect_wallets = f"""
+            load csv with headers from '{url}' as borrower
+            with collect(distinct(borrower.address)) as addresses
+            match (wallet:Wallet) 
+            where wallet.address in addresses
+            with wallet
+            match (wallet)
+            match (wic:_Wic:_{self.subgraph_name}:_{context})
+            with wallet, wic
+            merge (wallet)-[r:_HAS_CONTEXT]->(wic)
+            return count(wallet) 
+            """
+            logging.info(connect_wallets)
+            count += self.query(connect_wallets)[0].value()
+        
+        return count 
+
+
 
 
     

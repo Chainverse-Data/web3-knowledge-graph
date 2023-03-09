@@ -11,7 +11,7 @@ class CreatorsCollectorsAnalysis(WICAnalysis):
         self.subgraph_name = 'CreatorsCollectors'
         self.conditions = {
            "Writing": {
-                "MirrorAuthor": self.process_writing
+               "MirrorAuthor": self.process_writing
            },
             "BlueChip": {
                "BlueChipNFTCollections": self.process_NFTs_blue_chip
@@ -20,7 +20,8 @@ class CreatorsCollectorsAnalysis(WICAnalysis):
             },
             "NftMarketplacePowerUsers": {
                 "SudoswapPowerUser": self.process_sudo_power_users,
-                "BlurPowerUser": self.process_blur_power_users
+                "BlurPowerUser": self.process_blur_power_users,
+                "NftCollateralizedBorrower": self.process_nft_collat_borrowers
             }
         }
         self.cyphers = CreatorsCollectorsCypher(self.subgraph_name, self.conditions)
@@ -30,6 +31,8 @@ class CreatorsCollectorsAnalysis(WICAnalysis):
         self.seeds_addresses = list(pd.read_csv("pipelines/analytics/wic/creators-collectors/data/seeds.csv")['address'])
         self.sudo_power_users = pd.read_csv('pipelines/analytics/wic/creators-collectors/data/sudo.csv')
         self.blur_power_users = pd.read_csv("pipelines/analytics/wic/creators-collectors/data/blur.csv")
+        self.nft_backed_borrowers = pd.read_csv("pipelines/analytics/wic/creators-collectors/data/nft_borrowers.csv")
+
 
     def process_writing(self, context):
         benchmark = self.cyphers.get_writers_benchmark()
@@ -60,7 +63,7 @@ class CreatorsCollectorsAnalysis(WICAnalysis):
         self.cyphers.connect_sudo_power_users(context, urls)
 
     def process_blur_power_users(self, context):
-        logging.info("Saving power users....")
+        logging.info("Saving NFT marketplace power users....")
         blur_users = self.blur_power_users
         blur_users = blur_users.dropna(subset=['address'])
         logging.info(blur_users.head(5))
@@ -70,6 +73,17 @@ class CreatorsCollectorsAnalysis(WICAnalysis):
         self.cyphers.create_blur_power_users(urls)
         logging.info("connecting blur power users")
         self.cyphers.connect_blur_power_users(context, urls)
+
+    def process_nft_collat_borrowers(self, context):
+        logging.info("Saving NFT-backed borrowers...")
+        nft_backed_borrowers = self.nft_backed_borrowers
+        nft_backed_borrowers = nft_backed_borrowers.dropna(subset=['address'])
+        urls = self.save_df_as_csv(nft_backed_borrowers, bucket_name=self.bucket_name, file_name=f"nft_backed_borrowers{self.asOf}")
+        logging.info("creating NFT backed borrowers...")
+        self.cyphers.create_nft_borrowers(context, urls)
+        logging.info('connect NFT backed borrowers')
+        self.cyphers.connect_nft_borrowers(context, urls)
+        logging.info("I am done cuz")
 
     def run(self):
         self.process_conditions()
