@@ -36,7 +36,7 @@ class Constraints(Cypher):
         self.query(query)
 
     def ens(self):
-        query = """CREATE CONSTRAINT UniqueENS IF NOT EXISTS FOR (d:Ens) REQUIRE d.editionId IS UNIQUE"""
+        query = """CREATE CONSTRAINT UniqueENS IF NOT EXISTS FOR (d:Ens) REQUIRE d.name IS UNIQUE"""
         self.query(query)
 
     def spaces(self):

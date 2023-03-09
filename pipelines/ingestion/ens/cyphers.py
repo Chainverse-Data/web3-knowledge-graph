@@ -1,7 +1,5 @@
 from tqdm import tqdm
-from ...helpers import Cypher
-from ...helpers import Queries
-from ...helpers import count_query_logging
+from ...helpers import Cypher, Constraints, Indexes, Queries, count_query_logging
 
 
 class ENSCyphers(Cypher):
@@ -9,9 +7,13 @@ class ENSCyphers(Cypher):
         super().__init__()
         self.queries = Queries()
 
+    def create_constraints(self):
+        constraints = Constraints()
+        constraints.ens()
+
     def create_indexes(self):
-        query = "CREATE INDEX UniqueENSName IF NOT EXISTS FOR (n:Ens) ON (n.name)"
-        self.query(query)
+        indexes = Indexes()
+        indexes.ens()
 
     @count_query_logging
     def create_or_merge_ens_domains(self, urls):
