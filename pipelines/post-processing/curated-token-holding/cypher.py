@@ -2,7 +2,7 @@
 from tqdm import tqdm
 from ...helpers import Cypher, get_query_logging, count_query_logging
 
-class CitizenTokenHoldingCyphers(Cypher):
+class CuratedTokenHoldingCyphers(Cypher):
     def __init__(self, database=None):
         super().__init__(database)
 

@@ -1,21 +1,22 @@
 
 import logging
-from .cypher import CitizenTokenHoldingCyphers
+from .cypher import CuratedTokenHoldingCyphers
 from ..helpers import Processor
-from ...helpers import Alchemy
+from ...helpers import Alchemy, Etherscan
 import os
 
 DEBUG = os.environ.get("DEBUG", False)
 DEBUG = False
 
-class CitizenTokenHoldingProcessor(Processor):
+class CuratedTokenHoldingProcessor(Processor):
     def __init__(self, bucket_name="citizen-token-holding"):
-        self.cyphers = CitizenTokenHoldingCyphers()
+        self.cyphers = CuratedTokenHoldingCyphers()
         super().__init__(bucket_name)
         self.NFT_chunk_size = 100
         self.ERC20_chunk_size = 100
         self.ERC20_last_block = self.metadata.get("ERC20_last_block", {})
         self.alchemy = Alchemy() 
+        self.etherscan = Etherscan() 
 
     def get_NFTs_tokens(self):
         tokens = self.cyphers.get_bluechip_NFT_tokens(min_price=10)
@@ -75,5 +76,5 @@ class CitizenTokenHoldingProcessor(Processor):
         # self.get_holders_for_ERC20_tokens()
 
 if __name__ == "__main__":
-    P = CitizenTokenHoldingProcessor()
+    P = CuratedTokenHoldingProcessor()
     P.run()
