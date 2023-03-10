@@ -49,12 +49,11 @@ class CreatorsCollectorsAnalysis(WICAnalysis):
     def process_sudo_power_users(self, context):
         logging.info("Getting benchmark for sudo power users")
         sudo_users = self.sudo_power_users.dropna(subset=['seller'])
-        sudo_users = sudo_users.drop_duplicates(['seller'])
         sudo_benchmark = sudo_users['total_volume'].quantile(0.8)
         logging.info(f"Benchmark value for Sudoswap power users: {sudo_benchmark}")
         logging.info("Getting sudo power users wallet addresses...")
         sudo_power_wallets = sudo_users.loc[sudo_users['total_volume'] > sudo_benchmark]
-        sudo_power_wallets["address"] = sudo_power_wallets["seller"]
+        sudo_power_wallets["address"] = sudo_power_wallets["seller"].unique()
         urls = self.save_df_as_csv(sudo_power_wallets, bucket_name=self.bucket_name, file_name=f"sudo_power_wallets_{self.asOf}")
         self.cyphers.queries.create_wallets(urls)
         self.cyphers.connect_sudo_power_users(context, urls)
