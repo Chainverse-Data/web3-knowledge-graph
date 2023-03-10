@@ -32,7 +32,7 @@ class Indexes(Cypher):
         self.query(query)
 
     def ens(self):
-        query = """CREATE INDEX UniqueENS IF NOT EXISTS FOR (n:Ens) ON (n.editionId)"""
+        query = "CREATE INDEX ENSName IF NOT EXISTS FOR (n:Ens) ON (n.name)"
         self.query(query)
 
     def transactions(self):

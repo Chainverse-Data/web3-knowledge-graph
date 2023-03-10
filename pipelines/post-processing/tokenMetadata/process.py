@@ -1,6 +1,7 @@
 import logging
 
 from tqdm import tqdm
+from ...helpers import Alchemy, Etherscan
 from ..helpers import Processor
 from .cyphers import TokenMetadataCyphers
 import os
@@ -10,12 +11,8 @@ class TokenMetadataPostProcess(Processor):
     def __init__(self):
         self.cyphers = TokenMetadataCyphers()
         super().__init__("token-metadata")
-        self.alchemy_api_url = f"https://eth-mainnet.g.alchemy.com/v2/{os.environ['ALCHEMY_API_KEY']}"
-        self.alchemy_nft_api_url = "https://eth-mainnet.g.alchemy.com/nft/v2/{}/getNFTMetadata?contractAddress={}&tokenId=0"
-        self.headers = {
-            "accept": "application/json",
-            "content-type": "application/json"
-        }
+        self.alchemy = Alchemy()
+        self.etherscan = Etherscan()
         self.chunk_size = 10000
 
     def get_tokens_ERC721_metadata(self):
@@ -36,13 +33,12 @@ class TokenMetadataPostProcess(Processor):
         logging.info("Starting ERC20 Metadata extraction")
         tokens = self.cyphers.get_empty_ERC20_tokens()
         for i in tqdm(range(0, len(tokens), self.chunk_size)):
-            results = self.parallel_process(self.get_alchemy_ERC20_metadata, tokens[i: i+self.chunk_size], description="Getting all ERC20 metadata")
+            results = self.parallel_process(self.get_ERC20_metadata, tokens[i: i+self.chunk_size], description="Getting all ERC20 metadata")
             metadata_urls = self.save_json_as_csv(results, self.bucket_name, f"token_ERC20_metadata_{self.asOf}")
             self.cyphers.add_ERC20_token_node_metadata(metadata_urls)
 
     def get_alchemy_ERC721_metadata(self, node):
-        url = self.alchemy_nft_api_url.format(os.environ['ALCHEMY_API_KEY'], node["address"])
-        response_data = self.get_request(url, headers=self.headers, json=True)
+        response_data = self.alchemy.getNFTMetadata(node["address"])
         if type(response_data) != dict:
             result = {}
         else:
@@ -73,14 +69,13 @@ class TokenMetadataPostProcess(Processor):
         node["twitterUsername"] = result.get("contractMetadata", {}).get("openSea", {}).get("twitterUsername", None)
         return node
 
+    def get_ERC20_metadata(self, node):
+        node = self.get_alchemy_ERC20_metadata(node)
+        node = self.get_etherscan_ERC20_metadata(node)
+        return node
+
     def get_alchemy_ERC20_metadata(self, node):
-        payload = {
-            "id": 1,
-            "jsonrpc": "2.0",
-            "method": "alchemy_getTokenMetadata",
-            "params": [node['address']]
-        }
-        response_data = self.post_request(self.alchemy_api_url, json=payload, headers=self.headers, return_json=True)
+        response_data = self.alchemy.getTokenMetadata(node["address"])
         if type(response_data) != dict:
             result = {}
         else:
@@ -91,6 +86,26 @@ class TokenMetadataPostProcess(Processor):
         node['symbol'] = result.get("symbol", None)
         node['decimals'] = result.get("decimals", None)
         node['logo'] = result.get("logo", None)
+        return node
+    
+    def get_etherscan_ERC20_metadata(self, node):
+        response_data = self.etherscan.get_token_information(node["address"])
+        if type(response_data) != dict:
+            result = {}
+        else:
+            result = response_data.get("result", {})
+            node['metadataScraped'] = True
+        node['metadataScraped'] = result.get("metadataScraped", None)
+        node['name'] = result.get("tokenName", None)
+        node['symbol'] = result.get("symbol", None)
+        node['decimals'] = result.get("divisor", None)
+        node['totalSupply'] = result.get("totalSupply", None)
+        node['blueCheckmark'] = result.get("blueCheckmark", None)
+        node['description'] = result.get("description", None)
+        node['tokenPriceUSD'] = result.get("tokenPriceUSD", None)
+        social_keys = ["website", "email", "blog", "reddit", "slack", "facebook", "twitter", "bitcointalk", "github", "telegram", "wechat", "linkedin", "discord", "whitepaper"]
+        for social_key in social_keys:
+            node[social_key] = result.get(social_key, None)
         return node
 
     def run(self):
