@@ -33,7 +33,6 @@ class CreatorsCollectorsAnalysis(WICAnalysis):
         self.blur_power_users = pd.read_csv("pipelines/analytics/wic/creators-collectors/data/blur.csv")
         self.nft_backed_borrowers = pd.read_csv("pipelines/analytics/wic/creators-collectors/data/nft_borrowers.csv")
 
-
     def process_writing(self, context):
         benchmark = self.cyphers.get_writers_benchmark()
         logging.info(f"Benchmark value for Mirror articles: {benchmark}")
@@ -49,41 +48,32 @@ class CreatorsCollectorsAnalysis(WICAnalysis):
 
     def process_sudo_power_users(self, context):
         logging.info("Getting benchmark for sudo power users")
-        sudo_users = self.sudo_power_users
-        sudo_users = sudo_users.dropna(subset=['seller'])
+        sudo_users = self.sudo_power_users.dropna(subset=['seller'])
+        sudo_users = sudo_users.drop_duplicates(['seller'])
         sudo_benchmark = sudo_users['total_volume'].quantile(0.8)
         logging.info(f"Benchmark value for Sudoswap power users: {sudo_benchmark}")
         logging.info("Getting sudo power users wallet addresses...")
         sudo_power_wallets = sudo_users.loc[sudo_users['total_volume'] > sudo_benchmark]
-        logging.info("saving power users")
+        sudo_power_wallets["address"] = sudo_power_wallets["seller"]
         urls = self.save_df_as_csv(sudo_power_wallets, bucket_name=self.bucket_name, file_name=f"sudo_power_wallets_{self.asOf}")
-        logging.info("creating power user nodes")
-        self.cyphers.create_sudo_power_users(urls)
-        logging.info("connecting power users")
+        self.cyphers.queries.create_wallets(urls)
         self.cyphers.connect_sudo_power_users(context, urls)
 
     def process_blur_power_users(self, context):
         logging.info("Saving NFT marketplace power users....")
-        blur_users = self.blur_power_users
-        blur_users = blur_users.dropna(subset=['address'])
-        logging.info(blur_users.head(5))
+        blur_users = self.blur_power_users.dropna(subset=['address'])
+        blur_users = blur_users.drop_duplicates(['address'])
         urls = self.save_df_as_csv(blur_users, bucket_name=self.bucket_name, file_name=f"blur_power_wallets_{self.asOf}")
-        logging.info(urls)
-        logging.info("creating blur nodes...")
-        self.cyphers.create_blur_power_users(urls)
-        logging.info("connecting blur power users")
+        self.cyphers.queries.create_wallets(urls)
         self.cyphers.connect_blur_power_users(context, urls)
 
     def process_nft_collat_borrowers(self, context):
         logging.info("Saving NFT-backed borrowers...")
-        nft_backed_borrowers = self.nft_backed_borrowers
-        nft_backed_borrowers = nft_backed_borrowers.dropna(subset=['address'])
+        nft_backed_borrowers = self.nft_backed_borrowers.dropna(subset=['address'])
+        nft_backed_borrowers = nft_backed_borrowers.drop_duplicates(["address"])
         urls = self.save_df_as_csv(nft_backed_borrowers, bucket_name=self.bucket_name, file_name=f"nft_backed_borrowers{self.asOf}")
-        logging.info("creating NFT backed borrowers...")
-        self.cyphers.create_nft_borrowers(context, urls)
-        logging.info('connect NFT backed borrowers')
+        self.cyphers.queries.create_wallets(urls)
         self.cyphers.connect_nft_borrowers(context, urls)
-        logging.info("I am done cuz")
 
     def run(self):
         self.process_conditions()
