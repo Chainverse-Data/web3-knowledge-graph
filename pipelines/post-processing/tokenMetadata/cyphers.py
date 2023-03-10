@@ -49,6 +49,25 @@ class TokenMetadataCyphers(Cypher):
                     t.symbol = tokens.symbol,
                     t.decimals = toInteger(tokens.decimals),
                     t.logo = tokens.logo,
+                    t.symbol = tokens.symbol,
+                    t.totalSupply = tokens.totalSupply,
+                    t.blueCheckmark = toBooleanOrNull(tokens.blueCheckmark),
+                    t.description = tokens.description,
+                    t.website = tokens.website,
+                    t.email = tokens.email,
+                    t.blog = tokens.blog,
+                    t.reddit = tokens.reddit,
+                    t.slack = tokens.slack,
+                    t.facebook = tokens.facebook,
+                    t.twitter = tokens.twitter,
+                    t.bitcointalk = tokens.bitcointalk,
+                    t.github = tokens.github,
+                    t.telegram = tokens.telegram,
+                    t.wechat = tokens.wechat,
+                    t.linkedin = tokens.linkedin,
+                    t.discord = tokens.discord,
+                    t.whitepaper = tokens.whitepaper,
+                    t.tokenPriceUSD = toFloatOrNull(tokens.tokenPriceUSD),
                     t.lastUpdatedDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
                 return count(t)"""
             count += self.query(query)[0].value()
@@ -95,6 +114,22 @@ class TokenMetadataCyphers(Cypher):
                 MATCH (deployer:Wallet {{address: toLower(tokens.contractDeployer)}})
                 MERGE (deployer)-[edge:DEPLOYED]->(token)
                 RETURN count(edge)
+            """
+            count += self.query(query)[0].value()
+        return count
+    
+    @count_query_logging
+    def create_or_merge_socials(self, urls, labels, node_property, data_property, edge, citation):
+        count = 0
+        for url in urls:
+            query = f"""
+                LOAD CSV WITH HEADERS FROM '{url}' AS data
+                MERGE (social:{':'.join(labels)} {{{node_property}: toLower(data.{data_property})}})
+                WITH social, data
+                MATCH (token:Token {{address: toLower(data.address)}})
+                MERGE (token)-[edge:{edge}]->(social)
+                SET edge.citation = data.{citation}
+                RETURN count(social)
             """
             count += self.query(query)[0].value()
         return count

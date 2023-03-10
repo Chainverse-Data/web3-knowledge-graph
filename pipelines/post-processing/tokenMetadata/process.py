@@ -1,10 +1,12 @@
 import logging
+import pandas as pd
 
 from tqdm import tqdm
 from ...helpers import Alchemy, Etherscan
 from ..helpers import Processor
 from .cyphers import TokenMetadataCyphers
 import os
+import re
 
 class TokenMetadataPostProcess(Processor):
     """This class reads from the Neo4J instance for ERC20 tokens nodes to call the Alchemy getTokenMetadata endpoint to retreive the metadata"""
@@ -29,6 +31,88 @@ class TokenMetadataPostProcess(Processor):
             self.cyphers.queries.create_wallets(deployers_wallets_urls)
             self.cyphers.add_ERC721_deployers(deployers_urls)
 
+    def ingest_socials(self, metadata):
+        metadata = pd.DataFrame(metadata)
+        social_keys = {
+            "website": {"label": "Website", "property": "website" , "call": self.handle_external_links},
+            "email": {"label": "Email", "property": "email" , "call": self.handle_accounts},
+            "blog": {"label": "Blog:Website", "property": "blog" , "call": self.handle_external_links},
+            "reddit": {"label": "Reddit", "property": "reddit" , "call": self.handle_reddits},
+            "slack": {"label": "Slack", "property": "slack" , "call": self.handle_hubs},
+            "facebook": {"label": "Facebook", "property": "facebook" , "call": self.handle_accounts},
+            "twitter": {"label": "Twitter", "property": "twitter" , "call": self.handle_accounts},
+            "bitcointalk": {"label": "Bitcointalk", "property": "bitcointalk" , "call": self.handle_accounts},
+            "github": {"label": "Github", "property": "github" , "call": self.handle_githubs},
+            "telegram": {"label": "Telegram", "property": "telegram" , "call": self.handle_accounts},
+            "wechat": {"label": "Wechat", "property": "wechat" , "call": self.handle_accounts},
+            "linkedin": {"label": "Linkedin", "property": "linkedin" , "call": self.handle_accounts},
+            "discord": {"label": "Discord", "property": "discord" , "call": self.handle_hubs},
+            "whitepaper": {"label": "Whitepaper", "property": "whitepaper" , "call": self.handle_white_paper}
+        }
+        for key, social in social_keys.items():
+            data = metadata[metadata[key] != ""][["address", key]].drop_duplicates()
+            social["call"](data, key, social["label"], social["property"])
+
+    def handle_reddits(self, data, key, label, property):
+        def get_infos(url):
+            matches = re.match("https:\/\/www\.reddit\.com\/(\w*)?\/?(\w*)?", url)
+            is_user, handle = None, None
+            if matches:
+                is_user = matches.groups()[0]
+                if is_user == "r": is_user = False
+                elif is_user == "u": is_user = True
+                else: is_user = None
+                handle = matches.groups()[1]
+            return is_user, handle
+        data = data[~data[key].isna()]
+        tmp = data[key].apply(get_infos)
+        data["is_user"] = tmp.apply(lambda element: element[0])
+        data["handle"] = tmp.apply(lambda element: element[1])
+        users = data[data["is_user"] == True][["address", "handle", property]]
+        subreddits = data[data["is_user"] == False][["address", "handle", property]]
+        urls = self.save_df_as_csv(users, self.bucket_name, f"process_reddits_users_{self.asOf}")
+        self.cyphers.create_or_merge_socials(urls, [label, "Account"], "handle", "handle", "HAS_ACCOUNT", property)
+
+        urls = self.save_df_as_csv(subreddits, self.bucket_name, f"process_subreddits_{self.asOf}")
+        self.cyphers.create_or_merge_socials(urls, [label, "Hub"], "handle", "handle", "HAS_HUB", property)
+
+    def handle_githubs(self, data, key, label, property):
+        def get_accounts(url):
+            matches = re.match("https:\/\/github.com\/(\w*)?\/?(\w*)?", url)
+            account, repository = None, None
+            if matches:
+                account = matches.groups()[0]
+                repository = matches.groups()[1]
+            return account, repository
+        data = data[~data[key].isna()]
+        tmp = data[key].apply(get_accounts)
+        data["account"] = tmp.apply(lambda element: element[0])
+        data["repository"] = tmp.apply(lambda element: element[1])
+        tmp_data = data[~data["repository"].isna()]
+        tmp_data["full_name"] = tmp_data["account"] + "/" + tmp_data["repository"]
+        urls = self.save_df_as_csv(tmp_data, self.bucket_name, f"process_githubs_repos_{self.asOf}")
+        self.cyphers.create_or_merge_socials(urls, [label, "Repository"], "full_name", "full_name", "HAS_REPOSITORY", property)
+
+    def handle_accounts(self, data, key, label, property):
+        data = data[~data[key].isna()]
+        urls = self.save_df_as_csv(data, self.bucket_name, f"process_{key}_{self.asOf}")
+        self.cyphers.create_or_merge_socials(urls, [label, "Repository"], "handle", property, "HAS_ACCOUNT", property)
+
+    def handle_external_links(self, data, key, label, property):
+        data = data[~data[key].isna()]
+        urls = self.save_df_as_csv(data, self.bucket_name, f"process_{key}_{self.asOf}")
+        self.cyphers.create_or_merge_socials(urls, [label, "Website"], "url", property, "HAS_WEBSITE", property)
+
+    def handle_hubs(self, data, key, label, property):
+        data = data[~data[key].isna()]
+        urls = self.save_df_as_csv(data, self.bucket_name, f"process_{key}_{self.asOf}")
+        self.cyphers.create_or_merge_socials(urls, [label, "Hub"], "url", property, "HAS_HUB", property)
+
+    def handle_white_paper(self, data, key, label, property):
+        data = data[~data[key].isna()]
+        urls = self.save_df_as_csv(data, self.bucket_name, f"process_{key}_{self.asOf}")
+        self.cyphers.create_or_merge_socials(urls, [label, "Whitepaper"], "url", property, "HAS_WHITEPAPER", property)
+
     def get_tokens_ERC20_metadata(self):
         logging.info("Starting ERC20 Metadata extraction")
         tokens = self.cyphers.get_empty_ERC20_tokens()
@@ -36,6 +120,8 @@ class TokenMetadataPostProcess(Processor):
             results = self.parallel_process(self.get_ERC20_metadata, tokens[i: i+self.chunk_size], description="Getting all ERC20 metadata")
             metadata_urls = self.save_json_as_csv(results, self.bucket_name, f"token_ERC20_metadata_{self.asOf}")
             self.cyphers.add_ERC20_token_node_metadata(metadata_urls)
+            self.ingest_socials(results)
+
 
     def get_alchemy_ERC721_metadata(self, node):
         response_data = self.alchemy.getNFTMetadata(node["address"])
@@ -93,7 +179,7 @@ class TokenMetadataPostProcess(Processor):
         if type(response_data) != dict:
             result = {}
         else:
-            result = response_data.get("result", {})
+            result = response_data
             node['metadataScraped'] = True
         node['metadataScraped'] = result.get("metadataScraped", None)
         node['name'] = result.get("tokenName", None)
