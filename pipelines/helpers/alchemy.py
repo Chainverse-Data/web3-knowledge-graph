@@ -3,7 +3,7 @@ import os
 from . import Requests
 
 class Alchemy(Requests):
-    def __init__(self):
+    def __init__(self, max_retries=5):
         self.alchemy_api_url = {
             "ethereum": f"https://eth-mainnet.g.alchemy.com/v2/{os.environ['ALCHEMY_API_KEY']}",
             "optimism": f"https://opt-mainnet.g.alchemy.com/v2/{os.environ['ALCHEMY_API_KEY_OPTIMISM']}",
@@ -17,14 +17,63 @@ class Alchemy(Requests):
             "polygon": f"https://polygon-mainnet.g.alchemy.com/nft/v2/{os.environ['ALCHEMY_API_KEY_POLYGON']}"
         }
         self.headers = {"Content-Type": "application/json"}
+        self.max_retries = max_retries
     
+    def getNFTMetadata(self, tokenAddress, chain="ethereum", tokenId=0, tokenType=None, counter=0):
+        """
+            Helper function to get a ERC721 or ERC1155 token Metadata from alchemy.
+            Parameters are:
+                - token: (address) token contract address
+                - tokenId: (int) tokenId, defaults to 0 to get the overall contract metadata
+                - tokenType: (None|ERC721|ERC1155) Makes query faster if the contract type is specified 
+                - chain: (ethereum|arbitrum|polygon|optimism) which chain to get this data from
+        """
+        if counter > self.max_retries:
+            time.sleep(counter)
+            return None
+        
+        params = {
+            "contractAddress": tokenAddress,
+            "tokenId": tokenId,
+        }
+        if tokenType: params["tokenType"] = tokenType
+
+        url = self.alchemy_nft_url[chain] + "/getNFTMetadata"
+        result = self.get_request(url, params=params, headers=self.headers, json=True)
+        if type(result) != dict:
+            return self.getNFTMetadata(tokenAddress, chain, tokenId=tokenId, tokenType=tokenType, counter=counter+1)
+        return result
+
+    def getTokenMetadata(self, tokenAddress, chain="ethereum", counter=0):
+        """
+            Helper function to get a token Metadata from alchemy.
+            Parameters are:
+                - token: (address) token contract address
+                - chain: (ethereum|arbitrum|polygon|optimism) which chain to get this data from
+        """
+        if counter > self.max_retries:
+            time.sleep(counter)
+            return None
+        payload = {
+            "id": 1,
+            "jsonrpc": "2.0",
+            "method": "alchemy_getTokenMetadata",
+            "params": [tokenAddress]
+        }
+        response_data = self.post_request(self.alchemy_api_url[chain], json=payload, headers=self.headers, return_json=True)
+        if response_data and "result" in response_data:
+            result = response_data.get("result", {})
+            return result
+        else:
+            return self.getTokenMetadata(tokenAddress, counter=counter+1)
+
     def getOwnersForCollection(self, 
-                                       token,
-                                       block=None,
-                                       withTokenBalances=True,
-                                       chain="ethereum",
-                                       pageKey=None, 
-                                       counter=0):
+                               token,
+                               block=None,
+                               withTokenBalances=True,
+                               chain="ethereum",
+                               pageKey=None, 
+                               counter=0):
         """
             Helper function to automate getting the balance and holders data from Alchemy for NFT tokens (ERC721 and ERC1155).
             Parameters are:
@@ -33,7 +82,7 @@ class Alchemy(Requests):
                 - withTokenBalance: (boolean) returns the token balance with the token Id
                 - chain: (ethereum|arbitrum|polygon|optimism) which chain to get this data from
         """
-        if counter > 5:
+        if counter > self.max_retries:
             time.sleep(counter)
             return None
         results=[]
@@ -45,9 +94,8 @@ class Alchemy(Requests):
             params["block"] = block
         if pageKey:
             params["pageKey"] = pageKey
-        params = "&".join([f"{key}={value}" for key, value in params.items()])
-        url = self.alchemy_nft_url[chain] + "/getOwnersForCollection?" + params
-        content = self.get_request(url, headers=self.headers, json=True)
+        url = self.alchemy_nft_url[chain] + "/getOwnersForCollection"
+        content = self.get_request(url, params=params, headers=self.headers, json=True)
         if not content or not "ownerAddresses" in content:
             return self.getOwnersForCollection(token, pageKey=pageKey, counter=counter+1)
         results.extend(content["ownerAddresses"])
@@ -59,23 +107,23 @@ class Alchemy(Requests):
         return results
 
     def getAssetTransfers(self, 
-                                  tokens, 
-                                  fromBlock=None, 
-                                  toBlock=None, 
-                                  fromAddress=None, 
-                                  toAddress=None, 
-                                  maxCount=None, 
-                                  excludeZeroValue=True, 
-                                  external=True,
-                                  internal=True,
-                                  erc20=True,
-                                  erc721=True,
-                                  erc1155=True,
-                                  specialnft=True,
-                                  order="asc",
-                                  chain="ethereum",
-                                  pageKey=None,
-                                  counter=0):
+                          tokens, 
+                          fromBlock=None, 
+                          toBlock=None, 
+                          fromAddress=None, 
+                          toAddress=None, 
+                          maxCount=None, 
+                          excludeZeroValue=True, 
+                          external=True,
+                          internal=True,
+                          erc20=True,
+                          erc721=True,
+                          erc1155=True,
+                          specialnft=True,
+                          order="asc",
+                          chain="ethereum",
+                          pageKey=None,
+                          counter=0):
         """
             Helper function to automate getting the transfers data from Alchemy for any tokens.
             Parameters are:
@@ -95,7 +143,7 @@ class Alchemy(Requests):
                 - chain: (ethereum|arbitrum|polygon|optimism) which chain to get this data from
         """
         results = []
-        if counter > 5:
+        if counter > self.max_retries:
             time.sleep(counter)
             return None
 
@@ -128,9 +176,8 @@ class Alchemy(Requests):
                 params
             ]
         }
-        url = self.alchemy_api_url[chain]
 
-        content = self.post_request(url, json=payload, headers=self.headers, return_json=True)
+        content = self.post_request(self.alchemy_api_url[chain], json=payload, headers=self.headers, return_json=True)
         if content and "result" in content:
             result = content["result"].get("transfers", [])
             results.extend(result)
@@ -157,7 +204,7 @@ class Alchemy(Requests):
                 - chain: (ethereum|arbitrum|polygon|optimism) which chain to get this data from
         """
         results = []
-        if counter > 5:
+        if counter > self.max_retries:
             time.sleep(counter)
             return None
 

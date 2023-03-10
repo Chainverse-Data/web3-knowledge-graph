@@ -13,6 +13,7 @@ class ENSIngestor(Ingestor):
 
     def prepare_domains(self):
         domains = pd.DataFrame(self.scraper_data["domains"])
+        domains = domains[domains["name"].apply(len) < 400]
         domains = domains[~domains["name"].isna()]
         domains = domains[~domains["createdAt"].isna()]
         resolvedAddresses = domains[~domains["resolvedAddress"].isna()]
