@@ -69,7 +69,7 @@ class TokenHolderScraper(Scraper):
         self.data["assets"] = {}
         self.data["tokens"] = {}
         self.data["transfers"] = []
-        data = self.parallel_process(self.job_get_transactions, wallets, description="Getting all the transactions")
+        data = self.parallel_process(self.job_get_transactions, wallets, description="Getting all the transactions", timeout=60)
         for item in tqdm(data):
             wallet, assets, tokens, transactions = item
             self.data["assets"][wallet] = assets
@@ -88,7 +88,7 @@ class TokenHolderScraper(Scraper):
                     "hash": transaction["hash"]
                 }
                 self.data["transfers"].append(tmp)
-        data = self.parallel_process(self.job_get_balances, wallets, description="Getting all the balances")
+        data = self.parallel_process(self.job_get_balances, wallets, description="Getting all the balances", timeout=60)
         for item in tqdm(data):
             wallet, balances = item
             self.data["balances"][wallet] = balances
