@@ -30,7 +30,7 @@ class Multiprocessing:
             joblib.parallel.BatchCompletionCallBack = old_batch_callback
             tqdm_object.close()
 
-    def parallel_process(self, function, array, description="Multithreaded processing running... Give me a description!", timeout=None):
+    def parallel_process(self, function, array, description="Multithreaded processing running... Give me a description!"):
         """Function to do parallel processing of a function. 
         It expects the following:
         - The function takes a single argument. This argument can be expanded inside the function if needed
@@ -47,5 +47,5 @@ class Multiprocessing:
         >> [1, 4, 9, 16]
         """
         with self.tqdm_joblib(tqdm(desc=description, total=len(array))):
-            data = joblib.Parallel(n_jobs=self.max_thread, backend="threading", timeout=timeout)(joblib.delayed(function)(element) for element in array)
+            data = joblib.Parallel(n_jobs=self.max_thread, backend="threading")(joblib.delayed(function)(element) for element in array)
         return data
