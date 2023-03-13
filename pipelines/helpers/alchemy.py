@@ -187,7 +187,7 @@ class Alchemy(Requests):
 
         content = self.post_request(self.alchemy_api_url[chain], json=payload, headers=self.headers, return_json=True)
         if DEBUG: logging.debug(f"Calling url: {self.alchemy_api_url[chain]} with payload: {payload}")
-        if content and "result" in content:
+        if content and type(content) == dict and "result" in content:
             result = content["result"].get("transfers", [])
             results.extend(result)
             pageKey = content["result"].get("pageKey", None)
@@ -232,7 +232,7 @@ class Alchemy(Requests):
 
         if DEBUG: logging.debug(f"Calling url: {self.alchemy_api_url[chain]} with payload: {payload}")
         content = self.post_request(self.alchemy_api_url[chain], json=payload, headers=self.headers, return_json=True)
-        if content and "result" in content:
+        if content and type(content) == dict and "result" in content:
             result = content["result"]
             results.extend(result)
             pageKey = result.get("pageKey", None)

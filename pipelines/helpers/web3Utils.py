@@ -33,11 +33,15 @@ class Web3Utils:
                 return True
             return False
         return False
+    
+    def toChecksumAddress(self, address):
+        return self.w3.toChecksumAddress(address)
 
-    def get_smart_contract(self, address):
-        abi_endpoint = f"https://api.etherscan.io/api?module=contract&action=getabi&address={address}&apikey={os.environ['ETHERSCAN_API_KEY']}"
-        abi = json.loads(requests.get(abi_endpoint).text)
-        contract = self.w3.eth.contract(address, abi=abi["result"])
+    def get_smart_contract(self, address, abi=None):
+        if not abi:
+            abi_endpoint = f"https://api.etherscan.io/api?module=contract&action=getabi&address={address}&apikey={os.environ['ETHERSCAN_API_KEY']}"
+            abi = json.loads(requests.get(abi_endpoint).text)["result"]
+        contract = self.w3.eth.contract(address, abi=abi)
         return contract
 
     def parse_logs(self, contract, tx_hash, name):
