@@ -5,8 +5,7 @@ from ...helpers import get_query_logging, count_query_logging
 from ...helpers import Cypher
 import os
 
-# DEBUG = os.environ.get("DEBUG", False)
-DEBUG = False
+DEBUG = os.environ.get("DEBUG", False)
 
 class ContractDeployersCyphers(Cypher):
     def __init__(self, database=None):
