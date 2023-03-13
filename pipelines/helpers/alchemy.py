@@ -244,7 +244,7 @@ class Alchemy(Requests):
                 return self.getTokenBalances(tokens, address, chain=chain, pageKey=pageKey, counter=counter+1)
         return results
     
-    def get_getBlockByNumber(self, block, full_transaction=False, chain="ethereum", counter=0):
+    def getBlockByNumber(self, block, full_transaction=False, chain="ethereum", counter=0):
         """
             Helper function to automate getting the transfers data from Alchemy for any tokens.
             Parameters are:
@@ -290,3 +290,41 @@ class Alchemy(Requests):
         if type(result) != list:
             return self.getSpamContracts(chain=chain, counter=counter+1)
         return result
+
+    def getLogs(self, contractAddress, fromBlock=0, toBlock="latest", topics=None, blockHash=None, chain="ethereum", counter=0):
+        """
+            Helper function to automate getting the log data for a contract, filtered by block time, block hash and topics.
+            Parameters are:
+                - contractAddress: (address) The address of the contract
+                - fromBlock: (int|hex|string) start block
+                - toBlock: (int|hex|string) end block
+                - topics: [(topicHash)] An array of topic hashes
+                - blockHash: (blockHash) A block hash 
+                - chain: (ethereum|arbitrum|polygon|optimism) which chain to get this data from
+        """
+        if counter > self.max_retries:
+            time.sleep(counter)
+            return None
+        
+        params = {
+            "address": contractAddress
+        }
+        if fromBlock: params["fromBlock"] = hex(fromBlock) 
+        if toBlock: params["toBlock"] = hex(toBlock)
+        if topics: params["topics"] = topics
+        if blockHash: params["blockHash"] = blockHash
+
+        payload = {
+            "jsonrpc": "2.0",
+            "id": 0,
+            "method": "eth_getLogs",
+            "params": [params]
+        }
+
+        if DEBUG: logging.debug(f"Calling url: {self.alchemy_api_url[chain]} with payload: {payload}")
+        response_data = self.post_request(self.alchemy_api_url[chain], json=payload, headers=self.headers, return_json=True)
+        if response_data and "result" in response_data:
+            result = response_data.get("result", {})
+            return result
+        else:
+            return self.getLogs(contractAddress, fromBlock=fromBlock, toBlock=toBlock, topics=topics, blockHash=blockHash, chain=chain, counter=counter+1)

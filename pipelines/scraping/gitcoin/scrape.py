@@ -1,11 +1,13 @@
+from ...helpers import Alchemy
 from ..helpers import Scraper
-from ..helpers import get_smart_contract, parse_logs
 import json
 import logging
 import tqdm
 import os
 import time
 from datetime import datetime
+
+DEBUG = os.environ.get("DEBUG", False)
 
 class GitCoinScraper(Scraper):
     def __init__(self, bucket_name="gitcoin", allow_override=False):
@@ -22,19 +24,19 @@ class GitCoinScraper(Scraper):
         if "last_block_number" in self.metadata:
             self.last_block_number = self.metadata["last_block_number"]
 
+        self.alchemy = Alchemy()
         self.gitcoin_checkout_contract_address = "0x7d655c57f71464B6f83811C55D84009Cd9f5221C"
-        self.get_one_grant_url = "https://gitcoin.co/grants/v1/api/grant/{}/"
-        self.get_all_grants_url = "https://gitcoin.co/api/v0.1/grants/?limit={}&offset={}"
-        self.alchemy_api_url = "https://eth-mainnet.g.alchemy.com/v2/{}".format(os.environ["ALCHEMY_API_KEY"])
-        self.get_all_bounties_url = "https://gitcoin.co/api/v0.1/bounties/?limit={}&offset={}&order_by=web3_created"
+        self.get_one_grant_url = "https://bounties.gitcoin.co/grants/v1/api/grant/{}/"
+        self.get_all_grants_url = "https://bounties.gitcoin.co/api/v0.1/grants/?limit={}&offset={}"
+        self.get_all_bounties_url = "https://bounties.gitcoin.co/api/v0.1/bounties/?limit={}&offset={}&order_by=web3_created"
     
     def get_all_grants(self):
         logging.info("Getting the list of all the grants from GitCoin")
         self.data["grants"] = []
         with tqdm.tqdm(total=self.gitcoin_api_limit, position=0) as pbar:
             while True:
-                content = self.get_request(self.get_all_grants_url.format(self.gitcoin_api_limit, self.last_grant_offset))
-                data = json.loads(content)
+                data = self.get_request(self.get_all_grants_url.format(self.gitcoin_api_limit, self.last_grant_offset), json=True)
+                print(data)
                 if len(data) == 0:
                     break
                 for grant in tqdm.tqdm(data, position=1):
@@ -56,31 +58,24 @@ class GitCoinScraper(Scraper):
 
     def get_all_donnations(self):
         logging.info("Collecting all events from GitCoin BulckCheckout and extracting DonationSent events")
-        contract = get_smart_contract(self.gitcoin_checkout_contract_address)
-        headers = {"Content-Type": "application/json"}
-        post_data = {
-            "jsonrpc":"2.0", 
-            "id": 0,
-            "method":"eth_getLogs",
-            "params": [
-                         {
-                            "fromBlock": hex(self.last_block_number),
-                            "toBlock": hex(self.last_block_number + self.blocks_limit),
-                            "address": self.gitcoin_checkout_contract_address
-                          }
-                      ]
-        }
+        contract = self.get_smart_contract(self.gitcoin_checkout_contract_address)
+        
         self.data["donations"] = []
         with tqdm.tqdm(total=self.blocks_limit) as pbar:
             while True:
-                content = self.post_request(self.alchemy_api_url, json=post_data, headers=headers)
-                content = json.loads(content)
+                content = self.alchemy.getLogs(
+                    self.gitcoin_checkout_contract_address, 
+                    fromBlock=self.last_block_number, 
+                    toBlock=self.last_block_number + self.blocks_limit
+                )
                 tx_done = []
-                if "result" not in content:
+                if content == None:
                     break
-                for event in content["result"]:
+                if DEBUG and len(self.data["donations"]) > 100:
+                    break
+                for event in content:
                     if event["transactionHash"] not in tx_done:
-                        tx_logs = parse_logs(contract, event["transactionHash"], "DonationSent")
+                        tx_logs = self.parse_logs(contract, event["transactionHash"], "DonationSent")
                         for log in tx_logs:
                             tmp = dict(log['args'])
                             tmp["txHash"] = event["transactionHash"]
@@ -91,8 +86,6 @@ class GitCoinScraper(Scraper):
                         tx_done.append(event["transactionHash"])
                 self.metadata["last_block_number"] = self.last_block_number
                 self.last_block_number += self.blocks_limit
-                post_data["params"][0]["fromBlock"] = hex(self.last_block_number)
-                post_data["params"][0]["toBlock"] = hex(self.last_block_number + self.blocks_limit)
                 pbar.update(self.blocks_limit)
                 pbar.total += self.blocks_limit
                 pbar.refresh()
@@ -114,33 +107,6 @@ class GitCoinScraper(Scraper):
                 pbar.total += self.gitcoin_api_limit
                 pbar.refresh()
         logging.info("Success: Bounties scrapped!")
-
-    def get_block_time(self):
-        logging.info("Getting block number timestamps for donations")
-        blocks = {}
-        for donation in self.data["donations"]:
-            blocks[donation["blockNumber"]] = None
-        
-        for block in tqdm.tqdm(blocks):
-            headers = {"Content-Type": "application/json"}
-            post_data = {
-                "jsonrpc":"2.0", 
-                "id": 0,
-                "method": "eth_getBlockByNumber",
-                "params": [
-                            hex(block),
-                            False
-                        ]
-            }
-            content = self.post_request(self.alchemy_api_url, json=post_data, headers=headers)
-            content = json.loads(content)
-            if "result" not in content:
-                raise Exception("Something went wrong with the Alchemy call!")
-            blocks[block] = datetime.fromtimestamp(int(content["result"]["timestamp"], base=16))
-
-        for donation in self.data["donations"]:
-            donation["timestamp"] = blocks[donation["blockNumber"]]
-        logging.info("Success: timestamps aquired!")
 
     def run(self):
         self.get_all_donnations()

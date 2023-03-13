@@ -165,7 +165,7 @@ class S3Utils:
                 self.s3_client.create_bucket(Bucket=bucket_name, CreateBucketConfiguration=location)
                 logging.info(f"Creating bucket: {bucket_name}")
             except ClientError as e:
-                logging.error("An error occured during the creation of the bucket!")
+                logging.error(f"An error occured during the creation of the bucket: {bucket_name}")
                 raise e
         else:
             logging.info(f"Using existing bucket: {bucket_name}")
