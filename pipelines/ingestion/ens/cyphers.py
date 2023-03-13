@@ -24,7 +24,6 @@ class ENSCyphers(Cypher):
                         MERGE (ens:Alias:Ens {{name: toLower(domains.name)}})
                         ON CREATE SET   ens.uuid = apoc.create.uuid(),
                                         ens.labelName = domains.labelName,
-                                        ens.name = domains.name,
                                         ens.createdAt = datetime({{epochSeconds: toInteger(domains.createdAt)}}),
                                         ens.owner = domains.owner,
                                         ens.resolvedAddress = domains.resolvedAddress,
