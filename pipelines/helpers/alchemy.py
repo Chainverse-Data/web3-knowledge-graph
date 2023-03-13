@@ -1,9 +1,13 @@
+import logging
 import time
 import os
 from . import Requests
 
+DEBUG = os.environ.get("DEBUG", False)
+
 class Alchemy(Requests):
     def __init__(self, max_retries=5):
+        self.chains = ["ethereum", "optimism", "arbitrum", "polygon"]
         self.alchemy_api_url = {
             "ethereum": f"https://eth-mainnet.g.alchemy.com/v2/{os.environ['ALCHEMY_API_KEY']}",
             "optimism": f"https://opt-mainnet.g.alchemy.com/v2/{os.environ['ALCHEMY_API_KEY_OPTIMISM']}",
@@ -39,9 +43,10 @@ class Alchemy(Requests):
         if tokenType: params["tokenType"] = tokenType
 
         url = self.alchemy_nft_url[chain] + "/getNFTMetadata"
+        if DEBUG: logging.debug(f"Calling url: {url}")
         result = self.get_request(url, params=params, headers=self.headers, json=True)
         if type(result) != dict:
-            return self.getNFTMetadata(tokenAddress, chain, tokenId=tokenId, tokenType=tokenType, counter=counter+1)
+            return self.getNFTMetadata(tokenAddress, chain=chain, tokenId=tokenId, tokenType=tokenType, counter=counter+1)
         return result
 
     def getTokenMetadata(self, tokenAddress, chain="ethereum", counter=0):
@@ -60,12 +65,13 @@ class Alchemy(Requests):
             "method": "alchemy_getTokenMetadata",
             "params": [tokenAddress]
         }
+        if DEBUG: logging.debug(f"Calling url: {self.alchemy_api_url[chain]} with payload: {payload}")
         response_data = self.post_request(self.alchemy_api_url[chain], json=payload, headers=self.headers, return_json=True)
         if response_data and "result" in response_data:
             result = response_data.get("result", {})
             return result
         else:
-            return self.getTokenMetadata(tokenAddress, counter=counter+1)
+            return self.getTokenMetadata(tokenAddress, chain=chain, counter=counter+1)
 
     def getOwnersForCollection(self, 
                                token,
@@ -95,6 +101,7 @@ class Alchemy(Requests):
         if pageKey:
             params["pageKey"] = pageKey
         url = self.alchemy_nft_url[chain] + "/getOwnersForCollection"
+        if DEBUG: logging.debug(f"Calling url: {url}")
         content = self.get_request(url, params=params, headers=self.headers, json=True)
         if not content or not "ownerAddresses" in content:
             return self.getOwnersForCollection(token, pageKey=pageKey, counter=counter+1)
@@ -107,7 +114,7 @@ class Alchemy(Requests):
         return results
 
     def getAssetTransfers(self, 
-                          tokens, 
+                          tokens=None, 
                           fromBlock=None, 
                           toBlock=None, 
                           fromAddress=None, 
@@ -123,6 +130,7 @@ class Alchemy(Requests):
                           order="asc",
                           chain="ethereum",
                           pageKey=None,
+                          pageKeyIterate=True,
                           counter=0):
         """
             Helper function to automate getting the transfers data from Alchemy for any tokens.
@@ -148,10 +156,10 @@ class Alchemy(Requests):
             return None
 
         params = {
-            "contractAddresses": tokens,
             "order": order,
             "excludeZeroValue": excludeZeroValue
         }
+        if tokens: params["contractAddresses"] = tokens
         if fromBlock: params["fromBlock"] = fromBlock
         if toBlock: params["toBlock"] = toBlock
         if fromAddress: params["fromAddress"] = fromAddress
@@ -161,7 +169,7 @@ class Alchemy(Requests):
 
         categories = []
         if external: categories.append("external")
-        if internal: categories.append("internal")
+        if internal and chain in ["ethereum", "polygon"]: categories.append("internal")
         if erc20: categories.append("erc20")
         if erc721: categories.append("erc721")
         if erc1155: categories.append("erc1155")
@@ -178,11 +186,12 @@ class Alchemy(Requests):
         }
 
         content = self.post_request(self.alchemy_api_url[chain], json=payload, headers=self.headers, return_json=True)
+        if DEBUG: logging.debug(f"Calling url: {self.alchemy_api_url[chain]} with payload: {payload}")
         if content and "result" in content:
             result = content["result"].get("transfers", [])
             results.extend(result)
             pageKey = content["result"].get("pageKey", None)
-            if pageKey:
+            if pageKeyIterate and pageKey:
                 newResults = self.getAssetTransfers(tokens, fromBlock=fromBlock, toBlock=toBlock, fromAddress=fromAddress, toAddress=toAddress, maxCount=maxCount, excludeZeroValue=excludeZeroValue, external=external, internal=internal, erc20=erc20, erc721=erc721, erc1155=erc1155, specialnft=specialnft, pageKey=pageKey, order=order, chain=chain)
                 if newResults:
                     results.extend(newResults)
@@ -220,9 +229,9 @@ class Alchemy(Requests):
             "method": "alchemy_getTokenBalances",
             "params": params
         }
-        url = self.alchemy_api_url[chain]
 
-        content = self.post_request(url, json=payload, headers=self.headers, return_json=True)
+        if DEBUG: logging.debug(f"Calling url: {self.alchemy_api_url[chain]} with payload: {payload}")
+        content = self.post_request(self.alchemy_api_url[chain], json=payload, headers=self.headers, return_json=True)
         if content and "result" in content:
             result = content["result"]
             results.extend(result)
@@ -234,3 +243,33 @@ class Alchemy(Requests):
         else:
                 return self.getTokenBalances(tokens, address, chain=chain, pageKey=pageKey, counter=counter+1)
         return results
+    
+    def get_getBlockByNumber(self, block, full_transaction=False, chain="ethereum", counter=0):
+        """
+            Helper function to automate getting the transfers data from Alchemy for any tokens.
+            Parameters are:
+                - block: (hex) block number
+                - full_transaction: (boolean) Wether to return the full block information
+                - chain: (ethereum|arbitrum|polygon|optimism) which chain to get this data from
+        """
+        if counter > self.max_retries:
+            time.sleep(counter)
+            return None
+        
+        payload = {
+            "jsonrpc": "2.0",
+            "id": 0,
+            "method": "eth_getBlockByNumber",
+            "params": [
+                block,
+                full_transaction
+            ]
+        }
+
+        if DEBUG: logging.debug(f"Calling url: {self.alchemy_api_url[chain]} with payload: {payload}")
+        response_data = self.post_request(self.alchemy_api_url[chain], json=payload, headers=self.headers, return_json=True)
+        if response_data and "result" in response_data:
+            result = response_data.get("result", {})
+            return result
+        else:
+            return self.getTokenMetadata(block, full_transaction=full_transaction, chain=chain, counter=counter+1)
