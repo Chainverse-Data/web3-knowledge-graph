@@ -32,8 +32,8 @@ class Alchemy(Requests):
                 - tokenType: (None|ERC721|ERC1155) Makes query faster if the contract type is specified 
                 - chain: (ethereum|arbitrum|polygon|optimism) which chain to get this data from
         """
+        time.sleep(counter)
         if counter > self.max_retries:
-            time.sleep(counter)
             return None
         
         params = {
@@ -56,8 +56,8 @@ class Alchemy(Requests):
                 - token: (address) token contract address
                 - chain: (ethereum|arbitrum|polygon|optimism) which chain to get this data from
         """
+        time.sleep(counter)
         if counter > self.max_retries:
-            time.sleep(counter)
             return None
         payload = {
             "id": 1,
@@ -88,8 +88,8 @@ class Alchemy(Requests):
                 - withTokenBalance: (boolean) returns the token balance with the token Id
                 - chain: (ethereum|arbitrum|polygon|optimism) which chain to get this data from
         """
+        time.sleep(counter)
         if counter > self.max_retries:
-            time.sleep(counter)
             return None
         results=[]
         params = {
@@ -151,8 +151,8 @@ class Alchemy(Requests):
                 - chain: (ethereum|arbitrum|polygon|optimism) which chain to get this data from
         """
         results = []
+        time.sleep(counter)
         if counter > self.max_retries:
-            time.sleep(counter)
             return None
 
         params = {
@@ -213,8 +213,8 @@ class Alchemy(Requests):
                 - chain: (ethereum|arbitrum|polygon|optimism) which chain to get this data from
         """
         results = []
+        time.sleep(counter)
         if counter > self.max_retries:
-            time.sleep(counter)
             return None
 
         params = [
@@ -252,8 +252,8 @@ class Alchemy(Requests):
                 - full_transaction: (boolean) Wether to return the full block information
                 - chain: (ethereum|arbitrum|polygon|optimism) which chain to get this data from
         """
+        time.sleep(counter)
         if counter > self.max_retries:
-            time.sleep(counter)
             return None
         
         payload = {
@@ -280,8 +280,8 @@ class Alchemy(Requests):
                 - chain: (ethereum|arbitrum|polygon|optimism) which chain to get this data from
         """
         assert chain in ["ethereum", "polygon"], "Supported chains are only ethereum and polygon"
+        time.sleep(counter)
         if counter > self.max_retries:
-            time.sleep(counter)
             return None
         
         url = self.alchemy_nft_url[chain] + "/getSpamContracts"
@@ -302,8 +302,8 @@ class Alchemy(Requests):
                 - blockHash: (blockHash) A block hash 
                 - chain: (ethereum|arbitrum|polygon|optimism) which chain to get this data from
         """
+        time.sleep(counter)
         if counter > self.max_retries:
-            time.sleep(counter)
             return None
         
         params = {

@@ -1,7 +1,8 @@
-import multiprocessing
 import requests
 import os
 from tqdm import tqdm
+
+from ...helpers import Etherscan
 from .helpers.arweave import MirrorScraperHelper
 from ..helpers import Scraper
 import logging
@@ -33,8 +34,9 @@ class MirrorScraper(Scraper):
         self.reverse_ens = {}
         self.mirror_NFT_factory_address = "0x302f746eE2fDC10DDff63188f71639094717a766"
         self.writing_editions_address = "0xfd8077F228E5CD9dED1b558Ac21F98ECF18f1a28"
+        self.etherscan = Etherscan()
         self.etherescan_API_url = "https://api-optimistic.etherscan.io/api?module=account&action=txlistinternal&address={}&startblock={}&endblock={}&page={}&offset={}&sort=asc&apikey=" + os.environ.get("OPTIMISTIC_ETHERSCAN_API_KEY", "")
-        self.etherescan_ABI_API_url = "https://api-optimistic.etherscan.io/api?module=contract&action=getabi&address={}&apikey=" + os.environ.get("OPTIMISTIC_ETHERSCAN_API_KEY", "")
+        # self.etherescan_ABI_API_url = "https://api-optimistic.etherscan.io/api?module=contract&action=getabi&address={}&apikey=" + os.environ.get("OPTIMISTIC_ETHERSCAN_API_KEY", "")
         self.alchemy_optimism_rpc = f"https://opt-mainnet.g.alchemy.com/v2/{os.environ['ALCHEMY_API_KEY']}"
         self.w3 = web3.Web3(web3.HTTPProvider(self.alchemy_optimism_rpc))
 
@@ -53,6 +55,8 @@ class MirrorScraper(Scraper):
     def get_mirror_NFTs(self):
         NFT_addresses = []
         logging.info("Getting all NFTs from Mirror Factory")
+        
+        
         page = 1
         offset = 10000           
         while page:
@@ -80,15 +84,16 @@ class MirrorScraper(Scraper):
         factory_NFTs = set([el["address"] for el in self.data["factory_NFTs"]])
         articles = set([el["original_content_digest"] for el in self.data["arweave_articles"]])
         contracts_to_check = factory_NFTs.difference(arweave_NFTs)
-        url = self.etherescan_ABI_API_url.format(self.writing_editions_address)
-        abi = self.get_request(url, decode=False, json=True)["result"]
+        abi = self.etherscan.get_smart_contract_ABI(self.writing_editions_address, chain="optimism")
+        # url = self.etherescan_ABI_API_url.format(self.writing_editions_address)
+        # abi = self.get_request(url, decode=False, json=True)["result"]
         missing_NFTs = []
         missing_articles = []
         logging.info("Reconciling NFTs and articles")
         for address in tqdm(contracts_to_check):
             logging.info(f"Getting informations from NFT at: {address}")
             try:
-                contract = self.w3.eth.contract(address=self.w3.toChecksumAddress(address), abi=abi)
+                contract = self.get_smart_contract(address, abi=abi)
                 mirror_url = contract.functions.description().call()
                 funding_recipient = contract.functions.fundingRecipient().call()
                 supply = contract.functions.limit().call()
@@ -112,10 +117,6 @@ class MirrorScraper(Scraper):
                     arweave_hash = contract.functions.contentURI().call()
                     if (arweave_hash.strip()):
                         data = self.get_article(arweave_hash)
-                        # if data["authorship"]["contributor"] not in self.reverse_ens:
-                        #     ens = self.ENSsearch(data["authorship"]["contributor"])
-                        # else:
-                        #     ens = self.reverse_ens[data["authorship"]["contributor"]]
                         article = {
                             "original_content_digest": digest,
                             "current_content_digest": digest,
@@ -124,7 +125,6 @@ class MirrorScraper(Scraper):
                             "title": data["content"]["title"],
                             "timestamp": data["content"]["timestamp"],
                             "author": data["authorship"]["contributor"],
-                            # "ens": ens,
                         }
 
                         missing_articles.append(article)

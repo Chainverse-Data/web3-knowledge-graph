@@ -36,6 +36,8 @@ ecs_awslogs_stream_prefix = f"ecs/{ecs_task_image}"
 # Get the container's ENV vars from Airflow Variables
 env_vars = [
     {"name": "ETHERSCAN_API_KEY", "value": Variable.get("ETHERSCAN_API_KEY")},
+    {"name": "ETHERSCAN_API_KEY_OPTIMISM", "value": Variable.get("ETHERSCAN_API_KEY_OPTIMISM")},
+    {"name": "ETHERSCAN_API_KEY_POLYGON", "value": Variable.get("ETHERSCAN_API_KEY_POLYGON")},
     {"name": "ALCHEMY_API_KEY", "value": Variable.get("ALCHEMY_API_KEY")},
     {"name": "ALCHEMY_API_KEY_OPTIMISM", "value": Variable.get("ALCHEMY_API_KEY_OPTIMISM")},
     {"name": "ALCHEMY_API_KEY_ARBITRUM", "value": Variable.get("ALCHEMY_API_KEY_ARBITRUM")},
