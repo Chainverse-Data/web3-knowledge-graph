@@ -15,6 +15,8 @@ class MultisigCyphers(Cypher):
     def create_indexes(self):
         indexes = Indexes()
         indexes.wallets()
+        query = "CREATE INDEX multisigs IF NOT EXISTS FOR (n:MultiSig) ON (n.address)"
+        self.query(query)
 
     @count_query_logging
     def create_or_merge_multisig_wallets(self, urls):
