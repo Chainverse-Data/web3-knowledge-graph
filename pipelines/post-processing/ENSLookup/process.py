@@ -10,7 +10,7 @@ class ENSLookupProcessor(Processor):
         self.provider = f"wss://eth-mainnet.g.alchemy.com/v2/{os.environ.get('ALCHEMY_API_KEY', '')}"
         self.cyphers = ENSLooupCyphers()
         self.web3utils = Web3Utils()
-        self.chunk_size = 10000
+        self.chunk_size = 1000
         super().__init__(bucket_name)
     
     def process_ens_names(self):
