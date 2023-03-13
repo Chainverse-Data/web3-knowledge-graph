@@ -9,16 +9,11 @@ class SpamCyphers(Cypher):
     @count_query_logging
     def label_spam_contracts(self, contractAddresses):
         query = f"""
-        match
-            (token:Token)
-        where
-            token.address in $contractAddresses
-        and not
-            token:SpamContract
-        set
-            token:SpamContract
-        return 
-            count(token)
+        MATCH (token:Token)
+        WHERE token.address IN $contractAddresses
+        AND NOT token:SpamContract
+        SET token:SpamContract
+        RETURN count(token)
         """
         count = self.query(query, parameters={"contractAddresses": contractAddresses})[0].value()
 

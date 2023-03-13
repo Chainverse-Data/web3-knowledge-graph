@@ -7,7 +7,6 @@ from tqdm import tqdm
 
 class ENSLookupProcessor(Processor):
     def __init__(self, bucket_name="ens-lookup"):
-        self.provider = f"wss://eth-mainnet.g.alchemy.com/v2/{os.environ.get('ALCHEMY_API_KEY', '')}"
         self.cyphers = ENSLooupCyphers()
         self.web3utils = Web3Utils()
         self.chunk_size = 1000

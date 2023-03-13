@@ -1,4 +1,5 @@
 from datetime import datetime
+import time
 from neo4j import GraphDatabase
 import os
 import logging
@@ -38,6 +39,7 @@ class Cypher:
         logging.warning("This function should be implemented in the children class.")
 
     def run_query(self, neo4j_driver, query, parameters=None, counter=0):
+        time.sleep(counter * 10)
         assert neo4j_driver is not None, "Driver not initialized!"
         session = None
         response = None

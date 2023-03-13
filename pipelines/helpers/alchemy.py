@@ -273,3 +273,20 @@ class Alchemy(Requests):
             return result
         else:
             return self.getTokenMetadata(block, full_transaction=full_transaction, chain=chain, counter=counter+1)
+
+    def getSpamContracts(self, chain="ethereum", counter=0):
+        """
+            Helper function to get the list of Alchemy defines spam contracts.
+                - chain: (ethereum|arbitrum|polygon|optimism) which chain to get this data from
+        """
+        assert chain in ["ethereum", "polygon"], "Supported chains are only ethereum and polygon"
+        if counter > self.max_retries:
+            time.sleep(counter)
+            return None
+        
+        url = self.alchemy_nft_url[chain] + "/getSpamContracts"
+        if DEBUG: logging.debug(f"Calling url: {url}")
+        result = self.get_request(url, headers=self.headers, json=True)
+        if type(result) != list:
+            return self.getSpamContracts(chain=chain, counter=counter+1)
+        return result
