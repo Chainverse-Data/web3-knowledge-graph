@@ -13,7 +13,7 @@ class ContractDeployersCyphers(Cypher):
         super().__init__(database)
     
     @get_query_logging
-    def get_ens_multisigs(self):
+    def get_multisigs(self):
         query = f"""
             MATCH (multisig:MultiSig)
             WHERE NOT (:Wallet)-[:DEPLOYED]->(multisig)
@@ -25,14 +25,27 @@ class ContractDeployersCyphers(Cypher):
         results = [result["address"] for result in results]
         return results
 
+    @get_query_logging
+    def get_tokens(self):
+        query = f"""
+            MATCH (token:Token)
+            WHERE NOT (:Wallet)-[:DEPLOYED]->(token)
+            RETURN token.address as address
+        """
+        if DEBUG:
+            query += "LIMIT 10"
+        results = self.query(query)
+        results = [result["address"] for result in results]
+        return results
+
     @count_query_logging
-    def link_or_merge_deployers(self, urls):
+    def link_or_merge_deployers(self, urls, label):
         count = 0
         for url in urls:
             query = f"""
                 LOAD CSV WITH HEADERS FROM '{url}' AS deployers
                 MATCH (wallet:Wallet {{address: toLower(deployers.address)}})
-                MATCH (contract:MultiSig {{address: toLower(deployers.contractAddress)}})
+                MATCH (contract:{label} {{address: toLower(deployers.contractAddress)}})
                 MERGE (wallet)-[link:DEPLOYED]->(contract)
                 SET link.txHash = deployers.txHash,
                     link.citation = "Etherescan API"

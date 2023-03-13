@@ -13,7 +13,7 @@ class ContractDeployersProcessor(Processor):
         super().__init__(bucket_name)
     
     def process_multisigs(self):
-        multisigs = self.cyphers.get_ens_multisigs()
+        multisigs = self.cyphers.get_multisigs()
         for i in tqdm(range(0, len(multisigs), self.chunk_size), desc="Getting Multisig deployers address"):
             current_multisigs = multisigs[i: i+self.chunk_size]
             results = []
@@ -31,10 +31,32 @@ class ContractDeployersProcessor(Processor):
             ]
             urls = self.save_json_as_csv(results, self.bucket_name, f"process_multisig_{self.asOf}_{i}")
             self.cyphers.queries.create_wallets(urls)
-            self.cyphers.link_or_merge_deployers(urls)
+            self.cyphers.link_or_merge_deployers(urls, "MultiSig")
+
+    def process_tokens(self):
+        multisigs = self.cyphers.get_tokens()
+        for i in tqdm(range(0, len(multisigs), self.chunk_size), desc="Getting Tokens deployers address"):
+            current_multisigs = multisigs[i: i+self.chunk_size]
+            results = []
+            for j in range(0, len(current_multisigs), 5):
+                data = self.etherscan.get_contract_deployer(current_multisigs[j: j+5])
+                if data:
+                    results.extend(data)
+            results = [
+                {
+                    "contractAddress": result["contractAddress"],
+                    "address": result["contractCreator"],
+                    "txHash": result["txHash"]
+                } 
+                for result in results
+            ]
+            urls = self.save_json_as_csv(results, self.bucket_name, f"process_multisig_{self.asOf}_{i}")
+            self.cyphers.queries.create_wallets(urls)
+            self.cyphers.link_or_merge_deployers(urls, "Token")
 
     def run(self):
         self.process_multisigs()
+        self.process_tokens()
 
 if __name__ == "__main__":
     P = ContractDeployersProcessor()
