@@ -1,5 +1,6 @@
 import logging
 import pandas as pd
+from tqdm import tqdm
 from ..helpers import Processor
 from .cyphers import TwitterRelationsCyphers
 from ...helpers import S3Utils
@@ -24,7 +25,7 @@ class TwitterRelationsProcessor(Processor):
         self.s3 = S3Utils()
         self.now = datetime.datetime.now()
         self.timestamp = self.now.strftime("%Y_%m_%d_%H%M%S")
-        logging.info(self.timestamp)
+        self.chunk_size = 1000
         super().__init__("twitter-relations")
 
     def extract_handles(self, val):
@@ -69,7 +70,6 @@ class TwitterRelationsProcessor(Processor):
                 }
             return result
         except Exception as e:
-            # logging.error("Error getting the URL for: {}. \n {}".format(account["website"], e))
             return self.extract_website_data(account, counter=counter+1) 
     
     def process_websites(self):
@@ -89,16 +89,15 @@ class TwitterRelationsProcessor(Processor):
                     "handle": account["handle"],
                     "website": account["website_bio"]
                 })
-        results = self.parallel_process(self.extract_website_data, accounts, "Extracting URLs and domains from twitter accounts bios")
-        results = [result for result in results if result]
-        fname = "websites_" + self.asOf
-        urls = self.s3.save_json_as_csv(results, bucket_name=self.bucket_name, file_name=fname, ACL='public-read', max_lines=10000, max_size=10000000)
-        
-        logging.info("ingesting twitter / website / domain data")
-        self.cyphers.create_domains(urls)
-        self.cyphers.create_websites(urls)
-        self.cyphers.link_websites_domains(urls)
-        self.cyphers.link_twitter_websites(urls)
+        for i in tqdm(range(0, len(account), self.chunk_size)):
+            results = self.parallel_process(self.extract_website_data, accounts[i: i+self.chunk_size], "Extracting URLs and domains from twitter accounts bios")
+            results = [result for result in results if result]
+
+            urls = self.s3.save_json_as_csv(results, self.bucket_name, f"process_website_{self.asOf}_{i}")
+            self.cyphers.create_domains(urls)
+            self.cyphers.create_websites(urls)
+            self.cyphers.link_websites_domains(urls)
+            self.cyphers.link_twitter_websites(urls)
 
     def run(self):
         self.process_references()
