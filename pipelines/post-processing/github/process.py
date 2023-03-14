@@ -144,10 +144,11 @@ class GithubProcessor(Processor):
             self.data["repositories"][repository] = repos_data
 
     def process_github_accounts(self, handles):
-        user_pbar = tqdm(handles, desc="Getting neo4J accounts information", position=0)
-        for handle in user_pbar:
-            user_pbar.set_description(desc=f"Getting neo4J accounts information: {handle}")
-            self.get_user_data(handle)
+        self.parallel_process(self.get_user_data, handles, "Getting users accounts information")
+        # user_pbar = tqdm(handles, desc="Getting neo4J accounts information", position=0)
+        # for handle in user_pbar:
+        #     user_pbar.set_description(desc=f"Getting neo4J accounts information: {handle}")
+        #     self.get_user_data(handle)
 
     def ingest_github_data(self):
 
