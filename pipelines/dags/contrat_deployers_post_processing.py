@@ -6,7 +6,7 @@ from airflow.contrib.operators.ecs_operator import ECSOperator
 from airflow.models import Variable
 
 dag = DAG(
-    "contract_depoloyers_matching",
+    "contract_deployers_matching",
     description="Gets the missing contract deployers for contracts in the DB.",
     default_args={
         "start_date": days_ago(2),
