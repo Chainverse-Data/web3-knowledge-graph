@@ -128,6 +128,7 @@ class GithubProcessor(Processor):
         url = f"https://api.github.com/repos/{repository}"
         repos_raw_data = self.get_request(url, headers=self.get_headers(), decode=False, json=True, retry_on_404=False)
         if repos_raw_data:
+            repos_raw_data["languages"] = self.get_repository_languages(repository)
             repos_raw_data["owner"] = repos_raw_data.get("owner", {}).get("login", None)
             repos_raw_data["license"] = repos_raw_data.get("license", {}).get("name", None)
             if "parent" in repos_raw_data:
@@ -141,6 +142,15 @@ class GithubProcessor(Processor):
             repos_data["subscribers_handles"] = subscribers 
             repos_data["readme"] = readme
             self.data["repositories"][repository] = repos_data
+    
+    def get_repository_languages(self, repository):
+        url = f"https://api.github.com/repos/{repository}/languages"
+        languages = self.get_request(url, headers=self.get_headers(), decode=False, json=True, retry_on_404=False)
+        if languages:
+            languages = [key for key in languages]
+        else:
+            languages = []
+        return languages
 
     def process_github_accounts(self, handles):
         self.parallel_process(self.get_user_data, handles, "Getting users accounts information")
