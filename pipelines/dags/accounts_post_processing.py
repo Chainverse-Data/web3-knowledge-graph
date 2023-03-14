@@ -6,7 +6,7 @@ from airflow.contrib.operators.ecs_operator import ECSOperator
 from airflow.models import Variable
 
 dag = DAG(
-    "Accounts post processing",
+    "accounts_post_processing",
     description="Performs some graph cleaning and preprocessing and postprocessing.",
     default_args={
         "start_date": days_ago(2),
