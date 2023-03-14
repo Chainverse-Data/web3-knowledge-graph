@@ -6,14 +6,14 @@ from airflow.contrib.operators.ecs_operator import ECSOperator
 from airflow.models import Variable
 
 dag = DAG(
-    "wallets_first_last_activity_processing",
-    description="Grabs missing first and last activity for all wallets.",
+    "Accounts post processing",
+    description="Performs some graph cleaning and preprocessing and postprocessing.",
     default_args={
         "start_date": days_ago(2),
         "owner": "Leo Blondel",
-        "retries": 3
+        "retries": 3        
     },
-    schedule_interval= "@weekly",
+    schedule_interval="@daily",
     max_active_runs=1,
     dagrun_timeout=timedelta(minutes=10080)
 )
@@ -28,10 +28,9 @@ ecs_security_group = Variable.get("MWAA_VPC_SECURITY_GROUPS") # str(ssm.get_para
 # pipelines-medium: 1CPU 8Gb RAM
 # pipelines-large: 2CPU 16Gb RAM
 # pipelines-xl: 8CPU 32Gb RAM
-ecs_task_definition_processing = "pipelines-highcpu"
-ecs_awslogs_group_processing = f"/ecs/{ecs_task_definition_processing}"
-
+ecs_task_definition = "pipelines-medium"
 ecs_task_image = "data-pipelines"
+ecs_awslogs_group = f"/ecs/{ecs_task_definition}"
 ecs_awslogs_stream_prefix = f"ecs/{ecs_task_image}"
 
 # Get the container's ENV vars from Airflow Variables
@@ -40,10 +39,6 @@ env_vars = [
     {"name": "ETHERSCAN_API_KEY_OPTIMISM", "value": Variable.get("ETHERSCAN_API_KEY_OPTIMISM")},
     {"name": "ETHERSCAN_API_KEY_POLYGON", "value": Variable.get("ETHERSCAN_API_KEY_POLYGON")},
     {"name": "ALCHEMY_API_KEY", "value": Variable.get("ALCHEMY_API_KEY")},
-    {"name": "ALCHEMY_API_KEY_OPTIMISM", "value": Variable.get("ALCHEMY_API_KEY_OPTIMISM")},
-    {"name": "ALCHEMY_API_KEY_ARBITRUM", "value": Variable.get("ALCHEMY_API_KEY_ARBITRUM")},
-    {"name": "ALCHEMY_API_KEY_SOLANA", "value": Variable.get("ALCHEMY_API_KEY_SOLANA")},
-    {"name": "ALCHEMY_API_KEY_POLYGON", "value": Variable.get("ALCHEMY_API_KEY_POLYGON")},
     {"name": "ALLOW_OVERRIDE", "value": Variable.get("ALLOW_OVERRIDE")},
     {"name": "AWS_BUCKET_PREFIX", "value": Variable.get("AWS_BUCKET_PREFIX")},
     {"name": "AWS_DEFAULT_REGION", "value": Variable.get("AWS_DEFAULT_REGION")},
@@ -66,30 +61,31 @@ network_configuration={
     },
 }
 
+    
 # Run Docker container via ECS operator
 # There are two fields set here:
 # task_id to give it a name
 # overrides -> command -> to set it to the module command 
-last_activity_processing_task = ECSOperator(
-    task_id="first_last_activity_processing",
+accounts_post_processing_task = ECSOperator(
+    task_id="accounts_post_processing",
     dag=dag,
     aws_conn_id="aws_ecs",
     cluster=ecs_cluster,
-    task_definition=ecs_task_definition_processing,
+    task_definition=ecs_task_definition,
     region_name="us-east-2",
     launch_type="FARGATE",
     overrides={
         "containerOverrides": [
             {
                 "name": "data-pipelines",
-                "command": ["python3", "-m", "pipelines.post-processing.lastActivity.process"],
+                "command": ["python3", "-m", "pipelines.post-processing.accounts.process"],
                 "environment": env_vars
             },
         ],
     },
     network_configuration=network_configuration,
-    awslogs_group=ecs_awslogs_group_processing,
+    awslogs_group=ecs_awslogs_group,
     awslogs_stream_prefix=ecs_awslogs_stream_prefix
 )
 
-last_activity_processing_task
+accounts_post_processing_task
