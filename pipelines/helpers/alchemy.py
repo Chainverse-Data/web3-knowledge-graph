@@ -192,11 +192,11 @@ class Alchemy(Requests):
             results.extend(result)
             pageKey = content["result"].get("pageKey", None)
             if pageKeyIterate and pageKey:
-                newResults = self.getAssetTransfers(tokens, fromBlock=fromBlock, toBlock=toBlock, fromAddress=fromAddress, toAddress=toAddress, maxCount=maxCount, excludeZeroValue=excludeZeroValue, external=external, internal=internal, erc20=erc20, erc721=erc721, erc1155=erc1155, specialnft=specialnft, pageKey=pageKey, order=order, chain=chain)
+                newResults = self.getAssetTransfers(tokens, fromBlock=fromBlock, toBlock=toBlock, fromAddress=fromAddress, toAddress=toAddress, maxCount=maxCount, excludeZeroValue=excludeZeroValue, external=external, internal=internal, erc20=erc20, erc721=erc721, erc1155=erc1155, specialnft=specialnft, pageKey=pageKey, pageKeyIterate=pageKeyIterate, order=order, chain=chain)
                 if newResults:
                     results.extend(newResults)
         else:
-            return self.getAssetTransfers(tokens, fromBlock=fromBlock, toBlock=toBlock, fromAddress=fromAddress, toAddress=toAddress, maxCount=maxCount, excludeZeroValue=excludeZeroValue, external=external, internal=internal, erc20=erc20, erc721=erc721, erc1155=erc1155, specialnft=specialnft, pageKey=pageKey, order=order, chain=chain, counter=counter+1)
+            return self.getAssetTransfers(tokens, fromBlock=fromBlock, toBlock=toBlock, fromAddress=fromAddress, toAddress=toAddress, maxCount=maxCount, excludeZeroValue=excludeZeroValue, external=external, internal=internal, erc20=erc20, erc721=erc721, erc1155=erc1155, specialnft=specialnft, pageKey=pageKey, pageKeyIterate=pageKeyIterate, order=order, chain=chain, counter=counter+1)
         return results
     
     def getTokenBalances(self, 
