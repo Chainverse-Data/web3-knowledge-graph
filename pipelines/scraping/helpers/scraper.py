@@ -13,8 +13,8 @@ from ...helpers import Base
 # The data field is a dictionary, define each root key as you would a mongoDB index.
 
 class Scraper(Base):
-    def __init__(self, bucket_name, allow_override=None):
-        Base.__init__(self)
+    def __init__(self, bucket_name, allow_override=None, chain="ethereum"):
+        Base.__init__(self, chain=chain)
         self.runtime = datetime.now()
 
         if not bucket_name:

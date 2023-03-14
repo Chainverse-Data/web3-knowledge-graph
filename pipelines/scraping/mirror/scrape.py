@@ -15,13 +15,13 @@ DEBUG = os.environ.get("DEBUG", False)
 
 class MirrorScraper(Scraper):
     def __init__(self, bucket_name="mirror", allow_override=False):
-        super().__init__(bucket_name, allow_override=allow_override)
+        super().__init__(bucket_name, allow_override=allow_override, chain="optimism")
+        self.etherscan = Etherscan()
         self.optimism_start_block = self.metadata.get("optimism_start_block", 8557803)
-        content = self.get_request("https://api-optimistic.etherscan.io/api?module=proxy&action=eth_blockNumber&apikey=" + os.environ.get("ETHERSCAN_API_KEY_OPTIMISM", ""), decode=False, json=True)
-        self.optimism_end_block = int(content["result"], 16)
+        self.optimism_end_block = self.etherscan.get_last_block_number(chain="optimism")
         if DEBUG:
             self.optimism_start_block = 8557803
-            self.optimism_end_block = 8567803
+            self.optimism_end_block = 9567803
         self.start_block = self.metadata.get("start_block", 595567)
         self.end_block = self.get_request("https://arweave.net/info", decode=False, json=True)["blocks"]
         if DEBUG:
@@ -29,23 +29,10 @@ class MirrorScraper(Scraper):
             self.end_block = 599567
         self.arweave_url = "https://arweave.net/{}"
         self.blockStep = 400
+        # TODO At some point when we need more arweave data, we need to make a arweave class function to replace this.
         self.arweaveHelpers = MirrorScraperHelper(self.blockStep)
-        self.ensSearchURL = "https://eth-mainnet.g.alchemy.com/nft/v2/{}/getNFTs?owner={}&contractAddresses[]=0x57f1887a8BF19b14fC0dF6Fd9B2acc9Af147eA85&withMetadata=true"
-        self.reverse_ens = {}
         self.mirror_NFT_factory_address = "0x302f746eE2fDC10DDff63188f71639094717a766"
         self.writing_editions_address = "0xfd8077F228E5CD9dED1b558Ac21F98ECF18f1a28"
-        self.etherscan = Etherscan()
-        self.etherescan_API_url = "https://api-optimistic.etherscan.io/api?module=account&action=txlistinternal&address={}&startblock={}&endblock={}&page={}&offset={}&sort=asc&apikey=" + os.environ.get("ETHERSCAN_API_KEY_OPTIMISM", "")
-        # self.etherescan_ABI_API_url = "https://api-optimistic.etherscan.io/api?module=contract&action=getabi&address={}&apikey=" + os.environ.get("ETHERSCAN_API_KEY_OPTIMISM", "")
-        self.alchemy_optimism_rpc = f"https://opt-mainnet.g.alchemy.com/v2/{os.environ['ALCHEMY_API_KEY']}"
-        self.w3 = web3.Web3(web3.HTTPProvider(self.alchemy_optimism_rpc))
-
-    def ENSsearch(self, address):
-        url = self.ensSearchURL.format(os.environ["ALCHEMY_API_KEY"], address)
-        content = self.get_request(url, decode=False, json=True)
-        if len(content.get("ownedNfts", 0)) > 0:
-            return content["ownedNfts"][0]["title"]
-        return None
 
     def get_article(self, arweaveHash):
         url = self.arweave_url.format(arweaveHash)
@@ -55,16 +42,9 @@ class MirrorScraper(Scraper):
     def get_mirror_NFTs(self):
         NFT_addresses = []
         logging.info("Getting all NFTs from Mirror Factory")
-        # page = 1
-        # offset = 10000           
-        # while page:
-        logging.info(f"Scrapping ... currently got {len(NFT_addresses)} NFTs from Optimism...")
-        # url = self.etherescan_API_url.format(self.mirror_NFT_factory_address, self.optimism_start_block, self.optimism_end_block, page, offset)
-        # transactions = self.get_request(url, decode=False, json=True)
-        transactions = self.etherscan.get_internal_transactions(self.mirror_NFT_factory_address, self.optimism_start_block, self.optimism_end_block)
-        
-        # if transactions["status"] == '1':
-        for transaction in transactions["result"]:
+        transactions = self.etherscan.get_internal_transactions(self.mirror_NFT_factory_address, self.optimism_start_block, self.optimism_end_block, chain="optimism")
+        logging.info(f"Got {len(transactions)} NFTs from Optimism...")
+        for transaction in transactions:
             if transaction["type"] in ["create2", "create"]:
                 tmp = {
                     "address": transaction["contractAddress"],
@@ -73,10 +53,6 @@ class MirrorScraper(Scraper):
                     "hash": transaction["hash"]
                 }
                 NFT_addresses.append(tmp)
-            # page += 1
-        # else:
-        #     if transactions["message"] == "No transactions found":
-        #         page = None
         self.data["factory_NFTs"] = NFT_addresses
 
     def reconcile_NFTs(self):
@@ -84,16 +60,14 @@ class MirrorScraper(Scraper):
         factory_NFTs = set([el["address"] for el in self.data["factory_NFTs"]])
         articles = set([el["original_content_digest"] for el in self.data["arweave_articles"]])
         contracts_to_check = factory_NFTs.difference(arweave_NFTs)
-        abi = self.etherscan.get_smart_contract_ABI(self.writing_editions_address, chain="optimism")
-        # url = self.etherescan_ABI_API_url.format(self.writing_editions_address)
-        # abi = self.get_request(url, decode=False, json=True)["result"]
         missing_NFTs = []
         missing_articles = []
         logging.info("Reconciling NFTs and articles")
         for address in tqdm(contracts_to_check):
             logging.info(f"Getting informations from NFT at: {address}")
             try:
-                contract = self.get_smart_contract(address, abi=abi)
+                abi = self.etherscan.get_smart_contract_ABI(address, chain="optimism")
+                contract = self.get_smart_contract(self.toChecksumAddress(address), abi=abi)
                 mirror_url = contract.functions.description().call()
                 funding_recipient = contract.functions.fundingRecipient().call()
                 supply = contract.functions.limit().call()

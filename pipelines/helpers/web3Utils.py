@@ -11,9 +11,14 @@ from web3.logs import DISCARD
 import eth_utils
 
 class Web3Utils:
-    def __init__(self) -> None:
-        self.alchemy_url = f"https://eth-mainnet.g.alchemy.com/v2/{os.environ['ALCHEMY_API_KEY']}"
-        self.w3 = Web3(Web3.HTTPProvider(self.alchemy_url))
+    def __init__(self, chain="ethereum") -> None:
+        self.alchemy_urls = {
+            "ethereum": f"https://eth-mainnet.g.alchemy.com/v2/{os.environ['ALCHEMY_API_KEY']}",
+            "optimism": f"https://opt-mainnet.g.alchemy.com/v2/{os.environ['ALCHEMY_API_KEY']}",
+            "polygon": f"https://polygon-mainnet.g.alchemy.com/v2/{os.environ['ALCHEMY_API_KEY']}",
+            "arbitrum": f"https://arb-mainnet.g.alchemy.com/v2/{os.environ['ALCHEMY_API_KEY']}"
+        }
+        self.w3 = Web3(Web3.HTTPProvider(self.alchemy_urls[chain]))
         self.ns = ENS.fromWeb3(self.w3)
         self.text_records = ["avatar", "description", "display", "email", "keywords", "mail", "notice", "location", "phone", "url", "com.github", "com.peepeth", "com.linkedin", "com.twitter", "io.keybase", "org.telegram"]
         if self.w3.isConnected():
@@ -37,10 +42,7 @@ class Web3Utils:
     def toChecksumAddress(self, address):
         return self.w3.toChecksumAddress(address)
 
-    def get_smart_contract(self, address, abi=None):
-        if not abi:
-            abi_endpoint = f"https://api.etherscan.io/api?module=contract&action=getabi&address={address}&apikey={os.environ['ETHERSCAN_API_KEY']}"
-            abi = json.loads(requests.get(abi_endpoint).text)["result"]
+    def get_smart_contract(self, address, abi):
         contract = self.w3.eth.contract(address, abi=abi)
         return contract
 

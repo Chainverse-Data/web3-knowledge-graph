@@ -8,8 +8,8 @@ import sys
 from ...helpers import Base
 
 class Ingestor(Base):
-    def __init__(self, bucket_name, load_data=True):
-        Base.__init__(self)
+    def __init__(self, bucket_name, load_data=True, chain="ethereum"):
+        Base.__init__(self, chain=chain)
         self.runtime = datetime.now()
         self.asOf = f"{self.runtime.year}-{self.runtime.month}-{self.runtime.day}"
 

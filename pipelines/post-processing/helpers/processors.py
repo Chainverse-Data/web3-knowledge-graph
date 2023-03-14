@@ -7,8 +7,8 @@ import os
 from ...helpers import Base
 
 class Processor(Base):
-    def __init__(self, bucket_name):
-        Base.__init__(self)
+    def __init__(self, bucket_name, chain="ethereum"):
+        Base.__init__(self, chain=chain)
         self.runtime = datetime.now()
         self.asOf = f"{self.runtime.year}-{self.runtime.month}-{self.runtime.day}"
         try:
