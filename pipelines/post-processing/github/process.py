@@ -128,9 +128,8 @@ class GithubProcessor(Processor):
         url = f"https://api.github.com/repos/{repository}"
         repos_raw_data = self.get_request(url, headers=self.get_headers(), decode=False, json=True, retry_on_404=False)
         if repos_raw_data:
-            repos_raw_data["owner"] = repos_raw_data["owner"]["login"]
-            if repos_raw_data["license"]:
-                repos_raw_data["license"] = repos_raw_data["license"]["name"]
+            repos_raw_data["owner"] = repos_raw_data.get("owner", {}).get("login", None)
+            repos_raw_data["license"] = repos_raw_data.get("license", {}).get("name", None)
             if "parent" in repos_raw_data:
                 self.get_repository_data(repos_raw_data["parent"]["full_name"])
                 repos_raw_data["parent"] = repos_raw_data["parent"]["full_name"]
@@ -145,10 +144,6 @@ class GithubProcessor(Processor):
 
     def process_github_accounts(self, handles):
         self.parallel_process(self.get_user_data, handles, "Getting users accounts information")
-        # user_pbar = tqdm(handles, desc="Getting neo4J accounts information", position=0)
-        # for handle in user_pbar:
-        #     user_pbar.set_description(desc=f"Getting neo4J accounts information: {handle}")
-        #     self.get_user_data(handle)
 
     def ingest_github_data(self):
 
