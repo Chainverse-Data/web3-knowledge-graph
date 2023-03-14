@@ -70,7 +70,7 @@ class Etherscan(Requests):
         }
 
         content = self.get_request(self.etherscan_api_url[chain], params=params, headers=self.headers, json=True)
-        if content and type(content) == dict and "result" in content and len(content["result"])>0:
+        if content and type(content) == dict and "result" in content and type(content["result"]) == list and len(content["result"]) > 0:
             result = content["result"]
             return result[0]
         else:
@@ -96,7 +96,7 @@ class Etherscan(Requests):
             "apikey": self.etherscan_api_keys[chain]
         }
         content = self.get_request(self.etherscan_api_url[chain], params=params, headers=self.headers, json=True)
-        if content and type(content) == dict and "result" in content and len(content["result"])>0:
+        if content and type(content) == dict and "result" in content and type(content["result"]) == list and len(content["result"])>0:
             result = content["result"]
             return result
         else:
@@ -147,7 +147,7 @@ class Etherscan(Requests):
         }
         
         content = self.get_request(self.etherscan_api_url[chain], params=params, headers=self.headers, json=True)
-        if content and type(content) == dict and "result" in content and len(content["result"])>0:
+        if content and type(content) == dict and "result" in content and type(content["result"]) == list and len(content["result"])>0:
             result = content["result"]
             return result
         else:

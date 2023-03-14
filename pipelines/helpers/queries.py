@@ -234,7 +234,7 @@ class Queries(Cypher):
         return count
 
     @count_query_logging
-    def create_or_merge_tokens(self, urls, token_type):
+    def create_or_merge_tokens(self, urls, token_type, chain_id = 1):
         "CSV Must have the columns: [contractAddress, symbol, decimal]"
         count = 0
         for url in tqdm(urls):
@@ -242,6 +242,7 @@ class Queries(Cypher):
                 LOAD CSV WITH HEADERS FROM '{url}' AS tokens
                 MERGE(token:Token {{address: toLower(tokens.contractAddress)}})
                 ON CREATE set token.uuid = apoc.create.uuid(),
+                    token.chainId = {chain_id},
                     token.symbol = tokens.id, 
                     token.decimal = tokens.id, 
                     token.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),

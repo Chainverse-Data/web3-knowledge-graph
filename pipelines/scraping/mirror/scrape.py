@@ -17,7 +17,7 @@ class MirrorScraper(Scraper):
     def __init__(self, bucket_name="mirror", allow_override=False):
         super().__init__(bucket_name, allow_override=allow_override)
         self.optimism_start_block = self.metadata.get("optimism_start_block", 8557803)
-        content = self.get_request("https://api-optimistic.etherscan.io/api?module=proxy&action=eth_blockNumber&apikey=" + os.environ.get("OPTIMISTIC_ETHERSCAN_API_KEY", ""), decode=False, json=True)
+        content = self.get_request("https://api-optimistic.etherscan.io/api?module=proxy&action=eth_blockNumber&apikey=" + os.environ.get("ETHERSCAN_API_KEY_OPTIMISM", ""), decode=False, json=True)
         self.optimism_end_block = int(content["result"], 16)
         if DEBUG:
             self.optimism_start_block = 8557803
@@ -35,8 +35,8 @@ class MirrorScraper(Scraper):
         self.mirror_NFT_factory_address = "0x302f746eE2fDC10DDff63188f71639094717a766"
         self.writing_editions_address = "0xfd8077F228E5CD9dED1b558Ac21F98ECF18f1a28"
         self.etherscan = Etherscan()
-        self.etherescan_API_url = "https://api-optimistic.etherscan.io/api?module=account&action=txlistinternal&address={}&startblock={}&endblock={}&page={}&offset={}&sort=asc&apikey=" + os.environ.get("OPTIMISTIC_ETHERSCAN_API_KEY", "")
-        # self.etherescan_ABI_API_url = "https://api-optimistic.etherscan.io/api?module=contract&action=getabi&address={}&apikey=" + os.environ.get("OPTIMISTIC_ETHERSCAN_API_KEY", "")
+        self.etherescan_API_url = "https://api-optimistic.etherscan.io/api?module=account&action=txlistinternal&address={}&startblock={}&endblock={}&page={}&offset={}&sort=asc&apikey=" + os.environ.get("ETHERSCAN_API_KEY_OPTIMISM", "")
+        # self.etherescan_ABI_API_url = "https://api-optimistic.etherscan.io/api?module=contract&action=getabi&address={}&apikey=" + os.environ.get("ETHERSCAN_API_KEY_OPTIMISM", "")
         self.alchemy_optimism_rpc = f"https://opt-mainnet.g.alchemy.com/v2/{os.environ['ALCHEMY_API_KEY']}"
         self.w3 = web3.Web3(web3.HTTPProvider(self.alchemy_optimism_rpc))
 
@@ -55,28 +55,28 @@ class MirrorScraper(Scraper):
     def get_mirror_NFTs(self):
         NFT_addresses = []
         logging.info("Getting all NFTs from Mirror Factory")
+        # page = 1
+        # offset = 10000           
+        # while page:
+        logging.info(f"Scrapping ... currently got {len(NFT_addresses)} NFTs from Optimism...")
+        # url = self.etherescan_API_url.format(self.mirror_NFT_factory_address, self.optimism_start_block, self.optimism_end_block, page, offset)
+        # transactions = self.get_request(url, decode=False, json=True)
+        transactions = self.etherscan.get_internal_transactions(self.mirror_NFT_factory_address, self.optimism_start_block, self.optimism_end_block)
         
-        
-        page = 1
-        offset = 10000           
-        while page:
-            logging.info(f"Scrapping ... currently got {len(NFT_addresses)} NFTs from Optimism...")
-            url = self.etherescan_API_url.format(self.mirror_NFT_factory_address, self.optimism_start_block, self.optimism_end_block, page, offset)
-            transactions = self.get_request(url, decode=False, json=True)
-            if transactions["status"] == '1':
-                for transaction in transactions["result"]:
-                    if transaction["type"] in ["create2", "create"]:
-                        tmp = {
-                            "address": transaction["contractAddress"],
-                            "block": transaction["blockNumber"],
-                            "timestamp": transaction["timeStamp"],
-                            "hash": transaction["hash"]
-                        }
-                        NFT_addresses.append(tmp)
-                page += 1
-            else:
-                if transactions["message"] == "No transactions found":
-                    page = None
+        # if transactions["status"] == '1':
+        for transaction in transactions["result"]:
+            if transaction["type"] in ["create2", "create"]:
+                tmp = {
+                    "address": transaction["contractAddress"],
+                    "block": transaction["blockNumber"],
+                    "timestamp": transaction["timeStamp"],
+                    "hash": transaction["hash"]
+                }
+                NFT_addresses.append(tmp)
+            # page += 1
+        # else:
+        #     if transactions["message"] == "No transactions found":
+        #         page = None
         self.data["factory_NFTs"] = NFT_addresses
 
     def reconcile_NFTs(self):

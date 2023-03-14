@@ -72,7 +72,7 @@ class MirrorCyphers(Cypher):
                     LOAD CSV WITH HEADERS FROM '{url}' AS NFTs
                     MERGE (nft:Mirror:Token:ERC721 {{address: toLower(NFTs.address)}})
                     ON CREATE set nft.uuid = apoc.create.uuid(),
-                        nft.chainId = NFTs.chain_id,
+                        nft.chainId = toIntegerOrNull(NFTs.chain_id),
                         nft.supply = NFTs.supply,
                         nft.symbol = NFTs.symbol,
                         nft.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
