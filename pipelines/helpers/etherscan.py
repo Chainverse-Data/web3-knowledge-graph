@@ -9,11 +9,15 @@ class Etherscan(Requests):
             "ethereum": "https://api.etherscan.io/api",
             "optimism": "https://api-optimistic.etherscan.io/api",
             "polygon": "https://api.polygonscan.com/api",
+            "arbitrum": "https://api.arbiscan.io/api",
+            "binance": "https://api.bscscan.com/api",
         }
         self.etherscan_api_keys = {
-            "ethereum": os.environ['ETHERSCAN_API_KEY'],
-            "optimism": os.environ['ETHERSCAN_API_KEY_OPTIMISM'],
-            "polygon": os.environ['ETHERSCAN_API_KEY_POLYGON'],
+            "ethereum": os.environ.get('ETHERSCAN_API_KEY', ""),
+            "optimism": os.environ.get('ETHERSCAN_API_KEY_OPTIMISM', ""),
+            "polygon": os.environ.get('ETHERSCAN_API_KEY_POLYGON', ""),
+            "arbitrum": os.environ.get('ETHERSCAN_API_KEY_ARBITRUM', ""),
+            "binance": os.environ.get('ETHERSCAN_API_KEY_BINANCE', ""),
         }
         self.headers = {"Content-Type": "application/json"}
         self.pagination_count = 1000
