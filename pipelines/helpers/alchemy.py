@@ -103,7 +103,7 @@ class Alchemy(Requests):
         url = self.alchemy_nft_url[chain] + "/getOwnersForCollection"
         if DEBUG: logging.debug(f"Calling url: {url}")
         content = self.get_request(url, params=params, headers=self.headers, json=True)
-        if not content or not "ownerAddresses" in content:
+        if not content or type(content) != dict or not "ownerAddresses" in content:
             return self.getOwnersForCollection(token, pageKey=pageKey, counter=counter+1)
         results.extend(content["ownerAddresses"])
         pageKey = content.get("pageKey", None)
