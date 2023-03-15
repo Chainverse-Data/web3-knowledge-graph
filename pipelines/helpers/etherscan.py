@@ -4,7 +4,7 @@ from . import Requests
 
 class Etherscan(Requests):
     def __init__(self, max_retries=5) -> None:
-        self.chains = ["ethereum", "optimism", "polygon"]
+        self.chains = ["ethereum", "optimism", "polygon", "arbitrum", "binance"]
         self.etherscan_api_url = {
             "ethereum": "https://api.etherscan.io/api",
             "optimism": "https://api-optimistic.etherscan.io/api",

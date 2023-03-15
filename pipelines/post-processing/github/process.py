@@ -131,10 +131,22 @@ class GithubProcessor(Processor):
             return self.data["repositories"][repository]
         url = f"https://api.github.com/repos/{repository}"
         repos_raw_data = self.get_request(url, headers=self.get_headers(), decode=False, json=True, retry_on_404=False)
-        if repos_raw_data:
+        if repos_raw_data and type(repos_raw_data) == dict:
             repos_raw_data["languages"] = self.get_repository_languages(repository)
-            repos_raw_data["owner"] = repos_raw_data.get("owner", {}).get("login", None)
-            repos_raw_data["license"] = repos_raw_data.get("license", {}).get("name", None)
+            if "owner" in repos_raw_data:
+                if repos_raw_data["owner"]:
+                    repos_raw_data["owner"] = repos_raw_data["owner"].get("login", None)
+                else:
+                    repos_raw_data["owner"] = None
+            else:
+                repos_raw_data["owner"] = None
+            if "license" in repos_raw_data:
+                if repos_raw_data["license"]:
+                    repos_raw_data["license"] = repos_raw_data["license"].get("name", None)
+                else:
+                    repos_raw_data["license"] = None
+            else:
+                repos_raw_data["license"] = None
             if "parent" in repos_raw_data:
                 self.get_repository_data(repos_raw_data["parent"]["full_name"])
                 repos_raw_data["parent"] = repos_raw_data["parent"]["full_name"]
