@@ -1,11 +1,17 @@
 
-from ...helpers import Cypher
+from ...helpers import Cypher, Indexes
 from ...helpers import get_query_logging, count_query_logging
 
 class GithubCypher(Cypher):
     def __init__(self) -> None:
         super().__init__()
     
+    def create_indexes(self):
+        indexes = Indexes()
+        indexes.accounts()
+        query = "CREATE INDEX GithubRepository IF NOT EXISTS FOR (n:Repository) ON (n.full_name)"
+        self.query(query)
+
     @get_query_logging
     def get_all_github_accounts(self):
         query = f"""
@@ -74,11 +80,10 @@ class GithubCypher(Cypher):
         for url in urls:
             query = f"""
                 LOAD CSV WITH HEADERS FROM '{url}' AS data
-                MERGE (repo:Github:Repository {{full_name: data.full_name}})
+                MERGE (repo:Github:Repository {{full_name: toLower(data.full_name)}})
                 ON CREATE SET   repo.uuid = apoc.create.uuid(),
                                 repo.id = data.id,
                                 repo.name = data.name,
-                                repo.full_name = data.full_name,
                                 repo.private = data.private,
                                 repo.owner = data.owner,
                                 repo.html_url = data.html_url,
@@ -92,6 +97,7 @@ class GithubCypher(Cypher):
                                 repo.stargazers_count = toInteger(data.stargazers_count),
                                 repo.watchers_count = toInteger(data.watchers_count),
                                 repo.language = data.language,
+                                repo.languages = data.languages,
                                 repo.has_issues = data.has_issues,
                                 repo.has_projects = data.has_projects,
                                 repo.has_downloads = data.has_downloads,
@@ -117,7 +123,6 @@ class GithubCypher(Cypher):
                                 repo.ingestedBy = "{self.CREATED_ID}"
                 ON MATCH SET    repo.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                                 repo.name = data.name,
-                                repo.full_name = data.full_name,
                                 repo.private = data.private,
                                 repo.owner = data.owner,
                                 repo.html_url = data.html_url,
@@ -131,6 +136,7 @@ class GithubCypher(Cypher):
                                 repo.stargazers_count = toInteger(data.stargazers_count),
                                 repo.watchers_count = toInteger(data.watchers_count),
                                 repo.language = data.language,
+                                repo.languages = data.languages,
                                 repo.has_issues = data.has_issues,
                                 repo.has_projects = data.has_projects,
                                 repo.has_downloads = data.has_downloads,
@@ -178,7 +184,7 @@ class GithubCypher(Cypher):
             query = f"""
                 LOAD CSV WITH HEADERS FROM '{url}' AS data
                 MATCH (handle:Github:Account {{handle: toLower(data.owner)}})
-                MATCH (repo:Github:Repository {{full_name: data.full_name}})
+                MATCH (repo:Github:Repository {{full_name: toLower(data.full_name)}})
                 MERGE (handle)-[edge:OWNER]->(repo)
                 RETURN count(edge)
             """
@@ -192,7 +198,7 @@ class GithubCypher(Cypher):
             query = f"""
                 LOAD CSV WITH HEADERS FROM '{url}' AS data
                 MATCH (handle:Github:Account {{handle: toLower(data.contributor)}})
-                MATCH (repo:Github:Repository {{full_name: data.full_name}})
+                MATCH (repo:Github:Repository {{full_name: toLower(data.full_name)}})
                 MERGE (handle)-[edge:CONTRIBUTOR]->(repo)
                 RETURN count(edge)
             """
@@ -206,7 +212,7 @@ class GithubCypher(Cypher):
             query = f"""
                 LOAD CSV WITH HEADERS FROM '{url}' AS data
                 MATCH (handle:Github:Account {{handle: toLower(data.subscriber)}})
-                MATCH (repo:Github:Repository {{full_name: data.full_name}})
+                MATCH (repo:Github:Repository {{full_name: toLower(data.full_name)}})
                 MERGE (handle)-[edge:SUBSCRIBER]->(repo)
                 RETURN count(edge)
             """
