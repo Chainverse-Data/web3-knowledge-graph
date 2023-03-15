@@ -8,7 +8,7 @@ from tqdm import tqdm
 class ENSLookupProcessor(Processor):
     def __init__(self, bucket_name="ens-lookup"):
         self.cyphers = ENSLooupCyphers()
-        self.web3utils = Web3Utils()
+        self.web3utils = Web3Utils(max_retries=1)
         self.chunk_size = 1000
         super().__init__(bucket_name)
     
@@ -70,6 +70,3 @@ class ENSLookupProcessor(Processor):
 if __name__ == "__main__":
     P = ENSLookupProcessor()
     P.run()
-
-
-

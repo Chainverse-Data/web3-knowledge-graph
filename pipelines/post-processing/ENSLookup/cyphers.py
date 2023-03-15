@@ -14,6 +14,7 @@ class ENSLooupCyphers(Cypher):
     def get_ens_names(self):
         query = f"""
             MATCH (ens:Alias:Ens)
+            WHERE ens.textRecordScrappedDt IS NULL
             RETURN ens.name as name
         """
         if DEBUG:
@@ -72,6 +73,7 @@ class ENSLooupCyphers(Cypher):
                     alias.twitter = aliases.twitter,
                     alias.keybase = aliases.keybase,
                     alias.telegram = aliases.telegram,
+                    alias.textRecordScrappedDt = datetime(),
                     alias.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                     alias.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                     alias.ingestedBy = "{self.UPDATED_ID}"

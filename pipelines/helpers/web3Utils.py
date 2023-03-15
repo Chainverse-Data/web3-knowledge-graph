@@ -11,13 +11,14 @@ from web3.logs import DISCARD
 import eth_utils
 
 class Web3Utils:
-    def __init__(self, chain="ethereum") -> None:
+    def __init__(self, chain="ethereum", max_retries=10) -> None:
         self.alchemy_urls = {
             "ethereum": f"https://eth-mainnet.g.alchemy.com/v2/{os.environ['ALCHEMY_API_KEY']}",
             "optimism": f"https://opt-mainnet.g.alchemy.com/v2/{os.environ['ALCHEMY_API_KEY']}",
             "polygon": f"https://polygon-mainnet.g.alchemy.com/v2/{os.environ['ALCHEMY_API_KEY']}",
             "arbitrum": f"https://arb-mainnet.g.alchemy.com/v2/{os.environ['ALCHEMY_API_KEY']}"
         }
+        self.max_retries = max_retries
         self.w3 = Web3(Web3.HTTPProvider(self.alchemy_urls[chain]))
         self.ns = ENS.fromWeb3(self.w3)
         self.text_records = ["avatar", "description", "display", "email", "keywords", "mail", "notice", "location", "phone", "url", "com.github", "com.peepeth", "com.linkedin", "com.twitter", "io.keybase", "org.telegram"]
@@ -52,8 +53,8 @@ class Web3Utils:
         decoded_logs = contract.events[event["name"]]().processReceipt(receipt, errors=DISCARD)
         return decoded_logs
 
-    def get_ens_name(self, address, counter=0, max_retry=10):
-        if counter > max_retry:
+    def get_ens_name(self, address, counter=0):
+        if counter > self.max_retries:
             time.sleep(counter * 10)
             return None
         try:
@@ -63,8 +64,8 @@ class Web3Utils:
             self.get_ens_name(address, counter=counter+1)
         return domain
 
-    def get_text_record(self, name, record, counter=0, max_retry=10):
-        if counter > max_retry:
+    def get_text_record(self, name, record, counter=0):
+        if counter > self.max_retries:
             time.sleep(counter * 10)
             return None
         domain = None
@@ -75,10 +76,10 @@ class Web3Utils:
             self.get_text_record(name, record, counter=counter+1)
         return domain
 
-    def get_text_records(self, name, max_retry=10):
+    def get_text_records(self, name):
         records = {"name": name}
         for record in self.text_records:
-            records[record] = self.get_text_record(name, record, max_retry=max_retry)
+            records[record] = self.get_text_record(name, record)
         return records
 
     def get_ens_address(self, name, counter=0, max_retry=10):
