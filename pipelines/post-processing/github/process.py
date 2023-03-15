@@ -49,10 +49,11 @@ class GithubProcessor(Processor):
         followers_data = []
         if followers_raw_data:
             follower_pbar = tqdm(followers_raw_data, desc="Getting followers information", position=2, leave=False)
-            for account in follower_pbar:
-                follower_pbar.set_description("Getting followers information: " +  account["login"])
-                self.get_user_data(account["login"], follow_through=False)
-                followers_data.append(account["login"])
+            for follower in follower_pbar:
+                if "login" in follower:
+                    follower_pbar.set_description("Getting followers information: " +  follower["login"])
+                    self.get_user_data(follower["login"], follow_through=False)
+                    followers_data.append(follower["login"])
         return followers_data
 
     def get_user_data(self, handle, follow_through=True):
@@ -76,8 +77,9 @@ class GithubProcessor(Processor):
         if repos_raw_data:
             repo_pbar = tqdm(repos_raw_data, position=1, desc="Getting repository information", leave=False)
             for repo in repo_pbar:
-                repo_pbar.set_description(desc="Getting repository information: " + repo["full_name"])
-                self.get_repository_data(repo["full_name"])
+                if "full_name" in repo:
+                    repo_pbar.set_description(desc="Getting repository information: " + repo["full_name"])
+                    self.get_repository_data(repo["full_name"])
             repositories = [repo["full_name"] for repo in repos_raw_data]
         return repositories
 
@@ -92,10 +94,11 @@ class GithubProcessor(Processor):
         if contributors_raw_data:
             cont_pbar = tqdm(contributors_raw_data, desc="Getting contributors information", position=2, leave=False)
             for contributor in cont_pbar:
-                cont_pbar.set_description(desc="Getting contributors information: " + contributor["login"])
-                self.get_user_data(contributor["login"], follow_through=False)
-                contributor = {key: value for (key, value) in contributor.items() if key in self.contributor_keys}
-                contributors_data.append(contributor["login"])
+                if "login" in contributor:
+                    cont_pbar.set_description(desc="Getting contributors information: " + contributor["login"])
+                    self.get_user_data(contributor["login"], follow_through=False)
+                    contributor = {key: value for (key, value) in contributor.items() if key in self.contributor_keys}
+                    contributors_data.append(contributor["login"])
         return contributors_data
 
     def get_subscribers(self, repository):
@@ -105,9 +108,10 @@ class GithubProcessor(Processor):
         if subscribers_raw_data:
             sub_pbar = tqdm(subscribers_raw_data, desc="Getting subscribers information", position=2, leave=False)
             for subscriber in sub_pbar:
-                sub_pbar.set_description(desc="Getting subscribers information: " + subscriber["login"])
-                self.get_user_data(subscriber["login"], follow_through=False)
-                subscribers_data.append(subscriber["login"])
+                if "login" in subscriber:
+                    sub_pbar.set_description(desc="Getting subscribers information: " + subscriber["login"])
+                    self.get_user_data(subscriber["login"], follow_through=False)
+                    subscribers_data.append(subscriber["login"])
         return subscribers_data
 
     def get_repo_readme(self, repository):
