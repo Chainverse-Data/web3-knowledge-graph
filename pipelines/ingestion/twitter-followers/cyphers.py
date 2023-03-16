@@ -24,7 +24,7 @@ class FollowerCyphers(Cypher):
         for url in urls:
             query = f"""
                     LOAD CSV WITH HEADERS FROM '{url}' AS twitter
-                    MERGE(t:Twitter {{handle: toLower(twitter.handle)}})
+                    MERGE(t:Twitter:Account {{handle: toLower(twitter.handle)}})
                     ON CREATE set t.uuid = apoc.create.uuid(),
                         t.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                         t.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
@@ -41,7 +41,8 @@ class FollowerCyphers(Cypher):
         for url in urls:
             query = f"""
                         LOAD CSV WITH HEADERS FROM '{url}' as twitter
-                        MATCH (f:Twitter {{handle: toLower(twitter.follower)}}), (e:Twitter {{handle: toLower(twitter.handle)}})
+                        MATCH (f:Twitter:Account {{handle: toLower(twitter.follower)}})
+                        MATCH (e:Twitter:Account {{handle: toLower(twitter.handle)}})
                         MERGE (f)-[r:FOLLOWS]->(e)
                         ON CREATE SET
                             r.asOf = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))

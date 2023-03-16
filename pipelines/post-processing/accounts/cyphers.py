@@ -38,7 +38,7 @@ class AccountsCyphers(Cypher):
     def link_wallet_twitter_accounts(self):
         query = f"""
             CALL apoc.periodic.commit("
-                MATCH (wallet:Wallet)-[:HAS_ALIAS]-(alias:Alias)-[:HAS_ALIAS]-(twitter:Twitter)
+                MATCH (wallet:Wallet)-[:HAS_ALIAS]-(alias:Alias:Ens)-[:HAS_ALIAS]-(twitter:Twitter:Account)
                 WHERE NOT (wallet)-[:HAS_ACCOUNT]-(twitter)
                 WITH wallet, twitter LIMIT 10000 
                 MERGE (twitter)-[r:HAS_ACCOUNT]->(wallet)

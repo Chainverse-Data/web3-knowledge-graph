@@ -10,7 +10,7 @@ class TwitterCyphers(Cypher):
     @count_query_logging
     def clean_twitter_nodes(self):
         query = """
-                    MATCH (n:Twitter)
+                    MATCH (n:Twitter:Account)
                     SET n:Account
                     RETURN count(n)
                 """
@@ -24,7 +24,7 @@ class TwitterCyphers(Cypher):
 
         while True:
             query = f"""
-                        MATCH (t:Twitter) 
+                        MATCH (t:Twitter:Account) 
                         WHERE NOT t:Trash
                         return t.handle
                         SKIP {offset} LIMIT {interval}
@@ -45,7 +45,7 @@ class TwitterCyphers(Cypher):
 
         while True:
             query = f"""
-                        MATCH (t:Twitter) 
+                        MATCH (t:Twitter:Account) 
                         WHERE NOT t:Trash AND t.name is NULL
                         return t.handle
                         SKIP {offset} LIMIT {interval}
@@ -68,7 +68,7 @@ class TwitterCyphers(Cypher):
         while True:
 
             query = f"""
-                        MATCH (t:Twitter) 
+                        MATCH (t:Twitter:Account) 
                         WHERE t.lastUpdatedDt >= datetime({{year: {cutoff.year}, month: {cutoff.month}, day: {cutoff.day}}}) AND t.name is NULL AND NOT t:Trash
                         return t.handle
                         SKIP {offset} LIMIT {interval}
@@ -88,7 +88,7 @@ class TwitterCyphers(Cypher):
         for url in urls:
             query = f"""
                         LOAD CSV WITH HEADERS FROM '{url}' AS twitter
-                        MATCH (t:Twitter {{handle: twitter.handle}})
+                        MATCH (t:Twitter:Account {{handle: twitter.handle}})
                         SET t:Trash
                         return count(t)
                     """
@@ -102,7 +102,7 @@ class TwitterCyphers(Cypher):
         for url in urls:
             query = f"""
                         LOAD CSV WITH HEADERS FROM '{url}' AS twitter
-                        MATCH (t:Twitter {{handle: twitter.handle}})
+                        MATCH (t:Twitter:Account {{handle: twitter.handle}})
                         SET t:Account,
                             t.name = twitter.name,
                             t.bio = twitter.bio,

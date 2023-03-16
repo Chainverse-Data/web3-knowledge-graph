@@ -82,3 +82,7 @@ class Indexes(Cypher):
     def website(self):
         query = """CREATE INDEX UniqueWebsiteID IF NOT EXISTS FOR (a:Website) ON a.url"""
         self.query(query)
+
+    def email(self):
+        query = "CREATE INDEX Emails IF NOT EXISTS FOR (e:Email) ON (e.email)"
+        self.query(query)

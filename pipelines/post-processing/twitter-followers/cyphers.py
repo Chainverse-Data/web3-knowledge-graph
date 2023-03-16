@@ -12,7 +12,7 @@ class TwitterFollowersCyphers(Cypher):
     @get_query_logging
     def get_high_rep_handles(self):
         query = """
-                    MATCH (w:Wallet)-[:HAS_ALIAS]-(a:Alias)-[:HAS_ALIAS]-(t:Twitter)
+                    MATCH (w:Wallet)-[:HAS_ALIAS]-(a:Alias)-[:HAS_ALIAS]-(t:Twitter:Account)
                     OPTIONAL MATCH (w)-[:_HAS_CONTEXT]->(context:_Context)
                     WITH t, count(distinct(context)) as reputation
                     RETURN distinct t.userId, t.handle, reputation order by reputation desc
@@ -26,7 +26,7 @@ class TwitterFollowersCyphers(Cypher):
         offset = 0
         while True:
             query = f"""
-                        MATCH (w:Wallet)-[:HAS_ALIAS]-(:Alias)-[:HAS_ALIAS]-(t:Twitter)
+                        MATCH (w:Wallet)-[:HAS_ALIAS]-(:Alias)-[:HAS_ALIAS]-(t:Twitter:Account)
                         WHERE NOT t:Trash and exists(t.userId)
                         RETURN t
                         SKIP {offset} LIMIT {limit}
@@ -46,7 +46,7 @@ class TwitterFollowersCyphers(Cypher):
         offset = 0
         while True:
             query = f"""
-                        MATCH (w:Wallet)-[:HAS_ACCOUNT]-(t:Twitter)
+                        MATCH (w:Wallet)-[:HAS_ACCOUNT]-(t:Twitter:Account)
                         WHERE NOT t:Trash
                         RETURN t
                         SKIP {offset} LIMIT {limit}
@@ -66,7 +66,7 @@ class TwitterFollowersCyphers(Cypher):
         offset = 0
         while True:
             query = f"""
-                        MATCH (e:Entity)-[:HAS_ALIAS]-(:Alias)-[:HAS_ALIAS]-(t:Twitter)
+                        MATCH (e:Entity)-[:HAS_ALIAS]-(:Alias)-[:HAS_ALIAS]-(t:Twitter:Account)
                         WHERE NOT t:Trash
                         return t
                         SKIP {offset} LIMIT {limit}
@@ -86,7 +86,7 @@ class TwitterFollowersCyphers(Cypher):
         offset = 0
         while True:
             query = f"""
-                        MATCH (e:Entity)-[:HAS_ACCOUNT]-(t:Twitter)
+                        MATCH (e:Entity)-[:HAS_ACCOUNT]-(t:Twitter:Account)
                         WHERE NOT t:Trash
                         return t
                         SKIP {offset} LIMIT {limit}
@@ -106,7 +106,7 @@ class TwitterFollowersCyphers(Cypher):
         offset = 0
         while True:
             query = f"""
-                        MATCH (t:Token)-[:HAS_ACCOUNT]-(t:Twitter)
+                        MATCH (t:Token)-[:HAS_ACCOUNT]-(t:Twitter:Account)
                         WHERE NOT t:Trash
                         return t
                         SKIP {offset} LIMIT {limit}
@@ -131,7 +131,8 @@ class TwitterFollowersCyphers(Cypher):
         for url in urls:
             query = f"""
                         LOAD CSV WITH HEADERS FROM '{url}' as twitter
-                        MATCH (f:Twitter {{handle: toLower(twitter.follower)}}), (e:Twitter {{handle: toLower(twitter.handle)}})
+                        MATCH (f:Twitter:Account {{handle: toLower(twitter.follower)}})
+                        MATCH (e:Twitter:Account {{handle: toLower(twitter.handle)}})
                         MERGE (f)-[r:FOLLOWS]->(e)
                         ON CREATE SET
                             r.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
@@ -149,7 +150,8 @@ class TwitterFollowersCyphers(Cypher):
         for url in urls:
             query = f"""
                         LOAD CSV WITH HEADERS FROM '{url}' as twitter
-                        MATCH (f:Twitter {{handle: toLower(twitter.handle)}}), (e:Twitter {{handle: toLower(twitter.follower)}})
+                        MATCH (f:Twitter:Account {{handle: toLower(twitter.handle)}})
+                        MATCH (e:Twitter:Account {{handle: toLower(twitter.follower)}})
                         MERGE (f)-[r:FOLLOWS]->(e)
                         ON CREATE SET
                             r.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),

@@ -21,7 +21,7 @@ class TwitterWebsiteCyphers(Cypher):
         results = []
         while True:
             query = f"""
-                        MATCH (t:Twitter) 
+                        MATCH (t:Twitter:Account) 
                         WHERE t.bio IS NOT NULL
                         return t.handle, t.bio
                         SKIP {offset} LIMIT {interval}
@@ -43,7 +43,7 @@ class TwitterWebsiteCyphers(Cypher):
         for url in urls:
             query = f"""
                         LOAD CSV WITH HEADERS FROM '{url}' AS websites
-                        MATCH (twitter:Twitter {{handle: websites.handle}})
+                        MATCH (twitter:Twitter:Account {{handle: websites.handle}})
                         SET twitter.website_bio = websites.url
                         RETURN count(twitter)
                 """

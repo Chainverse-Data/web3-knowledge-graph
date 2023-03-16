@@ -198,7 +198,7 @@ class GitcoinCyphers(Cypher):
         for url in urls:
             query = f"""
                     LOAD CSV WITH HEADERS FROM '{url}' AS twitter_accounts
-                    MATCH (twitter:Twitter {{handle: twitter_accounts.handle}}), (grant:Gitcoin:Grant {{id: twitter_accounts.grantId}})
+                    MATCH (twitter:Twitter:Account {{handle: twitter_accounts.handle}}), (grant:Gitcoin:Grant {{id: twitter_accounts.grantId}})
                     WITH twitter, grant, twitter_accounts
                     MERGE (grant)-[edge:HAS_ACCOUNT]->(twitter)
                     ON CREATE set edge.uuid = apoc.create.uuid(),

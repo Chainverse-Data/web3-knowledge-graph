@@ -24,7 +24,7 @@ class Queries(Cypher):
         for url in tqdm(urls):
             query = f"""
                     LOAD CSV WITH HEADERS FROM '{url}' AS wallets
-                    MERGE(wallet:Wallet {{address: toLower(wallets.address)}})
+                    MERGE(wallet:Wallet:Account {{address: toLower(wallets.address)}})
                     ON CREATE set wallet.uuid = apoc.create.uuid(),
                         wallet.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                         wallet.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
@@ -43,7 +43,7 @@ class Queries(Cypher):
         for url in tqdm(urls):
             query = f"""
                     LOAD CSV WITH HEADERS FROM '{url}' AS twitter
-                    MERGE (t:Twitter {{handle: toLower(twitter.handle)}})
+                    MERGE (t:Twitter:Account {{handle: toLower(twitter.handle)}})
                     ON CREATE set t.uuid = apoc.create.uuid(),
                         t.profileUrl = twitter.profileUrl,
                         t.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),

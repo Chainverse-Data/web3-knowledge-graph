@@ -230,7 +230,8 @@ class SnapshotCyphers(Cypher):
         for url in urls:
             query = f"""
                     LOAD CSV WITH HEADERS FROM '{url}' as twitter
-                    MATCH (s:Space {{snapshotId: twitter.snapshotId}}), (t:Twitter {{handle: toLower(twitter.handle)}})
+                    MATCH (s:Space {{snapshotId: twitter.snapshotId}})
+                    MATCH (t:Twitter:Account {{handle: toLower(twitter.handle)}})
                     MERGE (s)-[r:HAS_ACCOUNT]->(t)
                     return count(r) 
             """
