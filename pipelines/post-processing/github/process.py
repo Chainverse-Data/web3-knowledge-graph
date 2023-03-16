@@ -74,7 +74,7 @@ class GithubProcessor(Processor):
         url = f"https://api.github.com/users/{handle}/repos"
         repos_raw_data = self.get_request(url, headers=self.get_headers(), decode=False, json=True, retry_on_404=False)
         repositories = []
-        if repos_raw_data:
+        if repos_raw_data and type(repos_raw_data) == list:
             repo_pbar = tqdm(repos_raw_data, position=1, desc="Getting repository information", leave=False)
             for repo in repo_pbar:
                 if "full_name" in repo:
