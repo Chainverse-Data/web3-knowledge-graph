@@ -61,7 +61,7 @@ class GithubProcessor(Processor):
             return self.data["users"][handle]
         url = f"https://api.github.com/users/{handle}"
         user_raw_data = self.get_request(url, headers=self.get_headers(), decode=False, json=True, retry_on_404=False)
-        if user_raw_data and type(user_raw_data) == list:
+        if user_raw_data and type(user_raw_data) == dict:
             user_data = {key: value for (key, value) in user_raw_data.items() if key in self.user_keys}
             if follow_through:
                 followers = self.get_followers(handle)
