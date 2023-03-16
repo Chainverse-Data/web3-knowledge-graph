@@ -10,19 +10,19 @@ class TwitterEnsCyphers(Cypher):
         super().__init__()
         self.queries = Queries()
 
-    def create_constraints(self):
-        constraints = Constraints()
-        constraints.wallets()
-        constraints.aliases()
-        constraints.ens()
-        constraints.twitter()
+    # def create_constraints(self):
+    #     constraints = Constraints()
+    #     constraints.wallets()
+    #     constraints.aliases()
+    #     constraints.ens()
+    #     constraints.twitter()
 
-    def create_indexes(self):
-        indexes = Indexes()
-        indexes.wallets()
-        indexes.aliases()
-        indexes.ens()
-        indexes.twitter()
+    # def create_indexes(self):
+    #     indexes = Indexes()
+    #     indexes.wallets()
+    #     indexes.aliases()
+    #     indexes.ens()
+    #     indexes.twitter()
 
     @count_query_logging
     def create_or_merge_twitter_accounts(self, urls):

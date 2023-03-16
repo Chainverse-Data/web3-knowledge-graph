@@ -50,6 +50,7 @@ class Cypher:
             if counter > 10:
                 logging.error(f"An error occured for neo4j instance {neo4j_driver}")
                 logging.error(f"Query failed: {e}")
+                raise e
             return self.run_query(neo4j_driver, query, parameters=parameters, counter=counter+1)
         finally:
             if session is not None:
