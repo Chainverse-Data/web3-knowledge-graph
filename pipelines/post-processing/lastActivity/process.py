@@ -33,7 +33,7 @@ class LastActivityPostProcess(Processor):
                     excludeZeroValue=False,
                     pageKeyIterate=False
                     )
-                if len(transactions) > 0:
+                if transactions and len(transactions) > 0:
                     block = transactions[0]["blockNum"]
                     timestamp = self.alchemy.getBlockByNumber(block, chain=chain)
                     timestamp = int(timestamp["timestamp"], 16)
