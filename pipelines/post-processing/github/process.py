@@ -47,7 +47,7 @@ class GithubProcessor(Processor):
         url = f"https://api.github.com/users/{handle}/followers"
         followers_raw_data = self.get_request(url, headers=self.get_headers(), decode=False, json=True, retry_on_404=False) 
         followers_data = []
-        if followers_raw_data:
+        if followers_raw_data and type(followers_raw_data) == list:
             follower_pbar = tqdm(followers_raw_data, desc="Getting followers information", position=2, leave=False)
             for follower in follower_pbar:
                 if "login" in follower:
@@ -61,7 +61,7 @@ class GithubProcessor(Processor):
             return self.data["users"][handle]
         url = f"https://api.github.com/users/{handle}"
         user_raw_data = self.get_request(url, headers=self.get_headers(), decode=False, json=True, retry_on_404=False)
-        if user_raw_data:
+        if user_raw_data and type(user_raw_data) == list:
             user_data = {key: value for (key, value) in user_raw_data.items() if key in self.user_keys}
             if follow_through:
                 followers = self.get_followers(handle)
@@ -91,7 +91,7 @@ class GithubProcessor(Processor):
         url = f"https://api.github.com/repos/{repository}/contributors"
         contributors_raw_data = self.get_request(url, headers=self.get_headers(), decode=False, json=True, retry_on_404=False)
         contributors_data = []
-        if contributors_raw_data:
+        if contributors_raw_data and type(contributors_raw_data) == list:
             cont_pbar = tqdm(contributors_raw_data, desc="Getting contributors information", position=2, leave=False)
             for contributor in cont_pbar:
                 if "login" in contributor:
@@ -105,7 +105,7 @@ class GithubProcessor(Processor):
         url = f"https://api.github.com/repos/{repository}/subscribers"
         subscribers_raw_data = self.get_request(url, headers=self.get_headers(), decode=False, json=True, retry_on_404=False)
         subscribers_data = []
-        if subscribers_raw_data:
+        if subscribers_raw_data and type(subscribers_raw_data) == list:
             sub_pbar = tqdm(subscribers_raw_data, desc="Getting subscribers information", position=2, leave=False)
             for subscriber in sub_pbar:
                 if "login" in subscriber:
