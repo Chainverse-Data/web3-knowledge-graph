@@ -1,6 +1,8 @@
 import os
 import time
 from . import Requests
+from hexbytes import HexBytes
+from .web3Utils import Web3Utils
 
 class Etherscan(Requests):
     def __init__(self, max_retries=5) -> None:
@@ -22,8 +24,37 @@ class Etherscan(Requests):
         self.headers = {"Content-Type": "application/json"}
         self.pagination_count = 1000
         self.max_retries = max_retries
+        self.w3utils = Web3Utils()
         super().__init__()
 
+    def is_valid_response(self, response, response_type=dict, is_list=True):
+        if response == None:
+            return False
+        if type(response) != response_type:
+            return False
+        if response_type == dict and "result" not in response:
+            return False
+        if is_list and response_type == dict and type(response.get("result", None)) != list:
+            return False
+        if response_type == list and len(response) == 0:
+            return False
+        return True
+
+    def convert_etherscan_log_to_web3_log(self, log):
+        log["transactionHash"] = HexBytes(log["transactionHash"])
+        log["blockHash"] = HexBytes(log["blockHash"])
+        log["topics"] = [HexBytes(topic) for topic in log["topics"]]
+        log["removed"] = False
+        log["blockNumber"] = int(log["blockNumber"], 16)
+        if log["logIndex"] != "0x":
+            log["logIndex"] = int(log["logIndex"], 16)
+        else:
+            log["logIndex"] = 0
+        if log["transactionIndex"] != "0x":
+            log["transactionIndex"] = int(log["transactionIndex"], 16)
+        else:
+            log["transactionIndex"] = 0
+        return log
 
     def get_last_block_number(self, chain="ethereum", counter=0):
         """
@@ -42,7 +73,7 @@ class Etherscan(Requests):
         }
 
         content = self.get_request(self.etherscan_api_url[chain], params=params, headers=self.headers, json=True)
-        if content and type(content) == dict and "result" in content:
+        if self.is_valid_response(content):
             block_number = int(content["result"], 16)
         else:
             return self.get_last_block_number(chain=chain, counter=counter+1)
@@ -70,7 +101,7 @@ class Etherscan(Requests):
             "offset": offset
         }
         content = self.get_request(self.etherscan_api_url[chain], params=params, headers=self.headers, json=True)
-        if content and type(content) == dict and "result" in content:
+        if self.is_valid_response(content):
             result = content["result"]
             if len(result) > 0:
                 nextResult = self.get_token_holders(tokenAddress, page=page+1, offset=offset)
@@ -100,7 +131,7 @@ class Etherscan(Requests):
         }
 
         content = self.get_request(self.etherscan_api_url[chain], params=params, headers=self.headers, json=True)
-        if content and type(content) == dict and "result" in content and type(content["result"]) == list and len(content["result"]) > 0:
+        if self.is_valid_response(content) and len(content["result"]) > 0:
             result = content["result"]
             return result[0]
         else:
@@ -127,11 +158,93 @@ class Etherscan(Requests):
             "apikey": self.etherscan_api_keys[chain]
         }
         content = self.get_request(self.etherscan_api_url[chain], params=params, headers=self.headers, json=True)
-        if content and type(content) == dict and "result" in content and type(content["result"]) == list and len(content["result"])>0:
+        if self.is_valid_response(content):
             result = content["result"]
             return result
         else:
             self.get_contract_deployer(contractAddresses, counter=counter+1)
+
+    def get_event_logs(self, 
+                        address, 
+                        fromBlock=None, 
+                        toBlock=None, 
+                        topic0=None, 
+                        page=1,
+                        offset=1000,
+                        chain="ethereum",
+                        counter=0):
+        """
+            Helper method to get the transactions logs of a smart contract.
+            parameters:
+                - address: (address) A contract addresses.
+                - fromBlock: (int) The starting block to get transactions from
+                - toBlock: (int) The end block to get transactions from
+                - topic0: (hex) To filter on the first topic.
+                - chain: (ethereum|optimism|polygon) the chain of interest
+        """
+        time.sleep(counter)
+        if counter > self.max_retries:
+            return None
+
+        results = []
+        params = {
+            "module": "logs",
+            "action": "getLogs",
+            "address": address,
+            "fromBlock": fromBlock,
+            "toBlock": toBlock,
+            "topic0": topic0,
+            "page": page,
+            "offset": offset,
+            "apikey": self.etherscan_api_keys[chain],
+        }
+        content = self.get_request(self.etherscan_api_url[chain], params=params, headers=self.headers, json=True)
+        if self.is_valid_response(content):
+            result = content["result"]
+            if len(result) > 0:
+                nextResult = self.get_event_logs(address, fromBlock=fromBlock, toBlock=toBlock, topic0=topic0, chain=chain, page=page+1, offset=offset)
+                if nextResult:
+                    results.extend(nextResult)
+            results.extend(result)
+        else:
+            return self.get_event_logs(address, fromBlock=fromBlock, toBlock=toBlock, topic0=topic0, chain=chain, page=page, offset=offset, counter=counter+1)
+        return results
+
+    def parse_event_logs(self, contractAddress, logs, eventName, topic=None, chain="ethereum"):
+        abi = self.get_smart_contract_ABI(contractAddress, chain)
+        contract = self.w3utils.get_smart_contract(contractAddress, abi)
+        
+        if topic:
+            logs = [log for log in logs if topic in log["topics"]]
+        
+        results = []
+        for log in logs:
+            w3log = self.convert_etherscan_log_to_web3_log(log)
+            result = contract.events[eventName]().processLog(w3log)
+            results.append(result)
+        return results
+
+    def get_decoded_event_logs(self, 
+                        address, 
+                        eventName,
+                        fromBlock=None, 
+                        toBlock=None, 
+                        topic0=None, 
+                        chain="ethereum"):
+        """
+            Wrapper method that calls internal functions to get the decoded transactions logs of a smart contract for a given Event.
+            It is recommended to use the topic0 filter to make the queries faster!
+            parameters:
+                - address: (address) A contract addresses.
+                - eventName: (string) The name of the event. Must be the exact ABI spelling. 
+                - fromBlock: (int) The starting block to get transactions from
+                - toBlock: (int) The end block to get transactions from
+                - topic0: (hex) To filter on the first topic.
+                - chain: (ethereum|optimism|polygon) the chain of interest
+        """
+        raw_logs = self.get_event_logs(address, fromBlock=fromBlock, toBlock=toBlock, topic0=topic0, chain=chain)
+        decoded_logs = self.parse_event_logs(address, raw_logs, eventName, topic=topic0, chain=chain)
+        return decoded_logs
 
     def get_internal_transactions(self, address, startBlock, endBlock, page=1, offset=10000, sort="asc", chain="ethereum", counter=0):
         """
@@ -163,7 +276,7 @@ class Etherscan(Requests):
         content = self.get_request(self.etherscan_api_url[chain], params=params, headers=self.headers, json=True)
         if content["message"] == "No transactions found":
             return results
-        if content and type(content) == dict and "result" in content and type(content["result"]) == list:
+        if self.is_valid_response(content):
             result = content["result"]
             if len(result) > 0:
                 nextResult = self.get_internal_transactions(address, startBlock, endBlock, sort=sort, page=page+1, offset=offset)
@@ -193,7 +306,7 @@ class Etherscan(Requests):
         }
         
         content = self.get_request(self.etherscan_api_url[chain], params=params, headers=self.headers, json=True)
-        if content and type(content) == dict and "result" in content:
+        if self.is_valid_response(content, is_list=False):
             result = content["result"]
             return result
         else:

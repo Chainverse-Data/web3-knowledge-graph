@@ -53,6 +53,11 @@ class Web3Utils:
         decoded_logs = contract.events[event["name"]]().processReceipt(receipt, errors=DISCARD)
         return decoded_logs
 
+    def decode_log(self, contract, receipt, event_name):
+        decoded_log = contract.events[event_name]().processReceipt(receipt, errors=DISCARD)
+        return decoded_log
+
+
     def get_ens_name(self, address, counter=0):
         if counter > self.max_retries:
             time.sleep(counter * 10)
