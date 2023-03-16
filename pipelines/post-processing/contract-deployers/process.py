@@ -35,6 +35,7 @@ class ContractDeployersProcessor(Processor):
 
     def process_tokens(self):
         multisigs = self.cyphers.get_tokens()
+        multisigs = [multisig for multisig in multisigs if multisig]
         for i in tqdm(range(0, len(multisigs), self.chunk_size), desc="Getting Tokens deployers address"):
             current_multisigs = multisigs[i: i+self.chunk_size]
             results = []
@@ -61,6 +62,3 @@ class ContractDeployersProcessor(Processor):
 if __name__ == "__main__":
     P = ContractDeployersProcessor()
     P.run()
-
-
-
