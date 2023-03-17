@@ -32,7 +32,7 @@ class NFTfiScraper(Scraper):
         for log in logs:
             tmp = dict(log["args"])
             tmp["event"] = log["event"]
-            tmp["transactionHash"] = str(log["transactionHash"])
+            tmp["transactionHash"] = log["transactionHash"].hex()
             tmp["contractAddress"] = log["address"]
             tmp["blockNumber"] = log["blockNumber"]
             results.append(tmp)
@@ -45,7 +45,7 @@ class NFTfiScraper(Scraper):
         for log in logs:
             tmp = dict(log["args"])
             tmp["event"] = log["event"]
-            tmp["transactionHash"] = str(log["transactionHash"])
+            tmp["transactionHash"] = log["transactionHash"].hex()
             tmp["contractAddress"] = log["address"]
             tmp["blockNumber"] = log["blockNumber"]
             results.append(tmp)
@@ -58,7 +58,7 @@ class NFTfiScraper(Scraper):
         for log in logs:
             tmp = dict(log["args"])
             tmp["event"] = log["event"]
-            tmp["transactionHash"] = str(log["transactionHash"])
+            tmp["transactionHash"] = log["transactionHash"].hex()
             tmp["contractAddress"] = log["address"]
             tmp["blockNumber"] = log["blockNumber"]
             results.append(tmp)

@@ -6,10 +6,9 @@ This ingestor will take care of data obtained by the NFTfi scraper.
 
 Nodes:
 
-- PropHouse:Entity
-- PropHouse:Auction
-- PropHouse:Proposal
-- PropHouse:Proposal:Winner: If that proposal won a vote
+- NFTfi:Loan
+- Token:ERC20
+- Token:ERC721
 - Wallet:Account
 
 Edges:
