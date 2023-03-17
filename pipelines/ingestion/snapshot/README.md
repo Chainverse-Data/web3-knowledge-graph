@@ -14,7 +14,7 @@ Nodes:
 Edges:
 
 - (Space)-[HAS_PROPOSAL]->(Proposal)
-- (Proposal)-[HAS_AUTHOR]->(Wallet)
+- (Wallet)-[AUTHOR]->(Proposal)
 - (Wallet)-[CONTRIBUTOR]->(Space)
 - (Space)-[HAS_ALIAS]->(Alias)
 - (Space)-[HAS_ACCOUNT]->(Twitter)

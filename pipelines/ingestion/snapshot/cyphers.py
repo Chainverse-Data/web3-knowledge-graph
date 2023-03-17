@@ -156,7 +156,7 @@ class SnapshotCyphers(Cypher):
             query = f"""
                     LOAD CSV WITH HEADERS FROM '{url}' as proposals
                     MATCH (p:Proposal {{snapshotId: proposals.snapshotId}}), (w:Wallet {{address: proposals.address}})
-                    MERGE (p)-[d:HAS_AUTHOR]->(w)
+                    MERGE (p)<-[d:AUTHOR]-(w)
                     return count(d)
             """
             count += self.query(query)[0].value()

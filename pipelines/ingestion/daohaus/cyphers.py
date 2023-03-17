@@ -252,7 +252,7 @@ class DaoHausCyphers(Cypher):
                         LOAD CSV WITH HEADERS FROM '{url}' AS proposers
                         MATCH (proposal:DaoHaus:Proposal {{id: proposers.id}}), (proposer:Wallet {{address: toLower(proposers.proposer)}})
                         WITH proposal, proposer, proposers
-                        MERGE (proposer)-[edge:PROPOSED]->(proposal)
+                        MERGE (proposer)-[edge:AUTHOR]->(proposal)
                         ON CREATE set edge.uuid = apoc.create.uuid(),
                             edge.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                             edge.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
