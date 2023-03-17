@@ -92,4 +92,26 @@ ens_twitter_task = ECSOperator(
     awslogs_stream_prefix=ecs_awslogs_stream_prefix
 )
 
-[ens_twitter_task]
+gaming_nft_task = ECSOperator(
+    task_id="gaming_nft_ingests",
+    dag=dag,
+    aws_conn_id="aws_ecs",
+    cluster=ecs_cluster,
+    task_definition=ecs_task_definition,
+    region_name="us-east-2",
+    launch_type="FARGATE",
+    overrides={
+        "containerOverrides": [
+            {
+                "name": "data-pipelines",
+                "command": ["python3", "-m", "pipelines.ingestion.manual-ingests.gamingNFTs.ingest"],
+                "environment": env_vars
+            },
+        ],
+    },
+    network_configuration=network_configuration,
+    awslogs_group=ecs_awslogs_group,
+    awslogs_stream_prefix=ecs_awslogs_stream_prefix
+)
+
+[ens_twitter_task, gaming_nft_task]
