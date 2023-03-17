@@ -83,7 +83,7 @@ class NFTfiCyphers(Cypher):
                 MATCH (collateral:Token:ERC721 {{address: toLower(data.nftCollateralContract)}})
                 MATCH (loan:NFTfi:Loan {{loanId: toInteger(data.loanId)}})
                 MERGE (collateral)-[r:IS_COLLATERAL]->(loan)
-                SET r.tokenId = toInteger(data.nftCollateralId)
+                SET r.tokenId = data.nftCollateralId
                 RETURN count(r)
             """
             count += self.query(query)[0].value()
