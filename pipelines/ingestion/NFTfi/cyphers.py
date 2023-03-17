@@ -18,9 +18,8 @@ class NFTfiCyphers(Cypher):
         for url in urls:
             query = f"""
                 LOAD CSV WITH HEADERS FROM '{url}' AS data
-                MERGE (loan:NFTfi:Load {{loanId: toInteger(data.loanId)}})
-                ON CREATE set loan.uuid = apoc.create.uuid(),
-                    loan.loanId = data.loanId, 
+                MERGE (loan:NFTfi:Loan {{loanId: toInteger(data.loanId)}})
+                ON CREATE SET loan.uuid = apoc.create.uuid(),
                     loan.loanPrincipalAmount = data.loanPrincipalAmount, 
                     loan.maximumRepaymentAmount = data.maximumRepaymentAmount, 
                     loan.loanStartTime = datetime({{epochSeconds: toInteger(data.loanStartTime)}}), 
@@ -32,7 +31,7 @@ class NFTfiCyphers(Cypher):
                     loan.blockNumber = toInteger(data.blockNumber), 
                     loan.createdDt = datetime(apoc.date.toISO8601(toInteger(data.createdDate), 'ms')),
                     loan.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
-                ON MATCH loan.loanPrincipalAmount = data.loanPrincipalAmount, 
+                ON MATCH SET loan.loanPrincipalAmount = data.loanPrincipalAmount, 
                     loan.maximumRepaymentAmount = data.maximumRepaymentAmount, 
                     loan.loanStartTime = datetime({{epochSeconds: toInteger(data.loanStartTime)}}), 
                     loan.loanDuration = toInteger(data.loanDuration), 
@@ -54,7 +53,7 @@ class NFTfiCyphers(Cypher):
             query = f"""
                 LOAD CSV WITH HEADERS FROM '{url}' AS data
                 MATCH (borrower:Wallet {{address: toLower(data.borrower)}})
-                MATCH (loan:NFTfi:Loan {{loadId: toInteger(data.loanId)}})
+                MATCH (loan:NFTfi:Loan {{loanId: toInteger(data.loanId)}})
                 MERGE (borrower)-[r:BORROWED]->(loan)
                 RETURN count(r)
             """
@@ -68,7 +67,7 @@ class NFTfiCyphers(Cypher):
             query = f"""
                 LOAD CSV WITH HEADERS FROM '{url}' AS data
                 MATCH (lender:Wallet {{address: toLower(data.lender)}})
-                MATCH (loan:NFTfi:Loan {{loadId: toInteger(data.loanId)}})
+                MATCH (loan:NFTfi:Loan {{loanId: toInteger(data.loanId)}})
                 MERGE (lender)-[r:LENT]->(loan)
                 RETURN count(r)
             """
@@ -82,7 +81,7 @@ class NFTfiCyphers(Cypher):
             query = f"""
                 LOAD CSV WITH HEADERS FROM '{url}' AS data
                 MATCH (collateral:Token:ERC721 {{address: toLower(data.nftCollateralContract)}})
-                MATCH (loan:NFTfi:Loan {{loadId: toInteger(data.loanId)}})
+                MATCH (loan:NFTfi:Loan {{loanId: toInteger(data.loanId)}})
                 MERGE (collateral)-[r:IS_COLLATERAL]->(loan)
                 SET r.tokenId = toInteger(data.nftCollateralId)
                 RETURN count(r)
@@ -97,7 +96,7 @@ class NFTfiCyphers(Cypher):
             query = f"""
                 LOAD CSV WITH HEADERS FROM '{url}' AS data
                 MATCH (denomination:Token:ERC20 {{address: toLower(data.loanERC20Denomination)}})
-                MATCH (loan:NFTfi:Loan {{loadId: toInteger(data.loanId)}})
+                MATCH (loan:NFTfi:Loan {{loanId: toInteger(data.loanId)}})
                 MERGE (denomination)-[r:IS_DENOMINATION]->(loan)
                 RETURN count(r)
             """
@@ -110,7 +109,7 @@ class NFTfiCyphers(Cypher):
         for url in urls:
             query = f"""
                 LOAD CSV WITH HEADERS FROM '{url}' AS data
-                MATCH (loan:NFTfi:Loan {{loadId: toInteger(data.loanId)}})
+                MATCH (loan:NFTfi:Loan {{loanId: toInteger(data.loanId)}})
                 SET loan:{status}
                 SET loan.{status.lower()}blockNumber = toInteger(data.blockNumber)
                 SET loan.{status.lower()}txHash = toInteger(data.transactionHash)
