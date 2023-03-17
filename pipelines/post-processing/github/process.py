@@ -117,7 +117,7 @@ class GithubProcessor(Processor):
     def get_repo_readme(self, repository):
         url = f"https://api.github.com/repos/{repository}/readme"
         readme_data = self.get_request(url, headers=self.get_headers(), decode=False, json=True, retry_on_404=False)
-        if readme_data:
+        if readme_data and type(readme_data) == dict:
             readme_file = self.get_request(readme_data["download_url"], decode=True, retry_on_404=False)
             if readme_file:
                 return readme_file
