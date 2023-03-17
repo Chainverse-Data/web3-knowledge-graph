@@ -70,18 +70,22 @@ class MirrorCyphers(Cypher):
         for url in tqdm(urls):
             query = f"""
                     LOAD CSV WITH HEADERS FROM '{url}' AS NFTs
-                    MERGE (nft:Mirror:Token:ERC721 {{address: toLower(NFTs.address)}})
+                    MERGE (nft:Token {{address: toLower(NFTs.address)}})
                     ON CREATE set nft.uuid = apoc.create.uuid(),
                         nft.chainId = toIntegerOrNull(NFTs.chain_id),
                         nft.supply = NFTs.supply,
                         nft.symbol = NFTs.symbol,
                         nft.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                         nft.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
+                        nft:Mirror,
+                        nft:ERC721,
                         nft.ingestedBy = "{self.CREATED_ID}"
                     ON MATCH set nft.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                         nft.chainId = NFTs.chainId,
                         nft.supply = NFTs.supply,
                         nft.symbol = NFTs.symbol,
+                        nft:Mirror,
+                        nft:ERC721,
                         nft.ingestedBy = "{self.UPDATED_ID}"
                     return count(nft)
             """
