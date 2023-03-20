@@ -93,10 +93,25 @@ class TokenMetadataPostProcess(Processor):
         urls = self.save_df_as_csv(tmp_data, self.bucket_name, f"process_githubs_repos_{self.asOf}")
         self.cyphers.create_or_merge_socials(urls, [label, "Repository"], "full_name", "full_name", "HAS_REPOSITORY", property)
 
+    def handle_twitter(self, data, key, label, property):
+        def get_handles(url):
+            matches = re.match("https:\/\/twitter\.com\/(\w*)", url)
+            handle =  None
+            if matches:
+                handle = matches.groups()[00]
+            else:
+                handle = url
+            return handle
+        tmp_data = data[~data[key].isna()]
+        tmp_data["handle"] = data[key].apply(get_handles)
+        tmp_data["handle"] = tmp_data[~tmp_data["handle"].isna()]
+        urls = self.save_df_as_csv(data, self.bucket_name, f"process_{key}_{self.asOf}")
+        self.cyphers.create_or_merge_socials(urls, [label, "Account"], "handle", property, "HAS_ACCOUNT", property)
+
     def handle_accounts(self, data, key, label, property):
         data = data[~data[key].isna()]
         urls = self.save_df_as_csv(data, self.bucket_name, f"process_{key}_{self.asOf}")
-        self.cyphers.create_or_merge_socials(urls, [label, "Repository"], "handle", property, "HAS_ACCOUNT", property)
+        self.cyphers.create_or_merge_socials(urls, [label, "Account"], "handle", property, "HAS_ACCOUNT", property)
 
     def handle_external_links(self, data, key, label, property):
         data = data[~data[key].isna()]
