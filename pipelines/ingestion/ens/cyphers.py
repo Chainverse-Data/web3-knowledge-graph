@@ -88,7 +88,7 @@ class ENSCyphers(Cypher):
                         LOAD CSV WITH HEADERS FROM '{url}' as transfers
                         MATCH (fromWallet:Wallet {{address: toLower(transfers.from)}})
                         MATCH (toWallet:Wallet {{address: toLower(transfers.to)}})
-                        MERGE (fromWallet)-[transfer:TRANSFERED {{txHash: transfers.transactionID}}]->(toWallet)
+                        MERGE (fromWallet)-[transfer:TRANSFERRED {{txHash: transfers.transactionID}}]->(toWallet)
                         SET transfer.type = "ENS",
                             transfer.name = toLower(transfers.name),
                             transfer.blockNumber = toInteger(transfers.blockNumber)

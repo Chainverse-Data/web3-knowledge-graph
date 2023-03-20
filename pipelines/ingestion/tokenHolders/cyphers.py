@@ -56,26 +56,52 @@ class TokenHoldersCyphers(Cypher):
                 LOAD CSV WITH HEADERS FROM '{url}' AS transfers
                 MATCH (from:Wallet {{address: toLower(transfers.from)}}), (to:Wallet {{address: toLower(transfers.to)}})
                 WITH from, to, transfers
-                MERGE (from)-[edge:TRANSFERED]->(to)
+                MERGE (from)-[edge:TRANSFERRED]->(to)
                 ON CREATE set edge.uuid = apoc.create.uuid(),
-                    edge.value = toFloat(transfers.value),
-                    edge.hash = transfers.hash,
-                    edge.contractAddress = transfers.contractAddress,
-                    edge.erc721TokenId = transfers.erc721TokenId,
-                    edge.erc1155Metadata = transfers.erc1155Metadata,
-                    edge.asset = transfers.asset,
+                    edge.nb_transfer = 1,
                     edge.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                     edge.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                     edge.ingestedBy = "{self.CREATED_ID}"
                 ON MATCH set edge.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
-                    edge.value = toFloat(transfers.value),
-                    edge.hash = transfers.hash,
-                    edge.contractAddress = transfers.contractAddress,
-                    edge.erc721TokenId = transfers.erc721TokenId,
-                    edge.erc1155Metadata = transfers.erc1155Metadata,
-                    edge.asset = transfers.asset,
+                    edge.nb_transfer = edge.nb_transfer + 1,
                     edge.ingestedBy = "{self.UPDATED_ID}"
                 return count(edge)
             """
             count += self.query(query)[0].value()
         return count
+
+    # Keeping this here for future revisions when we figure out
+    # how to ingest that much data without breaking our graph ...
+
+    # @count_query_logging
+    # def link_or_merge_transfers(self, urls):
+    #     "CSV Must have the columns: [from, to, contractAddress, value, hash, erc721TokenId, erc1155Metadata, asset]"
+    #     count = 0
+    #     for url in tqdm(urls):
+    #         query = f"""
+    #             LOAD CSV WITH HEADERS FROM '{url}' AS transfers
+    #             MATCH (from:Wallet {{address: toLower(transfers.from)}}), (to:Wallet {{address: toLower(transfers.to)}})
+    #             WITH from, to, transfers
+    #             MERGE (from)-[edge:TRANSFERRED]->(to)
+    #             ON CREATE set edge.uuid = apoc.create.uuid(),
+    #                 edge.value = toFloat(transfers.value),
+    #                 edge.hash = transfers.hash,
+    #                 edge.contractAddress = transfers.contractAddress,
+    #                 edge.erc721TokenId = transfers.erc721TokenId,
+    #                 edge.erc1155Metadata = transfers.erc1155Metadata,
+    #                 edge.asset = transfers.asset,
+    #                 edge.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
+    #                 edge.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
+    #                 edge.ingestedBy = "{self.CREATED_ID}"
+    #             ON MATCH set edge.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
+    #                 edge.value = toFloat(transfers.value),
+    #                 edge.hash = transfers.hash,
+    #                 edge.contractAddress = transfers.contractAddress,
+    #                 edge.erc721TokenId = transfers.erc721TokenId,
+    #                 edge.erc1155Metadata = transfers.erc1155Metadata,
+    #                 edge.asset = transfers.asset,
+    #                 edge.ingestedBy = "{self.UPDATED_ID}"
+    #             return count(edge)
+    #         """
+    #         count += self.query(query)[0].value()
+    #     return count
