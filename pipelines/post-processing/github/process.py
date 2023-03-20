@@ -176,12 +176,11 @@ class GithubProcessor(Processor):
         users = [self.data["users"][handle] for handle in self.data["users"]]
         users_urls = self.save_json_as_csv(users, self.bucket_name, f"processor_users_{self.asOf}")
 
-        emails = [{"handle": user["login"], "email":user["email"]} for user in users if user["email"]]
+        emails = [{"handle": user["login"], "email": user["email"]} for user in users if "email" in user and user["email"]]
         emails_urls = self.save_json_as_csv(emails, self.bucket_name, f"processor_emails_{self.asOf}")
 
-        twitters = [{"handle": user["login"], "twitter":user["twitter_username"]} for user in users if user["twitter_username"]]
+        twitters = [{"handle": user["login"], "twitter":user["twitter_username"]} for user in users if "twitter_username" in user and user["twitter_username"]]
         twitters_urls = self.save_json_as_csv(twitters, self.bucket_name, f"processor_twitters_{self.asOf}")
-
 
         repositories = [self.data["repositories"][handle] for handle in self.data["repositories"]]
         repositories_urls = self.save_json_as_csv(repositories, self.bucket_name, f"processor_repositories_{self.asOf}")
