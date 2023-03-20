@@ -18,7 +18,6 @@ class SnapshotIngestor(Ingestor):
     def ingest_spaces(self):
         print("Ingesting spaces...")
         space_data = self.process_spaces()
-        self.ingest_data.update(space_data)
 
         # add space nodes
         urls = self.save_json_as_csv(space_data["spaces"], self.bucket_name, f"ingestor_spaces_{self.asOf}")
@@ -63,7 +62,6 @@ class SnapshotIngestor(Ingestor):
     def ingest_proposals(self):
         print("Ingesting proposals...")
         proposal_data = self.process_proposals()
-        self.ingest_data.update(proposal_data)
 
         # add proposal nodes, proposal-space relationships, proposal author wallet nodes, proposal-author relationships
         urls = self.save_json_as_csv(proposal_data["proposals"], self.bucket_name, f"ingestor_proposals_{self.asOf}")
@@ -75,7 +73,6 @@ class SnapshotIngestor(Ingestor):
     def ingest_votes(self):
         print("Ingesting votes...")
         vote_data = self.process_votes()
-        self.ingest_data.update(vote_data)
 
         wallet_dict = [
             {"address": wallet}

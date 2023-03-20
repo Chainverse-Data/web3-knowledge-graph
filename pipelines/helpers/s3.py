@@ -10,9 +10,54 @@ from botocore.exceptions import ClientError
 import pandas as pd
 
 class S3Utils:
-    def __init__(self):
+    def __init__(self, bucket_name, metadata_filename, load_bucket_data=True):
         self.s3_client = boto3.client("s3")
         self.s3_resource = boto3.resource("s3")
+        self.S3_max_size = 1000000000
+        
+        self.scraper_data = {}
+        
+        if not bucket_name:
+            raise ValueError("bucket_name is not defined!")
+        self.bucket_name = os.environ["AWS_BUCKET_PREFIX"] + bucket_name
+        self.bucket = self.create_or_get_bucket(self.bucket_name)
+        
+        if not metadata_filename:
+            raise ValueError("bucket_name is not defined!")
+        self.metadata_filename = metadata_filename
+        self.metadata = self.read_metadata()
+
+        self.start_date = None
+        self.end_date = None
+        self.set_start_end_date()
+        
+        if load_bucket_data:
+            self.scraper_data = {}
+            self.load_data()
+
+        if not allow_override and "ALLOW_OVERRIDE" in os.environ and os.environ["ALLOW_OVERRIDE"] == "1":
+            allow_override = True
+
+        self.data = {}
+        self.data_filename = "data_{}-{}-{}".format(self.runtime.year, self.runtime.month, self.runtime.day)
+        if not allow_override and self.check_if_file_exists(self.bucket_name, self.data_filename):
+            logging.error("The data file for this day has already been created!")
+            sys.exit(0)
+
+    def set_start_end_date(self):
+        "Sets the start and end date from either params, env or metadata"
+        if not self.start_date and "INGEST_FROM_DATE" in os.environ and os.environ["INGEST_FROM_DATE"].strip():
+            self.start_date = os.environ["INGEST_FROM_DATE"]
+        else:
+            if "last_date_ingested" in self.metadata:
+                self.start_date = self.metadata["last_date_ingested"]
+        if not self.end_date and "INGEST_TO_DATE" in os.environ and os.environ["INGEST_TO_DATE"].strip():
+            self.end_date = os.environ["INGEST_TO_DATE"]
+        # Converting to python datetime object for easy filtering
+        if self.start_date:
+            self.start_date = datetime.strptime(self.start_date, "%Y-%m-%d")
+        if self.end_date:
+            self.end_date = datetime.strptime(self.end_date, "%Y-%m-%d")
 
     def get_size(self, obj, seen=None):
         """Recursively finds size of objects"""
@@ -214,8 +259,8 @@ class S3Utils:
         else:
             self.save_json(self.bucket_name, self.data_filename + f"_{chunk_prefix}.json", self.data)
 
-    def load_data(self):
-        "Loads the data in the S3 bucket from the start date to the end date (if defined)"
+    def get_datafile_from_s3(self):
+        "Get the list of datafiles in the S3 bucket from the start date to the end date (if defined)"
         logging.info("Collecting data files")
         datafiles = []
         for el in map(lambda x: (x.bucket_name, x.key), self.bucket.objects.all()):
@@ -239,6 +284,12 @@ class S3Utils:
         if not self.end_date:
             self.end_date = max(dates_to_keep)
         logging.info("Datafiles for ingestion: {}".format(",".join(datafiles_to_keep)))
+        return datafiles_to_keep
+
+    def load_data(self):
+        "Loads the data filtered by date saved in the S3 bucket"
+        datafiles_to_keep = self.get_datafile_from_s3()
+        logging.info("Datafiles for ingestion: {}".format(",".join(datafiles_to_keep)))
         for datafile in datafiles_to_keep:
             tmp_data = self.load_json(self.bucket_name, datafile)
             for root_key in tmp_data:
@@ -249,3 +300,23 @@ class S3Utils:
                 if type(tmp_data[root_key]) == list:
                     self.scraper_data[root_key] += tmp_data[root_key]
         logging.info("Data files loaded")
+
+    def load_data_iterate(self, nb_files=1):
+        "Generator function to load the datafiles one file at a time. Returns the content of N datafile at a time, N being the nb_files parameter."
+        datafiles_to_keep = self.get_datafile_from_s3()
+        counter = 0
+        data = {}
+        for datafile in datafiles_to_keep:
+            tmp_data = self.load_json(self.bucket_name, datafile)
+            for root_key in tmp_data:
+                if root_key not in data:
+                    data[root_key] = type(tmp_data[root_key])()
+                if type(tmp_data[root_key]) == dict:
+                    data[root_key] = dict(data[root_key], **tmp_data[root_key])
+                if type(tmp_data[root_key]) == list:
+                    data[root_key] += tmp_data[root_key]
+            counter += 1
+            if counter >= nb_files:
+                yield data
+                data = {}
+                counter = 0
