@@ -24,6 +24,11 @@ class TokenMetadataPostProcess(Processor):
             results = self.parallel_process(self.get_alchemy_ERC721_metadata, tokens[i: i+self.chunk_size], description="Getting all ERC721 Metadata")
             metadata_urls = self.save_json_as_csv(results, self.bucket_name, f"token_ERC721_metadata_{self.asOf}")
             self.cyphers.add_ERC721_token_node_metadata(metadata_urls)
+            
+            twitter = [{"handle": result["twitterUsername"], "contractAddress": result["address"]} for result in results if result["twitterUsername"]]
+            urls = self.save_json_as_csv(twitter, self.bucket_name, f"token_ERC721_twitters_{self.asOf}")
+            self.cyphers.create_or_merge_socials(urls, ["Twitter", "Account"], "handle", "handle", "HAS_ACCOUNT", "openSea metadata")
+            
             deployers = [{"address": result["address"], "contractDeployer": result["contractDeployer"]} for result in results if result["contractDeployer"]]
             deployers_wallets = [{"address": result["contractDeployer"]} for result in results if result["contractDeployer"]]
             deployers_urls = self.save_json_as_csv(deployers, self.bucket_name, f"token_ERC721_deployers_{self.asOf}")
