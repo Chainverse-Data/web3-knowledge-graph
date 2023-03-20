@@ -12,8 +12,8 @@ class CuratedTokenHoldingProcessor(Processor):
     def __init__(self, bucket_name="citizen-token-holding"):
         self.cyphers = CuratedTokenHoldingCyphers()
         super().__init__(bucket_name)
-        self.NFT_chunk_size = 100
-        self.ERC20_chunk_size = 100
+        self.NFT_chunk_size = 10
+        self.ERC20_chunk_size = 10
         self.ERC20_last_block = self.metadata.get("ERC20_last_block", {})
         self.alchemy = Alchemy() 
         self.etherscan = Etherscan() 
