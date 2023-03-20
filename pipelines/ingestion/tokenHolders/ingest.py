@@ -12,7 +12,7 @@ except:
 class TokenHoldersIngestor(Ingestor):
     def __init__(self, bucket_name="token-holders"):
         self.cyphers = TokenHoldersCyphers()
-        super().__init__(bucket_name)
+        super().__init__(bucket_name, load_data=False)
 
     def clean_symbol(self, symbol):
         if symbol:
@@ -117,11 +117,13 @@ class TokenHoldersIngestor(Ingestor):
         self.cyphers.link_wallet_tokens(urls)
 
     def run(self):
-        self.ingest_tokens()
-        self.ingest_holdings()
-        if "transfers" in self.scraper_data:
-            self.ingest_transfers()
-        self.save_metadata()
+        for data in self.load_data_iterate():
+            self.scraper_data = data
+            self.ingest_tokens()
+            self.ingest_holdings()
+            if "transfers" in self.scraper_data:
+                self.ingest_transfers()
+            self.save_metadata()
 
 if __name__ == '__main__':
     ingestor = TokenHoldersIngestor()

@@ -35,7 +35,7 @@ class S3Utils:
             self.scraper_data = {}
             self.load_data()
 
-        if not allow_override and "ALLOW_OVERRIDE" in os.environ and os.environ["ALLOW_OVERRIDE"] == "1":
+        if "ALLOW_OVERRIDE" in os.environ and os.environ["ALLOW_OVERRIDE"] == "1":
             allow_override = True
 
         self.data = {}
@@ -307,6 +307,7 @@ class S3Utils:
         counter = 0
         data = {}
         for datafile in datafiles_to_keep:
+            logging.info(f"Loading datafile: {datafile}")
             tmp_data = self.load_json(self.bucket_name, datafile)
             for root_key in tmp_data:
                 if root_key not in data:
