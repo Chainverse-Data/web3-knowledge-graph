@@ -78,7 +78,7 @@ curated_tokens_holding_processing_task = ECSOperator(
         "containerOverrides": [
             {
                 "name": "data-pipelines",
-                "command": ["python3", "-m", "pipelines.post-processing.curated-token-holding.process"],
+                "command": ["python3", "-m", "pipelines.postProcessing.curatedTokenHolding.process"],
                 "environment": env_vars
             },
         ],

@@ -81,7 +81,7 @@ prop_house_scrape_task = ECSOperator(
         "containerOverrides": [
             {
                 "name": "data-pipelines",
-                "command": ["python3", "-m", "pipelines.scraping.prop-house.scrape"],
+                "command": ["python3", "-m", "pipelines.scraping.propHouse.scrape"],
                 "environment": env_vars
             },
         ],

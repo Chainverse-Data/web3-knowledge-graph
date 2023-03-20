@@ -84,7 +84,7 @@ github_post_processing_task = ECSOperator(
         "containerOverrides": [
             {
                 "name": "data-pipelines",
-                "command": ["python3", "-m", "pipelines.post-processing.github.process"],
+                "command": ["python3", "-m", "pipelines.postProcessing.github.process"],
                 "environment": env_vars
             },
         ],

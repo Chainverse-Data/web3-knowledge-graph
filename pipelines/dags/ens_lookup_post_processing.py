@@ -82,7 +82,7 @@ ensLookup_post_processing_task = ECSOperator(
         "containerOverrides": [
             {
                 "name": "data-pipelines",
-                "command": ["python3", "-m", "pipelines.post-processing.ENSLookup.process"],
+                "command": ["python3", "-m", "pipelines.postProcessing.ENSLookup.process"],
                 "environment": env_vars
             },
         ],

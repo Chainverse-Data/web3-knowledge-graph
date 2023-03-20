@@ -84,7 +84,7 @@ twitter_post_processing_task = ECSOperator(
         "containerOverrides": [
             {
                 "name": "data-pipelines",
-                "command": ["python3", "-m", "pipelines.post-processing.twitter.process"],
+                "command": ["python3", "-m", "pipelines.postProcessing.twitter.process"],
                 "environment": env_vars
             },
         ],

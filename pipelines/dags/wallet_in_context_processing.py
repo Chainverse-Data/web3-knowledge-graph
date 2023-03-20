@@ -104,7 +104,7 @@ wic_creators_collectors = ECSOperator(
         "containerOverrides": [
             {
                 "name": "data-pipelines",
-                "command": ["python3", "-m", "pipelines.analytics.wic.creators-collectors.analyze"],
+                "command": ["python3", "-m", "pipelines.analytics.wic.creatorsCollectors.analyze"],
                 "environment": env_vars
             },
         ],
@@ -170,7 +170,7 @@ wic_ecosystem_development = ECSOperator(
         "containerOverrides": [
             {
                 "name": "data-pipelines",
-                "command": ["python3", "-m", "pipelines.analytics.wic.ecosystem-development.analyze"],
+                "command": ["python3", "-m", "pipelines.analytics.wic.ecosystemDevelopment.analyze"],
                 "environment": env_vars
             },
         ],
@@ -192,7 +192,7 @@ wic_protocol_politicians = ECSOperator(
         "containerOverrides": [
             {
                 "name": "data-pipelines",
-                "command": ["python3", "-m", "pipelines.analytics.wic.protocol-politicians.analyze"],
+                "command": ["python3", "-m", "pipelines.analytics.wic.protocolPoliticians.analyze"],
                 "environment": env_vars
             },
         ],
@@ -214,7 +214,7 @@ wic_early_adopters = ECSOperator(
         "containerOverrides": [
             {
                 "name": "data-pipelines",
-                "command": ["python3", "-m", "pipelines.analytics.wic.early-adopters.analyze"],
+                "command": ["python3", "-m", "pipelines.analytics.wic.earlyAdopters.analyze"],
                 "environment": env_vars
             },
         ],

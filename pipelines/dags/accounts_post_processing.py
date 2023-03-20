@@ -78,7 +78,7 @@ accounts_post_processing_task = ECSOperator(
         "containerOverrides": [
             {
                 "name": "data-pipelines",
-                "command": ["python3", "-m", "pipelines.post-processing.accounts.process"],
+                "command": ["python3", "-m", "pipelines.postProcessing.accounts.process"],
                 "environment": env_vars
             },
         ],

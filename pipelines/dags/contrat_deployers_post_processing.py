@@ -82,7 +82,7 @@ contract_deployers_post_processing_task = ECSOperator(
         "containerOverrides": [
             {
                 "name": "data-pipelines",
-                "command": ["python3", "-m", "pipelines.post-processing.contract-deployers.process"],
+                "command": ["python3", "-m", "pipelines.postProcessing.contractDeployers.process"],
                 "environment": env_vars
             },
         ],

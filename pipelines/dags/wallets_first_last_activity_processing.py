@@ -82,7 +82,7 @@ last_activity_processing_task = ECSOperator(
         "containerOverrides": [
             {
                 "name": "data-pipelines",
-                "command": ["python3", "-m", "pipelines.post-processing.lastActivity.process"],
+                "command": ["python3", "-m", "pipelines.postProcessing.lastActivity.process"],
                 "environment": env_vars
             },
         ],

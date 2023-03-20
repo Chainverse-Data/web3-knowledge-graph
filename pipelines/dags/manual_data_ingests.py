@@ -82,7 +82,7 @@ ens_twitter_task = ECSOperator(
         "containerOverrides": [
             {
                 "name": "data-pipelines",
-                "command": ["python3", "-m", "pipelines.ingestion.manual-ingests.ens-twitter.ingest"],
+                "command": ["python3", "-m", "pipelines.ingestion.manualIngests.ensTwitter.ingest"],
                 "environment": env_vars
             },
         ],
@@ -104,7 +104,7 @@ gaming_nft_task = ECSOperator(
         "containerOverrides": [
             {
                 "name": "data-pipelines",
-                "command": ["python3", "-m", "pipelines.ingestion.manual-ingests.gamingNFTs.ingest"],
+                "command": ["python3", "-m", "pipelines.ingestion.manualIngests.gamingNFTs.ingest"],
                 "environment": env_vars
             },
         ],

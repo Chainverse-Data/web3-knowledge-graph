@@ -78,7 +78,7 @@ twitter_ens_scrape_task = ECSOperator(
         "containerOverrides": [
             {
                 "name": "data-pipelines",
-                "command": ["python3", "-m", "pipelines.scraping.twitter-ens.scrape"],
+                "command": ["python3", "-m", "pipelines.scraping.twitterEns.scrape"],
                 "environment": env_vars
             },
         ],
@@ -100,7 +100,7 @@ twitter_ens_ingest_task = ECSOperator(
         "containerOverrides": [
             {
                 "name": "data-pipelines",
-                "command": ["python3", "-m", "pipelines.ingestion.twitter-ens.ingest"],
+                "command": ["python3", "-m", "pipelines.ingestion.twitterEns.ingest"],
                 "environment": env_vars
             },
         ],
