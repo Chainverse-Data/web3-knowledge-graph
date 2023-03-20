@@ -29,6 +29,10 @@ class TokenMetadataPostProcess(Processor):
             urls = self.save_json_as_csv(twitter, self.bucket_name, f"token_ERC721_twitters_{self.asOf}")
             self.cyphers.create_or_merge_socials(urls, ["Twitter", "Account"], "handle", "handle", "HAS_ACCOUNT", "openSea metadata")
             
+            twitter = [{"website": result["externalUrl"], "contractAddress": result["address"]} for result in results if result["externalUrl"]]
+            urls = self.save_json_as_csv(twitter, self.bucket_name, f"token_ERC721_websites_{self.asOf}")
+            self.cyphers.create_or_merge_socials(urls, ["Website", "Account"], "website", "website", "HAS_WEBSITE", "openSea metadata")
+
             deployers = [{"address": result["address"], "contractDeployer": result["contractDeployer"]} for result in results if result["contractDeployer"]]
             deployers_wallets = [{"address": result["contractDeployer"]} for result in results if result["contractDeployer"]]
             deployers_urls = self.save_json_as_csv(deployers, self.bucket_name, f"token_ERC721_deployers_{self.asOf}")
