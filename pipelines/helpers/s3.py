@@ -39,13 +39,10 @@ class S3Utils:
             self.scraper_data = {}
             self.load_data()
 
+        self.allow_override = False
         if "ALLOW_OVERRIDE" in os.environ and os.environ["ALLOW_OVERRIDE"] == "1":
-            allow_override = True
-
+            self.allow_override = True
         self.data_filename = "data_{}-{}-{}".format(datetime.now().year, datetime.now().month, datetime.now().day)
-        if not allow_override and self.bucket_name and self.data_filename and self.check_if_file_exists(self.bucket_name, self.data_filename):
-            logging.error("The data file for this day has already been created!")
-            sys.exit(0)
 
     def set_start_end_date(self):
         "Sets the start and end date from either params, env or metadata"
@@ -240,6 +237,7 @@ class S3Utils:
         logging.info("Measuring data size...")
         data_size = self.get_size(self.data)
         logging.info(f"Data size: {data_size}")
+        
         if data_size > self.S3_max_size:
             n_chunks = math.ceil(data_size / self.S3_max_size)
             logging.info(f"Data is too big: {data_size}, chuking it to {n_chunks} chunks ...")
@@ -257,6 +255,9 @@ class S3Utils:
                     else:
                         data_chunk[key] = self.data[key][i*len_data[key]:min((i+1)*len_data[key], len(self.data[key]))]
                 filename = self.data_filename + f"_{chunk_prefix}{i}.json"
+                if not self.allow_override and self.check_if_file_exists(self.bucket_name, filename):
+                    logging.error("The data file for this day has already been created!")
+                    sys.exit(0)
                 logging.info(f"Saving chunk {i}...")
                 self.save_json(self.bucket_name, filename, data_chunk)
         else:
