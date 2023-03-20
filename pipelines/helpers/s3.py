@@ -15,6 +15,8 @@ class S3Utils:
         self.s3_resource = boto3.resource("s3")
         self.S3_max_size = 1000000000
         
+        self.data = {}
+        self.metadata = {}
         self.scraper_data = {}
         
         if bucket_name:
@@ -40,7 +42,6 @@ class S3Utils:
         if "ALLOW_OVERRIDE" in os.environ and os.environ["ALLOW_OVERRIDE"] == "1":
             allow_override = True
 
-        self.data = {}
         self.data_filename = "data_{}-{}-{}".format(self.runtime.year, self.runtime.month, self.runtime.day)
         if not allow_override and self.check_if_file_exists(self.bucket_name, self.data_filename):
             logging.error("The data file for this day has already been created!")
