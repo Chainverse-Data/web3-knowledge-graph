@@ -42,7 +42,7 @@ class S3Utils:
         if "ALLOW_OVERRIDE" in os.environ and os.environ["ALLOW_OVERRIDE"] == "1":
             allow_override = True
 
-        self.data_filename = "data_{}-{}-{}".format(self.runtime.year, self.runtime.month, self.runtime.day)
+        self.data_filename = "data_{}-{}-{}".format(datetime.now().year, datetime.now().month, datetime.now().day)
         if not allow_override and self.check_if_file_exists(self.bucket_name, self.data_filename):
             logging.error("The data file for this day has already been created!")
             sys.exit(0)
