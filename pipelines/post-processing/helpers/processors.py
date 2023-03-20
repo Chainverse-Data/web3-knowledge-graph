@@ -1,8 +1,8 @@
 from ...helpers import Base
 
 class Processor(Base):
-    def __init__(self, bucket_name, chain="ethereum"):
-        Base.__init__(self, bucket_name=bucket_name, metadata_filename="processor_metadata.json", load_data=False, chain=chain)
+    def __init__(self, bucket_name, load_data=False, chain="ethereum"):
+        Base.__init__(self, bucket_name=bucket_name, metadata_filename="processor_metadata.json", load_data=load_data, chain=chain)
         
         try:
             self.cyphers

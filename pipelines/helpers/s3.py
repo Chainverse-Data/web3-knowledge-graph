@@ -10,22 +10,24 @@ from botocore.exceptions import ClientError
 import pandas as pd
 
 class S3Utils:
-    def __init__(self, bucket_name, metadata_filename, load_bucket_data=True):
+    def __init__(self, bucket_name=None, metadata_filename=None, load_bucket_data=False):
         self.s3_client = boto3.client("s3")
         self.s3_resource = boto3.resource("s3")
         self.S3_max_size = 1000000000
         
         self.scraper_data = {}
         
-        if not bucket_name:
-            raise ValueError("bucket_name is not defined!")
-        self.bucket_name = os.environ["AWS_BUCKET_PREFIX"] + bucket_name
-        self.bucket = self.create_or_get_bucket(self.bucket_name)
+        if bucket_name:
+            self.bucket_name = os.environ["AWS_BUCKET_PREFIX"] + bucket_name
+            self.bucket = self.create_or_get_bucket(self.bucket_name)
+        else:
+            logging.error("bucket_name is not defined! If this is voluntary, ignore this message.")
         
-        if not metadata_filename:
-            raise ValueError("bucket_name is not defined!")
-        self.metadata_filename = metadata_filename
-        self.metadata = self.read_metadata()
+        if metadata_filename:
+            self.metadata_filename = metadata_filename
+            self.metadata = self.read_metadata()
+        else:
+            logging.error("metadata_filename is not defined! If this is voluntary, ignore this message.")
 
         self.start_date = None
         self.end_date = None

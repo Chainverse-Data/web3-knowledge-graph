@@ -29,7 +29,8 @@ class TokenHoldersCyphers(Cypher):
         for url in tqdm(urls):
             query = f"""
                 LOAD CSV WITH HEADERS FROM '{url}' AS holdings
-                MATCH (token:Token {{address: toLower(holdings.contractAddress)}}), (wallet:Wallet {{address: toLower(holdings.address)}})
+                MATCH (token:Token {{address: toLower(holdings.contractAddress)}})
+                MATCH (wallet:Wallet {{address: toLower(holdings.address)}})
                 WITH token, wallet, holdings
                 MERGE (wallet)-[edge:HOLDS]->(token)
                 ON CREATE set edge.uuid = apoc.create.uuid(),
