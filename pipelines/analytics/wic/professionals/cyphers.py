@@ -231,15 +231,14 @@ class ProfessionalsCyphers(WICCypher):
         WITH influencerTwitter
         MATCH (follow:Account)-[:HAS_ACCOUNT]-(follower:Twitter)-[:FOLLOWS]->(influencerTwitter)
         WITH influencerTwitter, count(distinct(follower)) as influencerFollowers
-        with apoc.agg.percentiles(influencerFollowers, [.75]) as stuff
-        return stuff[0]
+        RETURN apoc.agg.percentiles(influencerFollowers, [.75])[0]
         """
         logging.info(cutoff)
         cutoff = self.query(cutoff)[0].value()
         logging.info(cutoff)
         
         labelQuery = f"""
-        MATCH (follow:Account)-[:HAS_ACCOUNT]-(followeßr:Twitter)-[:FOLLOWS]->(influencerTwitter)
+        MATCH (follow:Account)-[:HAS_ACCOUNT]-(follower:Twitter)-[:FOLLOWS]->(influencerTwitter)
         WITH influencerTwitter, count(distinct(follower)) as countFollowers
         WHERE countFollowers >= {cutoff}
         WITH influencerTwitter
@@ -273,6 +272,7 @@ class ProfessionalsCyphers(WICCypher):
     def identify_investors_bios(self, context):
         remove = f"match (a:Account:{self.investorLabel}) remove a:{self.investorLabel}"
         self.query(remove)
+        logging.info(remove)
 
         queryString = "'investor' OR 'investing' OR 'angel investor' OR 'GP' OR 'LP'"
 
@@ -284,6 +284,7 @@ class ProfessionalsCyphers(WICCypher):
         MATCH (investor:HasBio:Account)
         SET investor:{self.investorLabel}"""
         self.query(label)
+        logging.info(label)
 
         connect = f"""
         match (account:Account:{self.investorLabel})
@@ -294,8 +295,8 @@ class ProfessionalsCyphers(WICCypher):
         """
         count = self.query(connect)[0].value()
 
-
-        self.query(f"match (a:Account:{self.investorLabel}) remove a:{self.investorLabel}")
+        clean = f"match (a:Account:{self.investorLabel}) remove a:{self.investorLabel}"
+        logging.info(clean)
 
         return count
 
@@ -309,7 +310,7 @@ class ProfessionalsCyphers(WICCypher):
         CALL db.index.fulltext.queryNodes("wicBios", "{queryString}") YIELD node, score
         UNWIND node as marketer
         WITH marketer
-        MATCH (marketer:HasBio:Account)
+        MATCH (marketer:Account)
         SET marketer:{self.marketerLabel}"""
         self.query(label)
 
@@ -321,7 +322,8 @@ class ProfessionalsCyphers(WICCypher):
         RETURN COUNT(account)
         """
         count = self.query(connect)[0].value()
-        self.query(f"match (account:Account:{self.marketerLabel}) remove account:{self.marketerLabel}")
+        clean = f"match (account:Account:{self.marketerLabel}) remove account:{self.marketerLabel}"
+        self.query(clean)
 
         return count
 
@@ -335,7 +337,7 @@ class ProfessionalsCyphers(WICCypher):
         CALL db.index.fulltext.queryNodes("wicBios", "{queryString}") YIELD node, score
         UNWIND node as communityLead
         WITH communityLead
-        MATCH (communityLead:HasBio:Account)
+        MATCH (communityLead:Account)
         SET communityLead:{self.communityLeadLabel}"""
         self.query(label)
 
@@ -363,7 +365,7 @@ class ProfessionalsCyphers(WICCypher):
         CALL db.index.fulltext.queryNodes("wicBios", "{queryString}") YIELD node, score
         UNWIND node as devRel
         WITH devRel
-        MATCH (devRel:HasBio:Account)
+        MATCH (devRel:Account)
         SET devRel:{self.devrelLabel}"""
         self.query(label)
 
@@ -383,8 +385,6 @@ class ProfessionalsCyphers(WICCypher):
     @count_query_logging
     def identify_company_officers_bios(self, context):
         queryString = "'VP' or 'Vice President' OR 'CEO' or 'Head of'"
-
-
         remove = f"match (a:Account:{self.companyOfficerLabel}) remove a:{self.companyOfficerLabel}"
         self.query(remove)
 
@@ -392,16 +392,16 @@ class ProfessionalsCyphers(WICCypher):
         CALL db.index.fulltext.queryNodes("wicBios", "{queryString}") YIELD node
         UNWIND node as devrel
         WITH companyOfficer
-        MATCH (companyOfficer:HasBio:Account)
+        MATCH (companyOfficer:Account)
         SET companyOfficer:{self.companyOfficerLabel}"""
         self.query(label)
 
         connect = f"""
         MATCH (companyOfficer:Account:{self.companyOfficerLabel})
-        MATCH (context:_Context:_{context}:{self.companyOfficerLabel})
+        MATCH (context:_Context:_{context}:_{self.subgraph_name}:{self.companyOfficerLabel})
         WITH context, companyOfficer
         merge (companyOfficer)-[r:_HAS_CONTEXT]->(context)
-        return count(*)"""
+        return count(companyOfficer)"""
         count = self.query(connect)[0].value()
 
         self.query(f"match (a:Account:{self.companyOfficerLabel}) remove a:{self.companyOfficerLabel}")
@@ -411,23 +411,19 @@ class ProfessionalsCyphers(WICCypher):
 
 
 
-    @count_query_logging
-    def connect_accounts_to_wallet_for_bios(self):
-
+    def connect_accounts_to_wallet_for_bios(self, context):
         connectWallets = f"""
         CALL apoc.periodic.commit("
-        MATCH (account:Account)-[:_HAS_CONTEXT]-(context:_Context:_{self.subgraph_name})
-        MATCH (wallet)-[:HAS_ACCOUNT]-(account)
+        MATCH (account:Account)-[:_HAS_CONTEXT]->(context:_Context:_{self.subgraph_name}:_{context})
+        MATCH (wallet:Wallet)-[:HAS_ACCOUNT]-(account)
         WHERE NOT (wallet)-[:_HAS_CONTEXT]->(context)
         WITH wallet, context 
         LIMIT 5000
-        MATCH (wallet)
-        MATCH (context)
         MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
-        RETURN COUNT(*)"
+        RETURN COUNT(*)")
         """
-        count = self.query(connectWallets)[0].value()
+        self.query(connectWallets)
 
-        return count
+        return None
         
         

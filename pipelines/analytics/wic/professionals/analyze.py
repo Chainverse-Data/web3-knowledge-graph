@@ -9,13 +9,13 @@ class ProfessionalsAnalysis(WICAnalysis):
 
         
         self.conditions = {
-            "DaoContributors": {
-               "DaoTokenContractDeployers": self.process_token_contract_deployer_wallets,
-               "CommunityWalletDeployers": self.process_org_wallet_deployers,
-               "SnapshotContributors": self.process_org_snapshot_contributors,
-                "CommunityMultisigSigners": self.process_org_multisig_signers,
-                "OrgEnsCustodian": self.process_org_ens_admin
-            },
+      #      "DaoContributors": {
+        #       "DaoTokenContractDeployers": self.process_token_contract_deployer_wallets,
+        #       "CommunityWalletDeployers": self.process_org_wallet_deployers,
+        #       "SnapshotContributors": self.process_org_snapshot_contributors,
+        #        "CommunityMultisigSigners": self.process_org_multisig_signers,
+        #        "OrgEnsCustodian": self.process_org_ens_admin
+           # },
             "Web3Professionals": {
                 "Founders": self.process_founder_bios,
                 "Investors": self.process_investor_bios,
