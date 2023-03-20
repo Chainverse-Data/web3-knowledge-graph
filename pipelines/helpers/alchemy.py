@@ -272,7 +272,7 @@ class Alchemy(Requests):
             result = response_data.get("result", {})
             return result
         else:
-            return self.getTokenMetadata(block, full_transaction=full_transaction, chain=chain, counter=counter+1)
+            return self.getBlockByNumber(block, full_transaction=full_transaction, chain=chain, counter=counter+1)
 
     def getSpamContracts(self, chain="ethereum", counter=0):
         """
