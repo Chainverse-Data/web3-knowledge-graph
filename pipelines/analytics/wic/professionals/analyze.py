@@ -6,17 +6,15 @@ import logging
 class ProfessionalsAnalysis(WICAnalysis):
     """Identitifes people who "work" in Web3"""
     def __init__(self):
-
-        
         self.conditions = {
-      #      "DaoContributors": {
-        #       "DaoTokenContractDeployers": self.process_token_contract_deployer_wallets,
-        #       "CommunityWalletDeployers": self.process_org_wallet_deployers,
-        #       "SnapshotContributors": self.process_org_snapshot_contributors,
-        #        "CommunityMultisigSigners": self.process_org_multisig_signers,
-        #        "OrgEnsCustodian": self.process_org_ens_admin
-           # },
+           "DaoContributors": {
+                "CommunityWalletDeployers": self.process_org_wallet_deployers,
+                "SnapshotContributors": self.process_org_snapshot_contributors,
+                "CommunityMultisigSigners": self.process_org_multisig_signers,
+                "OrgEnsCustodian": self.process_org_ens_admin
+           },
             "Web3Professionals": {
+                "TokenContractDeployers": self.process_token_contract_deployer_wallets,
                 "Founders": self.process_founder_bios,
                 "Investors": self.process_investor_bios,
                 "Marketers": self.process_marketers_bios,
@@ -31,7 +29,6 @@ class ProfessionalsAnalysis(WICAnalysis):
         }
         self.subgraph_name = "Professionals"
         self.cyphers = ProfessionalsCyphers(self.subgraph_name, self.conditions)
-
         super().__init__("wic-professionals")
 
     def process_token_contract_deployer_wallets(self, context):
@@ -56,49 +53,48 @@ class ProfessionalsAnalysis(WICAnalysis):
 
     def process_founder_bios(self, context):
         logging.info("Identifying founders based on bios..")
-        self.cyphers.identify_founders_bios(context)
+        queryString = "'founder' OR 'co-founder'"
+        self.cyphers.identify_founders_bios(context, queryString)
 
     def process_company_officer_bios(self, context):
         logging.info("Identifying company officers...")
-        self.cyphers.identify_community_lead_bios(context)
+        queryString = "'VP' or 'Vice President' OR 'CEO' or 'Head of'"
+        self.cyphers.identify_community_lead_bios(context, queryString)
 
     def process_investor_bios(self, context):
         logging.info("Identifying investors...")
-        self.cyphers.identify_investors_bios(context)
+        queryString = "'investor' OR 'investing' OR 'angel investor' OR 'GP' OR 'LP'"
+        self.cyphers.identify_investors_bios(context, queryString)
 
     def process_marketers_bios(self, context):
         logging.info("Identifying marketing professionals...")
-        self.cyphers.identify_marketers_bios(context)
+        queryString = """'Marketing' OR 'Marketer'"""
+        self.cyphers.identify_marketers_bios(context, queryString)
 
     def process_community_people_bios(self, context):
         logging.info("Identifying community people...")
-        self.cyphers.identify_community_lead_bios(context)
+        queryString = """'community lead' OR 'community manager'"""
+        self.cyphers.identify_community_lead_bios(context, queryString) 
 
     def process_devrel_bios(self, context):
         logging.info("idenitfying devrel people...")
-        self.cyphers.identify_devrel_bios(context)
+        queryString = """'devrel' OR 'developer relations' OR 'ecosystem lead'"""
+        self.cyphers.identify_devrel_bios(context, queryString)
 
     def process_podcaster_bios(self, context):
         logging.info("Identifying podcasters based on bios...")
-        self.cyphers.identify_podcasters_bios(context)
+        queryString = "'podcasts' OR 'podcast'"
+        self.cyphers.identify_podcasters_bios(context, queryString)
     
     def process_twitter_influencers(self, context):
         logging.info("Identifying cutoff for Twitter influencers...")
         self.cyphers.identify_twitter_influencers_bios(context)
         logging.info("identifying influencers omg...")
 
-    def connect_shit(self):
-        logging.info("Connecting wallets...")
-        self.cyphers.connect_accounts_to_wallet_for_bios()
-
     def run(self):
         self.process_conditions()
+        self.cyphers.connect_account_contexts_to_wallets()
 
 if __name__ == '__main__':
     analysis = ProfessionalsAnalysis()
     analysis.run()
-
-
-
-
-

@@ -86,3 +86,15 @@ class Indexes(Cypher):
     def email(self):
         query = "CREATE INDEX Emails IF NOT EXISTS FOR (e:Email) ON (e.email)"
         self.query(query)
+        
+    def wicIndexes(self):
+        query = """CREATE FULLTEXT INDEX wicArticles IF NOT EXISTS FOR (a:Article) ON EACH [a.text, a.title]"""
+        self.query(query)
+        query = """CREATE FULLTEXT INDEX wicBios IF NOT EXISTS FOR (a:Twitter|Github|Dune) ON EACH [a.bio]"""
+        self.query(query)
+        query = """CREATE FULLTEXT INDEX wicGrants IF NOT EXISTS FOR (a:Grant) ON EACH [a.text, a.title]"""
+        self.query(query)
+        query = """CREATE FULLTEXT INDEX wicProposals IF NOT EXISTS FOR (a:Proposal) ON EACH [a.text, a.title]"""
+        self.query(query)
+        query = """CREATE FULLTEXT INDEX wicTwitter IF NOT EXISTS FOR (a:Twitter) ON EACH [a.bio]"""
+        self.query(query)
