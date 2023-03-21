@@ -87,8 +87,8 @@ class CuratedTokenHoldingProcessor(Processor):
             self.cyphers.link_or_merge_ERC20_token_holding(urls)
 
     def run(self):
-        self.get_holders_for_ERC20_tokens()
         self.get_holders_for_NFT_tokens()
+        self.get_holders_for_ERC20_tokens()
 
 if __name__ == "__main__":
     P = CuratedTokenHoldingProcessor()
