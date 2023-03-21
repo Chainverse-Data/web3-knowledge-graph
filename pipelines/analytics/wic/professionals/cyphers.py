@@ -9,7 +9,7 @@ class ProfessionalsCyphers(WICCypher):
     @count_query_logging
     def token_contract_deployer_wallets(self, context):
         query = f"""
-        MATCH (deployer:Wallet)-[r:DEPLOYED]->(token:Token)
+        MATCH (deployer:Wallet)-[:DEPLOYED]->(token:Token)
         MATCH (wic:_Wic:_{self.subgraph_name}:_Context:_{context})
         MERGE (deployer)-[r:_HAS_CONTEXT]->(wic)
         RETURN COUNT(r)
