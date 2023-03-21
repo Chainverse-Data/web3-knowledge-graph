@@ -41,6 +41,10 @@ class Cypher:
     def run_query(self, neo4j_driver, query, parameters=None, counter=0):
         time.sleep(counter * 10)
         assert neo4j_driver is not None, "Driver not initialized!"
+        if counter > 10:
+            logging.error(f"An error occured for neo4j instance {neo4j_driver}")
+            logging.error(f"Query failed: {e}")
+            raise e
         session = None
         response = None
         try:
