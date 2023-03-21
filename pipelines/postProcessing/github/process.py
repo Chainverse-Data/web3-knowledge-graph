@@ -77,7 +77,7 @@ class GithubProcessor(Processor):
         if repos_raw_data and type(repos_raw_data) == list:
             repo_pbar = tqdm(repos_raw_data, position=1, desc="Getting repository information", leave=False)
             for repo in repo_pbar:
-                if "full_name" in repo:
+                if "full_name" in repo and repo["full_name"]:
                     repo_pbar.set_description(desc="Getting repository information: " + repo["full_name"])
                     self.get_repository_data(repo["full_name"])
             repositories = [repo["full_name"] for repo in repos_raw_data]
@@ -147,7 +147,7 @@ class GithubProcessor(Processor):
                     repos_raw_data["license"] = None
             else:
                 repos_raw_data["license"] = None
-            if "parent" in repos_raw_data:
+            if "parent" in repos_raw_data and repos_raw_data["parent"]["full_name"]:
                 self.get_repository_data(repos_raw_data["parent"]["full_name"])
                 repos_raw_data["parent"] = repos_raw_data["parent"]["full_name"]
             repos_data = {key: value for (key, value) in repos_raw_data.items() if key in self.repository_keys}

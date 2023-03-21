@@ -27,9 +27,9 @@ class TokenMetadataCyphers(Cypher):
     @get_query_logging
     def get_empty_ERC721_tokens(self):
         token_node_query = f"""
-            MATCH (token:Token:ERC721) 
-            WHERE token.address IS NOT NULL AND token.metadataScraped IS NULL 
-            RETURN token 
+            MATCH (token:Token)
+            WHERE (token:ERC721 OR token:ERC1155) AND token.metadataScraped IS NULL 
+            RETURN token
         """
         if DEBUG:
             token_node_query += " LIMIT 100"
