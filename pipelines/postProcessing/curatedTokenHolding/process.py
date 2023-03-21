@@ -88,7 +88,7 @@ class CuratedTokenHoldingProcessor(Processor):
 
     def run(self):
         self.get_holders_for_NFT_tokens()
-        self.get_holders_for_ERC20_tokens()
+        #self.get_holders_for_ERC20_tokens()
 
 if __name__ == "__main__":
     P = CuratedTokenHoldingProcessor()
