@@ -5,8 +5,8 @@ import os
 DEBUG = os.environ.get("DEBUG", False)
 
 class ENSScraper(Scraper):
-    def __init__(self, bucket_name="ens-records", allow_override=None):
-        super().__init__(bucket_name, allow_override)
+    def __init__(self, bucket_name="ens-records"):
+        super().__init__(bucket_name)
         self.graph_url = "https://api.thegraph.com/subgraphs/name/ensdomains/ens"
         self.last_block = self.metadata.get("last_block", 0)
         self.interval = 500

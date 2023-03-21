@@ -3,8 +3,8 @@ import logging
 
 
 class LensScraper(Scraper):
-    def __init__(self, bucket_name="lens", allow_override=True):
-        super().__init__(bucket_name, allow_override=allow_override)
+    def __init__(self, bucket_name="lens"):
+        super().__init__(bucket_name)
 
         self.graph_url = "https://api.thegraph.com/subgraphs/name/anudit/lens-protocol"
         self.headers = {"accept": "application/json", "content-type": "application/json"}

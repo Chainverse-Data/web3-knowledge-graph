@@ -14,8 +14,8 @@ DEBUG = os.environ.get("DEBUG", False)
 # For the future, there should be a better way to do this.
 
 class TokenHolderScraper(Scraper):
-    def __init__(self, bucket_name="token-holders", allow_override=False):
-        super().__init__(bucket_name, allow_override=allow_override)
+    def __init__(self, bucket_name="token-holders"):
+        super().__init__(bucket_name)
         self.cyphers = TokenHoldersCypher()
         self.wallets_last_block = self.metadata.get("wallets_last_block", {})
         self.alchemy_api_url = "https://eth-mainnet.g.alchemy.com/v2/{}".format(os.environ["ALCHEMY_API_KEY"])

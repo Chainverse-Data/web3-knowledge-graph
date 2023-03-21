@@ -7,8 +7,8 @@ import os
 DEBUG = os.environ.get("DEBUG", False)
 
 class DelegationScraper(Scraper):
-    def __init__(self, bucket_name="delegation", allow_override=True):
-        super().__init__(bucket_name, allow_override=allow_override)
+    def __init__(self, bucket_name="delegation"):
+        super().__init__(bucket_name)
         self.graph_urls = [
             {
                 "protocol": "ampleforth",

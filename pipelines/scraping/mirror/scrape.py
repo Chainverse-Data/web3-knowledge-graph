@@ -14,8 +14,8 @@ from collections import Counter
 DEBUG = os.environ.get("DEBUG", False)
 
 class MirrorScraper(Scraper):
-    def __init__(self, bucket_name="mirror", allow_override=False):
-        super().__init__(bucket_name, allow_override=allow_override, chain="optimism")
+    def __init__(self, bucket_name="mirror"):
+        super().__init__(bucket_name, chain="optimism")
         self.etherscan = Etherscan()
         self.optimism_start_block = self.metadata.get("optimism_start_block", 8557803)
         self.optimism_end_block = self.etherscan.get_last_block_number(chain="optimism")

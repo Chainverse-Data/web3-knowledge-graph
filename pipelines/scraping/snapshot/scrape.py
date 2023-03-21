@@ -5,8 +5,8 @@ import logging
 import time
 
 class SnapshotScraper(Scraper):
-    def __init__(self, bucket_name="snapshot", allow_override=False):
-        super().__init__(bucket_name, allow_override=allow_override)
+    def __init__(self, bucket_name="snapshot"):
+        super().__init__(bucket_name)
         self.snapshot_url = "https://hub.snapshot.org/graphql"
         self.space_limit = 100
         self.proposal_limit = 500

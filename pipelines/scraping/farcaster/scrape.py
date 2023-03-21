@@ -2,8 +2,8 @@ from ..helpers import Scraper
 import logging
 
 class FarcasterScraper(Scraper):
-    def __init__(self, bucket_name="farcaster", allow_override=True):
-        super().__init__(bucket_name, allow_override=allow_override)
+    def __init__(self, bucket_name="farcaster"):
+        super().__init__(bucket_name)
 
         self.graph_url = "https://api.thegraph.com/subgraphs/name/0xsarvesh/farcaster-goerli"
         self.headers = {"accept": "application/json", "content-type": "application/json"}

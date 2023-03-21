@@ -10,8 +10,8 @@ from datetime import datetime
 DEBUG = os.environ.get("DEBUG", False)
 
 class GitCoinScraper(Scraper):
-    def __init__(self, bucket_name="gitcoin", allow_override=False):
-        super().__init__(bucket_name, allow_override=allow_override)
+    def __init__(self, bucket_name="gitcoin"):
+        super().__init__(bucket_name)
         self.gitcoin_api_limit=40
         self.blocks_limit = 2000
         self.last_grant_offset = 0

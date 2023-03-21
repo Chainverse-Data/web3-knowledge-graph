@@ -9,8 +9,8 @@ from ens.auto import ns
 
 
 class EnsScraper(Scraper):
-    def __init__(self, bucket_name="ens", allow_override=False):
-        super().__init__(bucket_name, allow_override=allow_override)
+    def __init__(self, bucket_name="ens"):
+        super().__init__(bucket_name)
         self.provider = "https://eth-mainnet.alchemyapi.io/v2/{}".format(os.environ["ALCHEMY_API_KEY"])
         self.headers = {"accept": "application/json"}
 

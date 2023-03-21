@@ -4,10 +4,10 @@ import numpy as np
 import tqdm
 
 class PropHouseScraper(Scraper):
-    def __init__(self, allow_override=True):
+    def __init__(self):
         self.bucket_name="prop-house"
 
-        super().__init__(self.bucket_name, allow_override=allow_override)
+        super().__init__(self.bucket_name)
 
         self.graph_url = "https://prod.backend.prop.house/graphql"
         self.headers = {"accept": "application/json", "content-type": "application/json"}

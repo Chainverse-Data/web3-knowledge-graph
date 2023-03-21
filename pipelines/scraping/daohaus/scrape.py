@@ -6,8 +6,8 @@ import logging
 DEBUG = os.environ.get("DEBUG", False)
 
 class DAOHausScraper(Scraper):
-    def __init__(self, bucket_name="daohaus", allow_override=False):
-        super().__init__(bucket_name, allow_override=allow_override)
+    def __init__(self, bucket_name="daohaus"):
+        super().__init__(bucket_name)
 
         self.interval = 1000
         if DEBUG:

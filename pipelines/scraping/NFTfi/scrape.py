@@ -6,8 +6,8 @@ from ..helpers import Scraper
 
 
 class NFTfiScraper(Scraper):
-    def __init__(self, bucket_name="nftfi", allow_override=None, chain="ethereum"):
-        super().__init__(bucket_name, allow_override, chain)
+    def __init__(self, bucket_name="nftfi"):
+        super().__init__(bucket_name)
         self.NFTfi_contract = "0x88341d1a8F672D2780C8dC725902AAe72F143B0c"
         self.topics = {
             "LoanStarted": "0x7a9a95acdaec2726663658ce76ffb4b960ce244a001b3252a5bb3db586e28c1b",

@@ -6,8 +6,8 @@ import logging
 import json
 
 class UnlockScraper(Scraper):
-    def __init__(self, bucket_name="unlock", allow_override=True): 
-        super().__init__(bucket_name, allow_override=allow_override)
+    def __init__(self, bucket_name="unlock"): 
+        super().__init__(bucket_name)
 
         ## graph urls
         self.graph_urls = [

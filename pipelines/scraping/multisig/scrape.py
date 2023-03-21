@@ -5,8 +5,8 @@ import logging
 DEBUG = os.environ.get("DEBUG", False)
 
 class MultisigScraper(Scraper):
-    def __init__(self, bucket_name="multisig", allow_override=False):
-        super().__init__(bucket_name, allow_override=allow_override)
+    def __init__(self, bucket_name="multisig"):
+        super().__init__(bucket_name)
         # self.graph_url = "https://gateway.thegraph.com/api/{}/subgraphs/id/3oPKQiPKyD1obYpi5zXBy6HoPdYoDgxXptKrZ8GC3N1N".format(os.environ["GRAPH_API_KEY"])
         self.graph_url = "https://api.thegraph.com/subgraphs/name/multis/multisig-mainnet"
         self.cutoff_timestamp = self.metadata.get("cutoff_timestamp", 0)
