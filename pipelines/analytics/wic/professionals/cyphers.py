@@ -58,7 +58,7 @@ class ProfessionalsCyphers(WICCypher):
         query = f"""
         MATCH (entity:Entity)-[:HAS_PROPOSAL]-(proposal:Proposal)<-[:VOTED]-(voter:Wallet)
         WITH entity, count(distinct(voter)) as voters
-        WHERE voters > 100 AND (entity)-[:HAS_ALIAS]-(Alias:Ens)
+        WHERE voters > 100 AND (entity)-[:HAS_ALIAS]-(:Alias:Ens)
         MATCH (entity)-[:HAS_ALIAS]-(alias:Alias:Ens)-[:HAS_ALIAS]-(ensAdmin:Wallet)
         MATCH (context:_Wic:_{self.subgraph_name}:_Context:_{context})
         MERGE (ensAdmin)-[r:_HAS_CONTEXT]->(context)
@@ -80,6 +80,18 @@ class ProfessionalsCyphers(WICCypher):
         count = self.query(query)[0].value()
         return count
     
+    @count_query_logging
+    def identify_mirror_power_users(self, context):
+        mirror_write_token="0x622236BB180256B6Ae1a935DaE08dC0356141632"
+        query = f"""
+            MATCH (t:Token {{address: toLower("{mirror_write_token}")}})-[:HOLDS]-(w:Wallet)
+            MATCH (context:_Wic:_{self.subgraph_name}:_Context:_{context})
+            MERGE (account)-[r:_HAS_CONTEXT]->(context)
+            RETURN count(r)
+        """
+
+        count = self.query(query)[0].value()
+
     @count_query_logging
     def identify_podcasters_bios(self, context, queryString):
         query =f"""

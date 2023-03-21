@@ -24,6 +24,7 @@ class ProfessionalsAnalysis(WICAnalysis):
             },
             "Influencers": {
                 "TwitterInfluencers": self.process_twitter_influencers,
+                "MirrorInfluencers": self.process_mirror_influencers,
                 "Podcasters": self.process_podcaster_bios
             }
         }
@@ -89,7 +90,12 @@ class ProfessionalsAnalysis(WICAnalysis):
     def process_twitter_influencers(self, context):
         logging.info("Identifying cutoff for Twitter influencers...")
         self.cyphers.identify_twitter_influencers_bios(context)
-        logging.info("identifying influencers omg...")
+
+    def process_mirror_influencers(self, context):
+        logging.info("Identifying Mirror Write holders...")
+        self.cyphers.identify_mirror_power_users(context)
+
+
 
     def run(self):
         self.process_conditions()
