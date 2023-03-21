@@ -38,7 +38,7 @@ class MirrorCyphers(Cypher):
                     article.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                     article.ingestedBy = "{self.CREATED_ID}"
                 ON MATCH set article.title = articles.title,
-                    article.body = articles.body,
+                    article.text = articles.body,
                     article.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                     article.ingestedBy = "{self.UPDATED_ID}"
                 return count(article)
