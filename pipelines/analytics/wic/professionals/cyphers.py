@@ -192,6 +192,7 @@ class ProfessionalsCyphers(WICCypher):
             CALL apoc.periodic.commit("
                 MATCH (wallet:Wallet)-[:HAS_ACCOUNT]-(account:Account)-[:_HAS_CONTEXT]->(context:_Wic:_{self.subgraph_name}:_Context)
                 WHERE NOT (wallet)-[:_HAS_CONTEXT]->(context)
+                WITH wallet
                 LIMIT 10000
                 MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
                 RETURN COUNT(*)
