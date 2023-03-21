@@ -62,3 +62,19 @@ class AccountsCyphers(Cypher):
         """
         count = self.query(query)[0].value()
         return count
+
+    @count_query_logging
+    def link_same_handles(self):
+        query = f"""
+            MATCH (account1:Account)
+            MATCH (account2:Account)
+            WHERE id(account1) <> id(account2) 
+            AND account1.handle IS NOT NULL 
+            AND account2.handle IS NOT NULL 
+            AND account1.handle = account2.handle 
+            AND NOT (account1)-[:HAS_ACCOUNT]-(account2)
+            MERGE (account1)-[r:HAS_ACCOUNT]-(account2)
+            return count(r)
+        """
+        count = self.query(query)[0].value()
+        return count

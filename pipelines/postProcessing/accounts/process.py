@@ -22,11 +22,15 @@ class AccountsProcessor(Processor):
     def process_github_accounts(self):
         self.cyphers.link_wallet_github_accounts()
 
+    def process_same_handle(self):
+        self.cyphers.link_same_handles()
+
     def run(self):
         self.process_wallets_account_labeling()
         self.process_acount_types()
         self.process_twitter_accounts()
         self.process_github_accounts()
+        self.process_same_handle()
 
 if __name__ == "__main__":
     P = AccountsProcessor()
