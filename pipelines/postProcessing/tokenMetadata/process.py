@@ -25,13 +25,13 @@ class TokenMetadataPostProcess(Processor):
             metadata_urls = self.save_json_as_csv(results, self.bucket_name, f"token_ERC721_metadata_{self.asOf}")
             self.cyphers.add_ERC721_token_node_metadata(metadata_urls)
             
-            twitter = [{"handle": result["twitterUsername"], "contractAddress": result["address"]} for result in results if result["twitterUsername"]]
+            twitter = [{"handle": result["twitterUsername"], "contractAddress": result["address"], "citation": "OpenSea Metadata"} for result in results if result["twitterUsername"]]
             urls = self.save_json_as_csv(twitter, self.bucket_name, f"token_ERC721_twitters_{self.asOf}")
-            self.cyphers.create_or_merge_socials(urls, ["Twitter", "Account"], "handle", "handle", "HAS_ACCOUNT", "openSea metadata")
+            self.cyphers.create_or_merge_socials(urls, ["Twitter", "Account"], "handle", "handle", "HAS_ACCOUNT", "citation")
             
-            twitter = [{"url": result["externalUrl"], "contractAddress": result["address"]} for result in results if result["externalUrl"]]
+            twitter = [{"url": result["externalUrl"], "contractAddress": result["address"], "citation": "OpenSea Metadata"} for result in results if result["externalUrl"]]
             urls = self.save_json_as_csv(twitter, self.bucket_name, f"token_ERC721_websites_{self.asOf}")
-            self.cyphers.create_or_merge_socials(urls, ["Website", "Account"], "url", "url", "HAS_WEBSITE", "openSea metadata")
+            self.cyphers.create_or_merge_socials(urls, ["Website", "Account"], "url", "url", "HAS_WEBSITE", "citation")
 
             deployers = [{"address": result["address"], "contractDeployer": result["contractDeployer"]} for result in results if result["contractDeployer"]]
             deployers_wallets = [{"address": result["contractDeployer"]} for result in results if result["contractDeployer"]]
