@@ -22,8 +22,6 @@ class TokenMetadataPostProcess(Processor):
         tokens = self.cyphers.get_empty_ERC721_tokens()
         for i in tqdm(range(0, len(tokens), self.chunk_size)):
             results = self.parallel_process(self.get_alchemy_ERC721_metadata, tokens[i: i+self.chunk_size], description="Getting all ERC721 Metadata")
-            metadata_urls = self.save_json_as_csv(results, self.bucket_name, f"token_ERC721_metadata_{self.asOf}")
-            self.cyphers.add_ERC721_token_node_metadata(metadata_urls)
             
             twitter = [{"handle": result["twitterUsername"], "contractAddress": result["address"], "citation": "OpenSea Metadata"} for result in results if result["twitterUsername"]]
             urls = self.save_json_as_csv(twitter, self.bucket_name, f"token_ERC721_twitters_{self.asOf}")
@@ -33,7 +31,7 @@ class TokenMetadataPostProcess(Processor):
             urls = self.save_json_as_csv(websites, self.bucket_name, f"token_ERC721_websites_{self.asOf}")
             self.cyphers.create_or_merge_socials(urls, ["Website", "Account"], "url", "url", "HAS_WEBSITE", "citation")
 
-            discords = [{"url": result["discordUrl"], "contractAddress": result["address"], "citation": "OpenSea Metadata"} for result in results if result["externalUrl"]]
+            discords = [{"url": result["discordUrl"], "contractAddress": result["address"], "citation": "OpenSea Metadata"} for result in results if "discordUrl" in result and result["discordUrl"]]
             urls = self.save_json_as_csv(discords, self.bucket_name, f"token_ERC721_websites_{self.asOf}")
             self.cyphers.create_or_merge_socials(urls, ["Discord", "Hub"], "url", "url", "HAS_HUB", "citation")
 
@@ -43,6 +41,9 @@ class TokenMetadataPostProcess(Processor):
             deployers_wallets_urls = self.save_json_as_csv(deployers_wallets, self.bucket_name, f"token_ERC721_deployers_wallets_{self.asOf}")
             self.cyphers.queries.create_wallets(deployers_wallets_urls)
             self.cyphers.add_ERC721_deployers(deployers_urls)
+
+            metadata_urls = self.save_json_as_csv(results, self.bucket_name, f"token_ERC721_metadata_{self.asOf}")
+            self.cyphers.add_ERC721_token_node_metadata(metadata_urls)
 
     def ingest_socials(self, metadata):
         metadata = pd.DataFrame(metadata)
