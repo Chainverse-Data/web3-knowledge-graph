@@ -140,12 +140,12 @@ class CuratedTokenHoldingCyphers(Cypher):
                 MERGE (wallet)-[edge:HOLDS_TOKEN {{tokenId: holdings.tokenId}}]->(token)
                 SET edge.balance = toIntegerOrNull(holdings.balance),
                     edge.lastUpdatedDt = datetime()
-                MERGE (wallet)-[edge:HOLDS]->(token)
-                SET edge.balance = holdings.balance,
-                    edge.numericBalance = toFloatOrNull(holdings.numericBalance),
-                    edge.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
-                    edge.ingestedBy = "{self.UPDATED_ID}"
-                RETURN count(edge)
+                MERGE (wallet)-[edge2:HOLDS]->(token)
+                SET edge2.balance = holdings.balance,
+                    edge2.numericBalance = toFloatOrNull(holdings.numericBalance),
+                    edge2.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
+                    edge2.ingestedBy = "{self.UPDATED_ID}"
+                RETURN count(edge2)
             """
             count += self.query(query)[0].value()
         return count
