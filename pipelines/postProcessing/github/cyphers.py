@@ -13,13 +13,24 @@ class GithubCypher(Cypher):
         self.query(query)
 
     @get_query_logging
-    def get_all_github_accounts(self):
+    def get_missing_github_accounts(self):
         query = f"""
             MATCH (github:Github:Account)
-            WHERE github.lastMetadataUpdateDt IS NULL OR github.lastMetadataUpdateDt < datetime() - duration({{days:30}})
+            WHERE (github.lastMetadataUpdateDt IS NULL OR github.lastMetadataUpdateDt < datetime() - duration({{days:30}}))
+            AND NOT github:BadHandle
             RETURN github.handle as handle
         """
         handles = self.query(query)
+        return handles
+
+    @get_query_logging
+    def get_known_github_accounts(self):
+        query = f"""
+            MATCH (github:Github:Account)
+            WHERE (github.lastMetadataUpdateDt IS NOT NULL AND github.lastMetadataUpdateDt > datetime() - duration({{days:30}}))
+            RETURN github.handle as handle
+        """
+        handles = [el["handle"] for el in self.query(query)]
         return handles
 
     @count_query_logging
@@ -280,6 +291,19 @@ class GithubCypher(Cypher):
                 MATCH (twitter:Twitter:Account {{handle: toLower(data.twitter)}})
                 MERGE (user)-[edge:HAS_ACCOUNT]->(twitter)
                 RETURN count(edge)
+            """
+            count += self.query(query)[0].value()
+        return count
+
+    @count_query_logging
+    def flag_bad_handles(self, urls):
+        count = 0
+        for url in urls:
+            query = f"""
+                LOAD CSV WITH HEADERS FROM '{url}' AS data
+                MATCH (user:Github:Account {{handle: toLower(data.handle)}})
+                SET user:BadHandle    
+                RETURN count(user)
             """
             count += self.query(query)[0].value()
         return count

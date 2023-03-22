@@ -49,10 +49,12 @@ class Requests:
                             allow_redirects=allow_redirects, verify=False)
             if not retry_on_404 and r.status_code == 404:
                 return None
+            elif r.status_code == 204:
+                return None
             elif not ignore_retries and retry_on_403 and (r.status_code == 403 or "403 Forbidden" in r.content.decode("UTF-8")):
                 logging.error(f"403 forbidden detected: {r.content.decode('UTF-8')}")
                 return self.get_request(url, params=params, headers=headers, allow_redirects=allow_redirects, counter=counter + 1)
-            elif not ignore_retries and r.status_code <= 200 and r.status_code > 300:
+            elif not ignore_retries and r.status_code != 200:
                 logging.error(f"Status code not 200: {r.status_code} Retrying in {counter*10}s (counter = {counter})...")
                 return self.get_request(url, params=params, headers=headers, allow_redirects=allow_redirects, counter=counter + 1)
             if not json and decode:

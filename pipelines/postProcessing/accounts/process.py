@@ -25,12 +25,16 @@ class AccountsProcessor(Processor):
     def process_same_handle(self):
         self.cyphers.link_same_handles()
 
+    def process_mirror_author_ref_twitter(self):
+        self.cyphers.link_mirror_authors_to_twitter(threshold=3, proportion=0.8)
+
     def run(self):
         self.process_wallets_account_labeling()
         self.process_acount_types()
         self.process_twitter_accounts()
         self.process_github_accounts()
         self.process_same_handle()
+        self.process_mirror_author_ref_twitter()
 
 if __name__ == "__main__":
     P = AccountsProcessor()

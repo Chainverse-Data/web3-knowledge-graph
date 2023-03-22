@@ -1,8 +1,11 @@
+import logging
 import os
+import time
 from tqdm import tqdm
 from .cyphers import GithubCypher
 from ..helpers import Processor
 import numpy as np
+from requests.models import Response
 
 DEBUG = os.environ.get("DEBUG", False)
 
@@ -14,13 +17,18 @@ class GithubProcessor(Processor):
         self.user_keys = ["id", "login", "avatar_url", "html_url", "name", "company", "blog", "location", "email", "hireable", "bio", "twitter_username", "public_repos", "public_gists", "followers", "following", "created_at", "updated_at"]
         self.contributor_keys = ["login", "contributions"]
         self.repository_keys = ["id","name","full_name","private","owner","html_url","description","fork","created_at","updated_at","pushed_at","homepage","size","stargazers_count","watchers_count","language","has_issues","has_projects","has_downloads","has_wiki","has_pages","has_discussions","forks_count","mirror_url","archived","disabled","open_issues_count","license","allow_forking","is_template","web_commit_signoff_required","topics","visibility","forks","open_issues","watchers"]
+        self.known_users = set()
         
         self.chunk_size = 10
         super().__init__("github-processing")
 
     def init_data(self):
+        if "user" in self.data:
+            for handle in self.data["users"]:
+                self.known_users.add(handle)
         self.data = {}
         self.data["users"] = {}
+        self.data['bad_handles'] = []
         self.data["repositories"] = {}
 
     def get_headers(self):
@@ -33,20 +41,47 @@ class GithubProcessor(Processor):
         return github_headers
 
     def get_all_handles(self):
-        handles = self.cyphers.get_all_github_accounts()
+        handles = self.cyphers.get_missing_github_accounts()
         handles = [el["handle"] for el in handles]
         if DEBUG:
-            handles = handles[:10]
+            handles = handles[:100]
         return handles
     
+    def get_known_handles(self):
+        handles = self.cyphers.get_known_github_accounts()
+        return handles
+
     ##########################################
     #                  USERS                 #
     ##########################################
 
-    def get_followers(self, handle):
+    def check_api_rate_limit(self, response):
+        if not type(response) == Response:
+            return True
+        remaining = int(response.headers["X-RateLimit-Remaining"])
+        if remaining <= 0:
+            to_sleep = float(response.headers["X-RateLimit-Remaining"]) - time.now()
+            logging.info(f"API Rate limit exceeded sleeping for: {to_sleep}")
+            time.sleep(int(to_sleep))
+            return False
+        return True
+
+    def get_followers(self, handle, counter=0):
+        time.sleep(counter)
+        if counter > 10:
+            return []
         url = f"https://api.github.com/users/{handle}/followers"
-        followers_raw_data = self.get_request(url, headers=self.get_headers(), decode=False, json=True, retry_on_404=False) 
+        response = self.get_request(url, headers=self.get_headers(), decode=False, json=False, retry_on_404=False) 
+        if response and not self.check_api_rate_limit(response):
+            return self.get_followers(handle)
         followers_data = []
+        if not response:
+            return followers_data
+        try:
+            followers_raw_data = response.json()
+        except:
+            logging.error(f"Error getting followers: {response}")
+            return self.get_followers(handle, counter=counter+1)
         if followers_raw_data and type(followers_raw_data) == list:
             follower_pbar = tqdm(followers_raw_data, desc="Getting followers information", position=2, leave=False)
             for follower in follower_pbar:
@@ -56,24 +91,49 @@ class GithubProcessor(Processor):
                     followers_data.append(follower["login"])
         return followers_data
 
-    def get_user_data(self, handle, follow_through=True):
-        if handle in self.data["users"]:
-            return self.data["users"][handle]
+    def get_user_data(self, handle, follow_through=True, counter=0):
+        time.sleep(counter)
+        if counter > 10:
+            return None
+        if handle in self.data["users"] or handle in self.known_users:
+            return None
         url = f"https://api.github.com/users/{handle}"
-        user_raw_data = self.get_request(url, headers=self.get_headers(), decode=False, json=True, retry_on_404=False)
-        if user_raw_data and type(user_raw_data) == dict:
-            user_data = {key: value for (key, value) in user_raw_data.items() if key in self.user_keys}
-            if follow_through:
-                followers = self.get_followers(handle)
-                user_data["followers_handles"] = followers
-                repositories = self.get_user_repos(handle)
-                user_data["repositories"] = repositories
-            self.data["users"][handle] = user_data
+        response = self.get_request(url, headers=self.get_headers(), decode=False, json=False, retry_on_404=False)
+        if response and not self.check_api_rate_limit(response):
+            return self.get_user_data(handle, follow_through=follow_through)
+        if response:
+            try:
+                user_raw_data = response.json()
+            except:
+                logging.error(f"Error getting user data: {response}")
+                return self.get_user_data(handle, follow_through=follow_through, counter=counter+1)
+            if user_raw_data and type(user_raw_data) == dict:
+                user_data = {key: value for (key, value) in user_raw_data.items() if key in self.user_keys}
+                if follow_through:
+                    followers = self.get_followers(handle)
+                    user_data["followers_handles"] = followers
+                    repositories = self.get_user_repos(handle)
+                    user_data["repositories"] = repositories
+                self.data["users"][handle] = user_data
+        else:
+            self.data["bad_handles"].append(handle)
 
-    def get_user_repos(self, handle):
+    def get_user_repos(self, handle, counter=0):
+        time.sleep(counter)
+        if counter > 10:
+            return []
         url = f"https://api.github.com/users/{handle}/repos"
-        repos_raw_data = self.get_request(url, headers=self.get_headers(), decode=False, json=True, retry_on_404=False)
+        response = self.get_request(url, headers=self.get_headers(), decode=False, json=False, retry_on_404=False)
+        if response and not self.check_api_rate_limit(response):
+            return self.get_user_repos(handle)
         repositories = []
+        if not response:
+            return repositories
+        try:
+            repos_raw_data = response.json()
+        except:
+            logging.error(f"Error getting user's repos: {response}")
+            return self.get_user_repos(handle, counter=counter+1)
         if repos_raw_data and type(repos_raw_data) == list:
             repo_pbar = tqdm(repos_raw_data, position=1, desc="Getting repository information", leave=False)
             for repo in repo_pbar:
@@ -87,10 +147,22 @@ class GithubProcessor(Processor):
     #                  REPOS                 #
     ##########################################
 
-    def get_contributors(self, repository):
+    def get_contributors(self, repository, counter=0):
+        time.sleep(counter)
+        if counter > 10:
+            return []
         url = f"https://api.github.com/repos/{repository}/contributors"
-        contributors_raw_data = self.get_request(url, headers=self.get_headers(), decode=False, json=True, retry_on_404=False)
+        response = self.get_request(url, headers=self.get_headers(), decode=False, json=False, retry_on_404=False)
+        if response and not self.check_api_rate_limit(response):
+            return self.get_contributors(repository)
         contributors_data = []
+        if not response:
+            return contributors_data
+        try:
+            contributors_raw_data = response.json()
+        except:
+            logging.error(f"Error getting contributors: {response}")
+            return self.get_contributors(repository, counter=counter+1)
         if contributors_raw_data and type(contributors_raw_data) == list:
             cont_pbar = tqdm(contributors_raw_data, desc="Getting contributors information", position=2, leave=False)
             for contributor in cont_pbar:
@@ -101,10 +173,22 @@ class GithubProcessor(Processor):
                     contributors_data.append(contributor["login"])
         return contributors_data
 
-    def get_subscribers(self, repository):
+    def get_subscribers(self, repository, counter=0):
+        time.sleep(counter)
+        if counter > 10:
+            return []
         url = f"https://api.github.com/repos/{repository}/subscribers"
-        subscribers_raw_data = self.get_request(url, headers=self.get_headers(), decode=False, json=True, retry_on_404=False)
+        response = self.get_request(url, headers=self.get_headers(), decode=False, json=False, retry_on_404=False)
+        if response and not self.check_api_rate_limit(response):
+            return self.get_subscribers(repository)
         subscribers_data = []
+        if not response:
+            return subscribers_data
+        try:
+            subscribers_raw_data = response.json()
+        except:
+            logging.error(f"Error getting subscribers: {response}")
+            return self.get_subscribers(repository, counter=counter+1)
         if subscribers_raw_data and type(subscribers_raw_data) == list:
             sub_pbar = tqdm(subscribers_raw_data, desc="Getting subscribers information", position=2, leave=False)
             for subscriber in sub_pbar:
@@ -125,39 +209,52 @@ class GithubProcessor(Processor):
                 return ""
         else:
             return ""
+    def handle_repository(self, repository, repos_raw_data):
+        repos_raw_data["languages"] = self.get_repository_languages(repository)
+        if "owner" in repos_raw_data:
+            if repos_raw_data["owner"]:
+                repos_raw_data["owner"] = repos_raw_data["owner"].get("login", None)
+            else:
+                repos_raw_data["owner"] = None
+        else:
+            repos_raw_data["owner"] = None
+        if "license" in repos_raw_data:
+            if repos_raw_data["license"]:
+                repos_raw_data["license"] = repos_raw_data["license"].get("name", None)
+            else:
+                repos_raw_data["license"] = None
+        else:
+            repos_raw_data["license"] = None
+        if "parent" in repos_raw_data and repos_raw_data["parent"]["full_name"]:
+            self.get_repository_data(repos_raw_data["parent"]["full_name"])
+            repos_raw_data["parent"] = repos_raw_data["parent"]["full_name"]
+        repos_data = {key: value for (key, value) in repos_raw_data.items() if key in self.repository_keys}
+        contributors = self.get_contributors(repository)
+        subscribers = self.get_subscribers(repository)
+        readme = self.get_repo_readme(repository)
+        repos_data["contributors_handles"] = contributors
+        repos_data["subscribers_handles"] = subscribers 
+        repos_data["readme"] = readme
+        self.data["repositories"][repository] = repos_data
 
-    def get_repository_data(self, repository):
+    def get_repository_data(self, repository, counter=0):
+        time.sleep(counter)
+        if counter > 10:
+            return None
         if repository in self.data["repositories"]:
             return self.data["repositories"][repository]
         url = f"https://api.github.com/repos/{repository}"
-        repos_raw_data = self.get_request(url, headers=self.get_headers(), decode=False, json=True, retry_on_404=False)
-        if repos_raw_data and type(repos_raw_data) == dict:
-            repos_raw_data["languages"] = self.get_repository_languages(repository)
-            if "owner" in repos_raw_data:
-                if repos_raw_data["owner"]:
-                    repos_raw_data["owner"] = repos_raw_data["owner"].get("login", None)
-                else:
-                    repos_raw_data["owner"] = None
-            else:
-                repos_raw_data["owner"] = None
-            if "license" in repos_raw_data:
-                if repos_raw_data["license"]:
-                    repos_raw_data["license"] = repos_raw_data["license"].get("name", None)
-                else:
-                    repos_raw_data["license"] = None
-            else:
-                repos_raw_data["license"] = None
-            if "parent" in repos_raw_data and repos_raw_data["parent"]["full_name"]:
-                self.get_repository_data(repos_raw_data["parent"]["full_name"])
-                repos_raw_data["parent"] = repos_raw_data["parent"]["full_name"]
-            repos_data = {key: value for (key, value) in repos_raw_data.items() if key in self.repository_keys}
-            contributors = self.get_contributors(repository)
-            subscribers = self.get_subscribers(repository)
-            readme = self.get_repo_readme(repository)
-            repos_data["contributors_handles"] = contributors
-            repos_data["subscribers_handles"] = subscribers 
-            repos_data["readme"] = readme
-            self.data["repositories"][repository] = repos_data
+        response = self.get_request(url, headers=self.get_headers(), decode=False, json=False, retry_on_404=False)
+        if response and not self.check_api_rate_limit(response):
+            return self.get_repository_data(repository)
+        if response:
+            try:
+                repos_raw_data = response.json()
+            except:
+                logging.error(f"Error getting repository: {response}")
+                return self.get_repository_data(repository, counter=counter+1)
+            if repos_raw_data and type(repos_raw_data) == dict:
+                self.handle_repository(repository, repos_raw_data)
     
     def get_repository_languages(self, repository):
         url = f"https://api.github.com/repos/{repository}/languages"
@@ -171,7 +268,41 @@ class GithubProcessor(Processor):
     def process_github_accounts(self, handles):
         self.parallel_process(self.get_user_data, handles, "Getting users accounts information")
 
+    def github_repo_search(self, url, params, page=1, counter=0):
+        time.sleep(counter)
+        if counter > 10:
+            return None
+        params["page"] = page
+        response = self.get_request(url, params, headers=self.get_headers(), decode=False, json=False)
+        if response and not self.check_api_rate_limit(response):
+            return self.github_repo_search(url, params, page=page, counter = counter+1)
+        try:
+            data = response.json()
+        except:
+            logging.error(f"Error in search query: {response}")
+            return self.github_repo_search(url, params, page=page, counter = counter+1)
+        for repo in data:
+            if repo and type(repo) == dict:
+                self.handle_repository(repo["full_name"], repo)
+        if page < 10:
+            return self.github_repo_search(url, params, page=page+1, counter = 0)
+
+    def get_solidity_repos(self):
+        sorting = ["stars", "forks", "help-wanted-issues", "updated"]
+        url = "https://api.github.com/search/repositories"
+        params = {
+            "q":"language:solidity",
+            "per_page":100,
+        }
+        for sort in sorting:
+            params["sort"] = sort
+            self.github_repo_search(url, params)
+
     def ingest_github_data(self):
+        bad_handles = [{"handle": handle} for handle in self.data["bad_handles"] if handle]
+        handles_urls = self.save_json_as_csv(bad_handles, self.bucket_name, f"processor_bad_handles_{self.asOf}")
+
+        self.cyphers.flag_bad_handles(handles_urls)
 
         users = [self.data["users"][handle] for handle in self.data["users"]]
         users_urls = self.save_json_as_csv(users, self.bucket_name, f"processor_users_{self.asOf}")
@@ -186,33 +317,33 @@ class GithubProcessor(Processor):
         repositories_urls = self.save_json_as_csv(repositories, self.bucket_name, f"processor_repositories_{self.asOf}")
 
         followers = []
-        for user in self.data["users"]:
-            if "followers_handles" in self.data["users"][user]:
-                for follower in self.data["users"][user]["followers_handles"]:
+        for user in users:
+            if "followers_handles" in user and user["login"]:
+                for follower in user["followers_handles"]:
                     followers.append({
-                        "handle": user,
+                        "handle": user["login"],
                         "follower": follower
                     })
         followers_urls = self.save_json_as_csv(followers, self.bucket_name, f"processor_followers_{self.asOf}")
         
         contributors = []
-        for repo in self.data["repositories"]:
-            if "contributors_handles" in self.data["repositories"][repo]:
-                for contributor in self.data["repositories"][repo]["contributors_handles"]:
-                    contributors.append({
-                        "full_name": repo,
-                        "contributor": contributor
-                    })
-        contributors_urls = self.save_json_as_csv(contributors, self.bucket_name, f"processor_contributors_{self.asOf}")
-
         subscribers = []
-        for repo in self.data["repositories"]:
-            if "subscribers_handles" in self.data["repositories"][repo]:
-                for subscriber in self.data["repositories"][repo]["subscribers_handles"]:
-                    subscribers.append({
-                        "full_name": repo,
-                        "subscriber": subscriber
-                    })
+        for repo in repositories:
+            if "contributors_handles" in repo:
+                for contributor in repo["contributors_handles"]:
+                    if contributor and repo["full_name"]:
+                        contributors.append({
+                            "full_name": repo["full_name"],
+                            "contributor": contributor
+                        })
+            if "subscribers_handles" in repo:
+                for subscriber in repo["subscribers_handles"]:
+                    if subscriber and repo["full_name"]:
+                        subscribers.append({
+                            "full_name": repo["full_name"],
+                            "subscriber": subscriber
+                        })
+        contributors_urls = self.save_json_as_csv(contributors, self.bucket_name, f"processor_contributors_{self.asOf}")
         subscribers_urls = self.save_json_as_csv(subscribers, self.bucket_name, f"processor_subscribers_{self.asOf}")
         
         self.cyphers.create_or_merge_users(users_urls)
@@ -227,6 +358,8 @@ class GithubProcessor(Processor):
         self.cyphers.link_twitter(twitters_urls)
 
     def run(self):
+        self.known_users = set(self.get_known_handles())
+        self.get_solidity_repos()
         handles = self.get_all_handles()
         for i in range(0, len(handles), self.chunk_size):
             self.init_data()

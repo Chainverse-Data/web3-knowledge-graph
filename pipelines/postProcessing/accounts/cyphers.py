@@ -78,3 +78,26 @@ class AccountsCyphers(Cypher):
         """
         count = self.query(query)[0].value()
         return count
+
+    @count_query_logging
+    def link_mirror_authors_to_twitter(self, threshold=3, proportion=0.8):
+        query = f"""
+            MATCH (w:Wallet)-[a:AUTHOR]-(m:Mirror:Article)-[r:REFERENCES]-(t:Twitter)
+            WITH w.address as address, t.handle as handle, COUNT(*) as refs
+            WHERE refs > {threshold}
+            MATCH (w:Wallet)-[a:AUTHOR]-(m:Mirror:Article)
+            WHERE w.address in address
+            WITH address, handle, refs, count(a) as authorship
+            WITH address, handle, toFloat(refs)/toFloat(authorship) as proportion
+            WHERE proportion > {proportion}
+            MATCH (w:Wallet {{address: address}})
+            MATCH (t:Twitter {{handle: handle}})
+            WHERE NOT (w)-[:HAS_ACCOUNT]-(t)
+            MERGE (w)-[r:HAS_ACCOUNT]-(t)
+            SET r.likely = true
+            SET r.citation = "High reference proportion in Mirror Articles"
+            RETURN count(r)
+        """
+        count = self.query(query)[0].values()
+
+        return count
