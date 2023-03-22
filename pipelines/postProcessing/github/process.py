@@ -377,6 +377,7 @@ class GithubProcessor(Processor):
         self.init_data()
         self.known_users = set(self.get_known_handles())
         self.get_solidity_repos()
+        self.ingest_github_data()
         handles = self.get_all_handles()
         for i in range(0, len(handles), self.chunk_size):
             self.init_data()
