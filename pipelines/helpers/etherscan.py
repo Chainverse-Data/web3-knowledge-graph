@@ -274,7 +274,7 @@ class Etherscan(Requests):
         }
 
         content = self.get_request(self.etherscan_api_url[chain], params=params, headers=self.headers, json=True)
-        if content and content["message"] == "No transactions found":
+        if content and (type(content) == dict and content["message"] == "No transactions found") or "No transactions found" in content:
             return results
         if self.is_valid_response(content):
             result = content["result"]

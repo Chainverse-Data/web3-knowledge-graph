@@ -130,7 +130,7 @@ class TokenMetadataPostProcess(Processor):
     def handle_external_links(self, data, key, label, property):
         data = data[~data[key].isna()]
         urls = self.save_df_as_csv(data, self.bucket_name, f"process_{key}_{self.asOf}")
-        self.cyphers.create_or_merge_socials(urls, [label, "Website"], "url", property, "HAS_WEBSITE", property)
+        self.cyphers.create_or_merge_socials(urls, [label], "url", property, "HAS_WEBSITE", property)
 
     def handle_hubs(self, data, key, label, property):
         data = data[~data[key].isna()]
