@@ -66,15 +66,19 @@ class GithubProcessor(Processor):
             return False
         return True
 
-    def get_followers(self, handle, counter=0):
+    def get_followers(self, handle, followers_data = [], page=1, counter=0):
         time.sleep(counter)
-        if counter > 10:
-            return []
+        if counter > 10  or page > 10:
+            return followers_data
         url = f"https://api.github.com/users/{handle}/followers"
-        response = self.get_request(url, headers=self.get_headers(), decode=False, json=False, retry_on_404=False) 
+        params = {
+            "per_page":100,
+            "page":page
+        }
+        response = self.get_request(url, params=params, headers=self.get_headers(), decode=False, json=False, retry_on_404=False) 
         if response and not self.check_api_rate_limit(response):
-            return self.get_followers(handle)
-        followers_data = []
+            return self.get_followers(handle, followers_data=followers_data, page=page)
+        
         if not response:
             return followers_data
         try:
@@ -82,13 +86,14 @@ class GithubProcessor(Processor):
         except:
             logging.error(f"Error getting followers: {response}")
             return self.get_followers(handle, counter=counter+1)
-        if followers_raw_data and type(followers_raw_data) == list:
+        if followers_raw_data and type(followers_raw_data) == list and len(followers_raw_data) > 0:
             follower_pbar = tqdm(followers_raw_data, desc="Getting followers information", position=2, leave=False)
             for follower in follower_pbar:
                 if "login" in follower:
                     follower_pbar.set_description("Getting followers information: " +  follower["login"])
                     self.get_user_data(follower["login"], follow_through=False)
                     followers_data.append(follower["login"])
+            return self.get_followers(handle, followers_data=followers_data, page=page+1)
         return followers_data
 
     def get_user_data(self, handle, follow_through=True, counter=0):
@@ -147,23 +152,26 @@ class GithubProcessor(Processor):
     #                  REPOS                 #
     ##########################################
 
-    def get_contributors(self, repository, counter=0):
+    def get_contributors(self, repository, contributors_data = [], page=1, counter=0):
         time.sleep(counter)
-        if counter > 10:
-            return []
+        if counter > 10 or page > 10:
+            return contributors_data
         url = f"https://api.github.com/repos/{repository}/contributors"
-        response = self.get_request(url, headers=self.get_headers(), decode=False, json=False, retry_on_404=False)
+        params = {
+            "per_page":100,
+            "page":page
+        }
+        response = self.get_request(url, params=params, headers=self.get_headers(), decode=False, json=False, retry_on_404=False)
         if response and not self.check_api_rate_limit(response):
-            return self.get_contributors(repository)
-        contributors_data = []
+            return self.get_contributors(repository, contributors_data=contributors_data, page=page)
         if not response:
             return contributors_data
         try:
             contributors_raw_data = response.json()
         except:
             logging.error(f"Error getting contributors: {response}")
-            return self.get_contributors(repository, counter=counter+1)
-        if contributors_raw_data and type(contributors_raw_data) == list:
+            return self.get_contributors(repository, contributors_data=contributors_data, page=page, counter=counter+1)
+        if contributors_raw_data and type(contributors_raw_data) == list and len(contributors_raw_data)>0:
             cont_pbar = tqdm(contributors_raw_data, desc="Getting contributors information", position=2, leave=False)
             for contributor in cont_pbar:
                 if "login" in contributor:
@@ -171,31 +179,36 @@ class GithubProcessor(Processor):
                     self.get_user_data(contributor["login"], follow_through=False)
                     contributor = {key: value for (key, value) in contributor.items() if key in self.contributor_keys}
                     contributors_data.append(contributor["login"])
+            return self.get_contributors(repository, contributors_data=contributors_data, page=page+1, counter=0)
         return contributors_data
 
-    def get_subscribers(self, repository, counter=0):
+    def get_subscribers(self, repository, page=1, subscribers_data = [], counter=0):
         time.sleep(counter)
-        if counter > 10:
-            return []
+        if counter > 10 or page > 10:
+            return subscribers_data
         url = f"https://api.github.com/repos/{repository}/subscribers"
-        response = self.get_request(url, headers=self.get_headers(), decode=False, json=False, retry_on_404=False)
+        params = {
+            "per_page":100,
+            "page":page
+        }
+        response = self.get_request(url, params=params, headers=self.get_headers(), decode=False, json=False, retry_on_404=False)
         if response and not self.check_api_rate_limit(response):
-            return self.get_subscribers(repository)
-        subscribers_data = []
+            return self.get_subscribers(repository, subscribers_data=subscribers_data, page=page)
         if not response:
             return subscribers_data
         try:
             subscribers_raw_data = response.json()
         except:
             logging.error(f"Error getting subscribers: {response}")
-            return self.get_subscribers(repository, counter=counter+1)
-        if subscribers_raw_data and type(subscribers_raw_data) == list:
+            return self.get_subscribers(repository, subscribers_data=subscribers_data, page=page, counter=counter+1)
+        if subscribers_raw_data and type(subscribers_raw_data) == list and len(subscribers_raw_data) > 0:
             sub_pbar = tqdm(subscribers_raw_data, desc="Getting subscribers information", position=2, leave=False)
             for subscriber in sub_pbar:
                 if "login" in subscriber:
                     sub_pbar.set_description(desc="Getting subscribers information: " + subscriber["login"])
                     self.get_user_data(subscriber["login"], follow_through=False)
                     subscribers_data.append(subscriber["login"])
+            return self.get_subscribers(repository, subscribers_data=subscribers_data, page=page+1)
         return subscribers_data
 
     def get_repo_readme(self, repository):
@@ -270,7 +283,7 @@ class GithubProcessor(Processor):
 
     def github_repo_search(self, url, params, page=1, counter=0):
         time.sleep(counter)
-        if counter > 10:
+        if counter > 10 or page > 10:
             return None
         params["page"] = page
         response = self.get_request(url, params, headers=self.get_headers(), decode=False, json=False)
@@ -278,14 +291,16 @@ class GithubProcessor(Processor):
             return self.github_repo_search(url, params, page=page, counter = counter+1)
         try:
             data = response.json()
+            data = data["items"]
         except:
             logging.error(f"Error in search query: {response}")
             return self.github_repo_search(url, params, page=page, counter = counter+1)
-        for repo in data:
+        repo_pbar = tqdm(data, position=1, desc="Getting repository information", leave=False)
+        for repo in repo_pbar:
             if repo and type(repo) == dict:
+                repo_pbar.set_description(desc="Getting repository information: " + repo["full_name"])
                 self.handle_repository(repo["full_name"], repo)
-        if page < 10:
-            return self.github_repo_search(url, params, page=page+1, counter = 0)
+        return self.github_repo_search(url, params, page=page+1, counter = 0)
 
     def get_solidity_repos(self):
         sorting = ["stars", "forks", "help-wanted-issues", "updated"]
@@ -295,6 +310,7 @@ class GithubProcessor(Processor):
             "per_page":100,
         }
         for sort in sorting:
+            logging.info(f"Getting top 1000 repos for: {sort}")
             params["sort"] = sort
             self.github_repo_search(url, params)
 
@@ -358,6 +374,7 @@ class GithubProcessor(Processor):
         self.cyphers.link_twitter(twitters_urls)
 
     def run(self):
+        self.init_data()
         self.known_users = set(self.get_known_handles())
         self.get_solidity_repos()
         handles = self.get_all_handles()
