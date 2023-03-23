@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 import logging
 import os
 import time
@@ -60,7 +61,7 @@ class GithubProcessor(Processor):
             return True
         remaining = int(response.headers["X-RateLimit-Remaining"])
         if remaining <= 0:
-            to_sleep = float(response.headers["X-RateLimit-Reset"]) - time.time()
+            to_sleep = float(response.headers["X-RateLimit-Reset"]) - datetime.now(timezone.utc).timestamp()
             logging.info(f"API Rate limit exceeded sleeping for: {to_sleep}")
             time.sleep(int(to_sleep))
             return False
