@@ -31,7 +31,7 @@ class AccountsProcessor(Processor):
     def run(self):
         self.process_wallets_account_labeling()
         self.process_acount_types()
-        # self.process_twitter_accounts()
+        self.process_twitter_accounts()
         self.process_github_accounts()
         self.process_same_handle()
         self.process_mirror_author_ref_twitter()

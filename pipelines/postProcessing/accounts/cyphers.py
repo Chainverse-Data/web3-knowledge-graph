@@ -40,6 +40,7 @@ class AccountsCyphers(Cypher):
             CALL apoc.periodic.commit("
                 MATCH (wallet:Wallet)-[:HAS_ALIAS]-(alias:Alias:Ens)-[:HAS_ALIAS]-(twitter:Twitter:Account)
                 WHERE NOT (wallet)-[:HAS_ACCOUNT]-(twitter)
+                AND NOT (alias)-[:HAS_ALIAS]-(:Entity)
                 WITH wallet, twitter LIMIT 10000 
                 MERGE (twitter)-[r:HAS_ACCOUNT]->(wallet)
                 SET r.citation = 'Twitter - self-attested in tweet or bio.'
