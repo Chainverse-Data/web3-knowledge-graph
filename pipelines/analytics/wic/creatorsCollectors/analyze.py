@@ -21,7 +21,7 @@ class CreatorsCollectorsAnalysis(WICAnalysis):
         super().__init__("wic-creators-collectors")
 
         # TODO: This will need to be automated to avoid relying on this list.
-        self.seeds_addresses = list(pd.read_csv("pipelines/analytics/wic/creators-collectors/data/seeds.csv")['address'])
+        self.seeds_addresses = list(pd.read_csv("pipelines/analytics/wic/creatorsCollectors/data/seeds.csv")['address'])
 
     def process_writing(self, context):
         benchmark = self.cyphers.get_writers_benchmark()

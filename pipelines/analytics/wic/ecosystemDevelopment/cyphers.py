@@ -88,7 +88,7 @@ class EcoDevCyphers(WICCypher):
 
     def get_gitcoin_bounty_creator_benchmark(self):
         benchmark_query = """
-            MATCH (bounty:Bounty:Gitcoin)-[:IS_OWNER]-(g:Account:Github)-[:HAS_WALLET]-(wallet:Wallet)
+            MATCH (bounty:Bounty:Gitcoin)-[:IS_OWNER]-(g:Account:Github)-[:HAS_ACCOUNT]-(wallet:Wallet)
             WITH wallet, count(distinct(bounty)) AS bounties
             RETURN apoc.agg.percentiles(bounties, [.5])[0] AS benchmark
         """
@@ -100,7 +100,7 @@ class EcoDevCyphers(WICCypher):
         connect_query = f"""
             WITH tofloat({benchmark}) AS benchmark
             MATCH (wic:_Wic:_{self.subgraph_name}:_Context:_{context})
-            MATCH (bounty:Bounty:Gitcoin)-[:IS_OWNER]-(g:Account:Github)-[:HAS_WALLET]-(wallet:Wallet)
+            MATCH (bounty:Bounty:Gitcoin)-[:IS_OWNER]-(g:Account:Github)-[:HAS_ACCOUNT]-(wallet:Wallet)
             WITH wallet, count(distinct(bounty)) AS bounties, wic, benchmark
             WITH wallet, wic, (tofloat(bounties) / benchmark) AS againstBenchmark
             MATCH (wallet)
