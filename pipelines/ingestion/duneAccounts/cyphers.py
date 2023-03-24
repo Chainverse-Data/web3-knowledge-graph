@@ -13,7 +13,8 @@ class DuneCyphers(Cypher):
 
     def create_indexes(self):
         indexes = Indexes()
-        indexes.ens()
+        indexes.telegram()
+        indexes.dune()
 
     @count_query_logging
     def create_or_merge_dune_wallets(self, urls):
@@ -24,7 +25,7 @@ class DuneCyphers(Cypher):
     def create_or_merge_dune_twitter(self, urls):
         count = self.queries.create_or_merge_twitter(urls)
         return count
-    
+
     @count_query_logging
     def create_or_merge_dune_users(self, urls):
         count = 0
@@ -43,7 +44,7 @@ class DuneCyphers(Cypher):
                         """
             count += self.query(channel_node_query)[0].value()
         return count
-    
+
     @count_query_logging
     def create_or_merge_dune_teams(self, urls):
         count = 0
@@ -62,7 +63,7 @@ class DuneCyphers(Cypher):
                         """
             count += self.query(channel_node_query)[0].value()
         return count
-    
+
     @count_query_logging
     def create_or_merge_dune_telegram(self, urls):
         count = 0
@@ -99,7 +100,7 @@ class DuneCyphers(Cypher):
                     """
             count += self.query(discord_node_query)[0].value()
         return count
-    
+
     @count_query_logging
     def link_dune_wallets(self, urls):
         count = 0
@@ -156,5 +157,3 @@ class DuneCyphers(Cypher):
                     """
             count += self.query(merge_dune_teams_query)[0].value()
         return count
-
-

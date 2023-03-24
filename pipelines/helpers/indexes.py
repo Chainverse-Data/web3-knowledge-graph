@@ -86,3 +86,11 @@ class Indexes(Cypher):
     def email(self):
         query = "CREATE INDEX Emails IF NOT EXISTS FOR (e:Email) ON (e.email)"
         self.query(query)
+
+    def telegram(self):
+        query = "CREATE INDEX Telegram IF NOT EXISTS FOR (e:Telegram) ON (e.handle)"
+        self.query(query)
+
+    def dune(self):
+        query = "CREATE INDEX Dune IF NOT EXISTS FOR (e:Dune) ON (e.handle)"
+        self.query(query)
