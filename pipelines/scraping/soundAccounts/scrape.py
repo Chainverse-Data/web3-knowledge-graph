@@ -35,21 +35,24 @@ class SoundScraper(Scraper):
         self.driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
 
     def get_sound_feed(self):
+        self.driver.get(self.root_url)
         last_height = self.driver.execute_script("return document.body.scrollHeight")
         idx = 0
 
-        while True:
-            idx += 1
-            self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-            try:
-                self.driver.find_element(by=By.XPATH, value="//button[contains(text(), 'Load more')]").click()
-            except:
-                pass
-            time.sleep(self.scroll_pause_time)
-            new_height = self.driver.execute_script("return document.body.scrollHeight")
-            if new_height == last_height:
-                break
-            last_height = new_height
+        with tqdm(desc="Scrolling feed") as pbar:
+            while True:
+                idx += 1
+                self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+                try:
+                    self.driver.find_element(by=By.XPATH, value="//button[contains(text(), 'Load more')]").click()
+                except:
+                    pass
+                time.sleep(self.scroll_pause_time)
+                new_height = self.driver.execute_script("return document.body.scrollHeight")
+                if new_height == last_height:
+                    break
+                last_height = new_height
+                pbar.update(1)
 
         s = self.driver.page_source
         soup = BeautifulSoup(s, "lxml")
@@ -68,7 +71,7 @@ class SoundScraper(Scraper):
             self.driver.get(url)
             time.sleep(self.scroll_pause_time)
             soup = BeautifulSoup(self.driver.page_source, "lxml")
-            profile = soup.find("div", {"class": "c-bOMbBk"})
+            profile = soup.find("div", {"class": "c-bMUoQk"})
             if not profile:
                 continue
             entry = {}
@@ -92,8 +95,7 @@ class SoundScraper(Scraper):
         return results
 
     def run(self):
-        soup = self.get_soup()
-        self.save_json(self.bucket_name, f"sound-feed-{self.asOf}", {"data": soup.prettify()})
+        soup = self.get_sound_feed()
 
         artists = self.parse(soup)
         self.data["artists"] = artists
