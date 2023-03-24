@@ -6,9 +6,10 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.proxy import *
 from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
 import functools
 import operator
-import pandas as pd
 from bs4 import BeautifulSoup
 import lxml
 import tkinter as tk
@@ -25,8 +26,7 @@ class DuneScraper(Scraper):
         self.proxy_auth = os.environ.get("PROXY") + ":"
         self.root_url = "https://dune.com/"
         self.wizard_url = "https://dune.com/browse/wizards"
-        self.CHROMEDRIVER_PATH = "/Users/rohan/documents/Diamond/chainverse/account-ingest/chromedriver"
-        self.scroll_pause_time = 10
+        self.scroll_pause_time = 5
         options = Options()
         options.proxy = Proxy(
             {
@@ -35,26 +35,27 @@ class DuneScraper(Scraper):
                 "sslProxy": "http://{}@{}:{}/".format(self.proxy_auth, self.proxy_host, self.proxy_port),
             }
         )
-        self.driver = webdriver.Chrome(self.CHROMEDRIVER_PATH, options=options)
+        self.driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
 
     def get_wizards(self, pages=1000):
         results = []
         self.driver.get(self.wizard_url)
         time.sleep(self.scroll_pause_time)
 
-        for i in range(1, pages + 1):
+        for i in tqdm(range(1, pages + 1), desc="collecting wizards", total=pages):
             s = self.driver.page_source
             soup = BeautifulSoup(s, "lxml")
             wizards = soup.find_all("li", {"class": "entries_entry__ZszyW"})
             for wizard in wizards:
                 results.append(wizard.find("a")["href"][1:])
-            logging.info(f"page {i} done, {len(results)} wizards found")
             try:
-                self.driver.find_element_by_xpath(f"//button[contains(text(), '{i+1}')]").click()
+                self.driver.find_element(by=By.XPATH, value=f"//button[contains(text(), '{i+1}')]").click()
             except:
                 logging.info("no more pages")
+                break
             time.sleep(self.scroll_pause_time)
 
+        logging.info(f"found {len(results)} wizards")
         return results
 
     def get_users(self, wizards):
