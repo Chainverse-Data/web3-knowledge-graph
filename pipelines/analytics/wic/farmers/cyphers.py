@@ -21,31 +21,92 @@ class FarmerCyphers(WICCypher):
         count = self.query(connect_wallets)[0].value()
         return count 
 
+    @count_query_logging
+    def remove_mirror_label(self):
+        query = """
+        MATCH (article:Article)
+        WHERE article:MirrorFarmer
+        REMOVE article:MirrorFarmer
+        RETURN COUNT(*)
+        """
+        count = self.query(query)[0]
+
+        return count 
+
     def get_mirror_benchmark(self):
         get_extreme = """
             MATCH (w:Wallet)-[r:AUTHOR]->(a:Article)
             WITH w, count(distinct(a)) AS articles
-            WITH apoc.agg.percentiles(articles, [.995]) AS arts
-            RETURN arts[0] AS cutoff
+            WITH apoc.agg.percentiles(articles)[4] AS arts
+            RETURN arts AS cutoff
         """
         cutoff = self.query(get_extreme)[0].value()
+
         return cutoff
 
     @count_query_logging
-    def connect_suspicious_mirror(self, context, cutoff):
+    def label_mirror(self, benchmark):
+        query = f"""
+        MATCH (wallet:Wallet)-[r:AUTHOR]->(article:Article)
+        WITH wallet, COUNT(DISTINCT(article)) as articles
+        WHERE articles >= {benchmark}
+        SET wallet:MirrorFarmer
+        RETURN COUNT(DISTINCT(wallet))
+        """
+        count = self.query(query)[0].value()
+        
+        return count
+
+    @count_query_logging
+    def connect_suspicious_mirror(self, context):
         connect_extreme = f"""
-            MATCH (w:Wallet)-[r:AUTHOR]->(a:Article)
-            WITH w, count(distinct(a)) AS articles
-            WHERE articles > {cutoff}
-            MATCH (w)
+            MATCH (wallet:MirrorFarmer)
             MATCH (context:_Wic:_{self.subgraph_name}:_Context:_{context})
-            WITH datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')) AS timeNow, w, context
-            MERGE (w)-[con:_HAS_CONTEXT]->(context)
-            SET con.createdDt = timeNow
-            SET con._context = "This wallet has published an more articles on mirror than 99.995% of Mirror authors: " + "https://mirror.xyz/" + w.address
-            RETURN count(distinct(w)) AS count
+            WITH wallet, context
+            MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
+            RETURN count(distinct(wallet)) AS count
         """
         count = self.query(connect_extreme)[0].value()
+
+        return count 
+
+    @count_query_logging
+    def clean(self):
+        query = """
+        MATCH (wallet:MirrorFarmer)
+        REMOVE wallet:MirrorFarmer
+        RETURN COUNT(DISTINCT(wallet))
+        """
+        count = self.query(query)[0].value()
+
+        return count
+
+    @count_query_logging
+    def identify_nft_wash_traders(self, context):
+        ## needs to be replaced lol
+        ## this comes from an export of a dune dashboard
+        query = f"""
+        MATCH (wallet:ActualWashTrader) // comes
+        MATCH (context:_Context:_Wic:_{context}:_{self.subgraph_name})
+        WITH wallet, context
+        MATCH (wallet)-[con:_CONTEXT]->(context)
+        RETURN COUNT(DISTINCT(wallet))
+        """
+        count = self.query(query)[0].value()
+
+        return count
+
+    @count_query_logging
+    def identify_spam_contract_deployers(self, context):
+        query = f"""
+        MATCH (wallet:Wallet)-[r:DEPLOYED]->(token:SpamContract)
+        MATCH (wic:_Wic:_{context}:_{self.subgraph_name})
+        WITH wallet, wic
+        MERGE (wallet)-[con:_HAS_CONTEXT]->(wic)
+        RETURN COUNT(DISTINCT(wallet))
+        """
+        count = self.query(query)[0].value()
+
         return count 
 
     @count_query_logging
