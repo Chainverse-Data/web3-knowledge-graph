@@ -9,11 +9,10 @@ class SoundCyphers(Cypher):
 
     def create_constraints(self):
         constraints = Constraints()
-        constraints.ens()
 
     def create_indexes(self):
         indexes = Indexes()
-        indexes.ens()
+        indexes.sound()
 
     @count_query_logging
     def create_or_merge_sound_wallets(self, urls):

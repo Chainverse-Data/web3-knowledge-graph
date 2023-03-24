@@ -86,3 +86,7 @@ class Indexes(Cypher):
     def email(self):
         query = "CREATE INDEX Emails IF NOT EXISTS FOR (e:Email) ON (e.email)"
         self.query(query)
+
+    def sound(self):
+        query = "CREATE INDEX Sound IF NOT EXISTS FOR (e:Sound) ON (e.handle)"
+        self.query(query)
