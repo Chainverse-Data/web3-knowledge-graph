@@ -74,7 +74,7 @@ class GitCoinIngestor(Ingestor):
             if self.is_valid_address(grant["admin_address"]):
                 tmp = {
                     "grantId": grant["id"],
-                    "citation": f"https://gitcoin.co/{grant['url']}",
+                    "citation": f"https://gitcoin.co{grant['url']}",
                     "address": grant["admin_address"].lower()
                     }
                 grants_data["admin_wallets"].append(tmp)
@@ -83,14 +83,14 @@ class GitCoinIngestor(Ingestor):
                 tmp = {
                     "grantId": grant["id"],
                     "userId": member["pk"],
-                    "citation": f"https://gitcoin.co/{grant['url']}",
+                    "citation": f"https://gitcoin.co{grant['url']}",
                     "handle": member["fields"]["handle"]
                 }
                 grants_data["team_members"].append(tmp)
             if grant["twitter_handle_1"]:
                 tmp = {
                     "grantId": grant["id"],
-                    "citation": f"https://gitcoin.co/{grant['url']}",
+                    "citation": f"https://gitcoin.co{grant['url']}",
                     "handle": grant["twitter_handle_1"],
                     "profileUrl": f"https://twitter.com/{grant['twitter_handle_1']}"
                 }
@@ -98,7 +98,7 @@ class GitCoinIngestor(Ingestor):
                 if grant["twitter_handle_1"] != grant["twitter_handle_2"] and grant["twitter_handle_2"]:
                     tmp = {
                         "grantId": grant["id"],
-                        "citation": f"https://gitcoin.co/{grant['url']}",
+                        "citation": f"https://gitcoin.co{grant['url']}",
                         "handle": grant["twitter_handle_2"],
                         "profileUrl": f"https://twitter.com/{grant['twitter_handle_2']}"
                     }
