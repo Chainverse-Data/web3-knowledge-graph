@@ -290,6 +290,20 @@ class S3Utils:
         logging.info("Datafiles for ingestion: {}".format(",".join(datafiles_to_keep)))
         return datafiles_to_keep
 
+    def get_files_urls_from_s3(self, bucket_name, filter):
+        "Get the list of datafiles in the S3 bucket from the start date to the end date (if defined)"
+        logging.info("Collecting data files")
+        datafiles = []
+        for el in map(lambda x: (x.bucket_name, x.key), self.bucket.objects.all()):
+            if filter in el[1]:
+                datafiles.append(el[1])
+        location = self.s3_client.get_bucket_location(Bucket=bucket_name)["LocationConstraint"]
+        locations = []
+        for file_name in datafiles:
+            url = "https://s3-%s.amazonaws.com/%s/%s" % (location, bucket_name, f"{file_name}.csv")
+            locations.append(url)
+        return locations
+
     def load_data(self):
         "Loads the data filtered by date saved in the S3 bucket"
         datafiles_to_keep = self.get_datafile_from_s3()
