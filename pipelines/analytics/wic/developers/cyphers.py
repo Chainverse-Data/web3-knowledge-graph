@@ -9,7 +9,7 @@ class DevelopersCyphers(WICCypher):
     def has_github(self, context):
         query = f"""
             WITH datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')) AS timeNow
-            MATCH (wallet:Wallet)-[r:HAS_WALLET]-(github:Github:Account)
+            MATCH (wallet:Wallet)-[r:HAS_ACCOUNT]-(github:Github:Account)
             MATCH (context:_Wic:_{self.subgraph_name}:_Context:_{context})
             WITH context, wallet, timeNow
             MERGE (wallet)-[r:_HAS_CONTEXT]->(context)
@@ -23,7 +23,7 @@ class DevelopersCyphers(WICCypher):
     def gitcoin_bounty_fulfill(self, context):
         query = f"""
             WITH datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')) AS timeNow
-            MATCH (wallet:Wallet)-[:HAS_WALLET]-(user:Github:Account)-[:HAS_FULLFILLED]-(bounty:Gitcoin:Bounty)
+            MATCH (wallet:Wallet)-[:HAS_ACCOUNT]-(user:Github:Account)-[:HAS_FULLFILLED]-(bounty:Gitcoin:Bounty)
             MATCH (context:_Wic:_{self.subgraph_name}:_Context:_{context})
             WITH wallet, context, timeNow, collect(distinct(bounty.uuid)) AS bountyUuids
             MERGE (wallet)-[r:_HAS_CONTEXT]->(context)
@@ -38,7 +38,7 @@ class DevelopersCyphers(WICCypher):
     def gitcoin_bounty_admin(self, context):
         query = f"""
             WITH datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')) AS datetime
-            MATCH (w:Wallet)-[:HAS_WALLET]-(user:Github:User)-[:IS_OWNER]-(bounty:Gitcoin:Bounty)
+            MATCH (w:Wallet)-[:HAS_ACCOUNT]-(user:Github:User)-[:IS_OWNER]-(bounty:Gitcoin:Bounty)
             MATCH (context:_Wic:_{self.subgraph_name}:_Context:_{context})
             WITH w, context, datetime, collect(distinct(bounty.uuid)) AS bountyUuids
             MERGE (w)-[r:_HAS_CONTEXT]->(context)
