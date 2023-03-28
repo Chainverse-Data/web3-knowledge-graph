@@ -300,7 +300,7 @@ class S3Utils:
         location = self.s3_client.get_bucket_location(Bucket=bucket_name)["LocationConstraint"]
         locations = []
         for file_name in datafiles:
-            url = "https://s3-%s.amazonaws.com/%s/%s" % (location, bucket_name, f"{file_name}.csv")
+            url = "https://s3-%s.amazonaws.com/%s/%s" % (location, bucket_name, file_name)
             locations.append(url)
         return locations
 

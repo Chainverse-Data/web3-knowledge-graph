@@ -315,54 +315,63 @@ class GithubProcessor(Processor):
             params["sort"] = sort
             self.github_repo_search(url, params)
 
-    def ingest_github_data(self):
-        bad_handles = [{"handle": handle} for handle in self.data["bad_handles"] if handle]
-        handles_urls = self.save_json_as_csv(bad_handles, self.bucket_name, f"processor_bad_handles_{self.asOf}")
+    def ingest_github_data(self, recover=False):
+        if recover:
+            handles_urls = self.get_files_urls_from_s3(self.bucket_name, "processor_bad_handles_")
+            users_urls = self.get_files_urls_from_s3(self.bucket_name, "processor_users_")
+            emails_urls = self.get_files_urls_from_s3(self.bucket_name, "processor_emails_")
+            twitters_urls = self.get_files_urls_from_s3(self.bucket_name, "processor_twitters_")
+            repositories_urls = self.get_files_urls_from_s3(self.bucket_name, "processor_repositories_")
+            followers_urls = self.get_files_urls_from_s3(self.bucket_name, "processor_followers_")
+            contributors_urls = self.get_files_urls_from_s3(self.bucket_name, "processor_contributors_")
+            subscribers_urls = self.get_files_urls_from_s3(self.bucket_name, "processor_subscribers_")
+        else:
+            bad_handles = [{"handle": handle} for handle in self.data["bad_handles"] if handle]
+            handles_urls = self.save_json_as_csv(bad_handles, self.bucket_name, f"processor_bad_handles_{self.asOf}")
+
+            users = [self.data["users"][handle] for handle in self.data["users"]]
+            users_urls = self.save_json_as_csv(users, self.bucket_name, f"processor_users_{self.asOf}")
+
+            emails = [{"handle": user["login"], "email": user["email"]} for user in users if "email" in user and user["email"]]
+            emails_urls = self.save_json_as_csv(emails, self.bucket_name, f"processor_emails_{self.asOf}")
+
+            twitters = [{"handle": user["login"], "twitter":user["twitter_username"]} for user in users if "twitter_username" in user and user["twitter_username"]]
+            twitters_urls = self.save_json_as_csv(twitters, self.bucket_name, f"processor_twitters_{self.asOf}")
+
+            repositories = [self.data["repositories"][handle] for handle in self.data["repositories"]]
+            repositories_urls = self.save_json_as_csv(repositories, self.bucket_name, f"processor_repositories_{self.asOf}")
+
+            followers = []
+            for user in users:
+                if "followers_handles" in user and user["login"]:
+                    for follower in user["followers_handles"]:
+                        followers.append({
+                            "handle": user["login"],
+                            "follower": follower
+                        })
+            followers_urls = self.save_json_as_csv(followers, self.bucket_name, f"processor_followers_{self.asOf}")
+            
+            contributors = []
+            subscribers = []
+            for repo in repositories:
+                if "contributors_handles" in repo:
+                    for contributor in repo["contributors_handles"]:
+                        if contributor and repo["full_name"]:
+                            contributors.append({
+                                "full_name": repo["full_name"],
+                                "contributor": contributor
+                            })
+                if "subscribers_handles" in repo:
+                    for subscriber in repo["subscribers_handles"]:
+                        if subscriber and repo["full_name"]:
+                            subscribers.append({
+                                "full_name": repo["full_name"],
+                                "subscriber": subscriber
+                            })
+            contributors_urls = self.save_json_as_csv(contributors, self.bucket_name, f"processor_contributors_{self.asOf}")
+            subscribers_urls = self.save_json_as_csv(subscribers, self.bucket_name, f"processor_subscribers_{self.asOf}")
 
         self.cyphers.flag_bad_handles(handles_urls)
-
-        users = [self.data["users"][handle] for handle in self.data["users"]]
-        users_urls = self.save_json_as_csv(users, self.bucket_name, f"processor_users_{self.asOf}")
-
-        emails = [{"handle": user["login"], "email": user["email"]} for user in users if "email" in user and user["email"]]
-        emails_urls = self.save_json_as_csv(emails, self.bucket_name, f"processor_emails_{self.asOf}")
-
-        twitters = [{"handle": user["login"], "twitter":user["twitter_username"]} for user in users if "twitter_username" in user and user["twitter_username"]]
-        twitters_urls = self.save_json_as_csv(twitters, self.bucket_name, f"processor_twitters_{self.asOf}")
-
-        repositories = [self.data["repositories"][handle] for handle in self.data["repositories"]]
-        repositories_urls = self.save_json_as_csv(repositories, self.bucket_name, f"processor_repositories_{self.asOf}")
-
-        followers = []
-        for user in users:
-            if "followers_handles" in user and user["login"]:
-                for follower in user["followers_handles"]:
-                    followers.append({
-                        "handle": user["login"],
-                        "follower": follower
-                    })
-        followers_urls = self.save_json_as_csv(followers, self.bucket_name, f"processor_followers_{self.asOf}")
-        
-        contributors = []
-        subscribers = []
-        for repo in repositories:
-            if "contributors_handles" in repo:
-                for contributor in repo["contributors_handles"]:
-                    if contributor and repo["full_name"]:
-                        contributors.append({
-                            "full_name": repo["full_name"],
-                            "contributor": contributor
-                        })
-            if "subscribers_handles" in repo:
-                for subscriber in repo["subscribers_handles"]:
-                    if subscriber and repo["full_name"]:
-                        subscribers.append({
-                            "full_name": repo["full_name"],
-                            "subscriber": subscriber
-                        })
-        contributors_urls = self.save_json_as_csv(contributors, self.bucket_name, f"processor_contributors_{self.asOf}")
-        subscribers_urls = self.save_json_as_csv(subscribers, self.bucket_name, f"processor_subscribers_{self.asOf}")
-        
         self.cyphers.create_or_merge_users(users_urls)
         self.cyphers.create_or_merge_repositories(repositories_urls)
         self.cyphers.link_followers(followers_urls)
@@ -374,16 +383,23 @@ class GithubProcessor(Processor):
         self.cyphers.create_or_merge_twitter(twitters_urls)
         self.cyphers.link_twitter(twitters_urls)
 
+    def recover_ingests(self):
+        logging.info("Starting the recovery process")
+        self.ingest_github_data(recover=True)
+
     def run(self):
-        self.init_data()
-        self.known_users = set(self.get_known_handles())
-        self.get_solidity_repos()
-        self.ingest_github_data()
-        handles = self.get_all_handles()
-        for i in range(0, len(handles), self.chunk_size):
+        if os.environ.get("RECOVER", False):
+            self.recover_ingests()
+        else:
             self.init_data()
-            self.process_github_accounts(handles[i: i+self.chunk_size])
+            self.known_users = set(self.get_known_handles())
+            self.get_solidity_repos()
             self.ingest_github_data()
+            handles = self.get_all_handles()
+            for i in range(0, len(handles), self.chunk_size):
+                self.init_data()
+                self.process_github_accounts(handles[i: i+self.chunk_size])
+                self.ingest_github_data()
 
 if __name__ == '__main__':
     P = GithubProcessor()
