@@ -1,99 +1,174 @@
-import logging
-from .. import WICAnalysis
-from .cyphers import CreatorsCollectorsCypher
-import pandas as pd
+from .. import WICCypher
+from ....helpers import count_query_logging
+import logging 
+
+class CreatorsCollectorsCypher(WICCypher):
+    def __init__(self, subgraph_name, conditions, database=None):
+        WICCypher.__init__(self, subgraph_name, conditions, database)
+
+    def get_writers_benchmark(self):
+        benchmark_query = """
+            MATCH (w:Wallet)-[r:AUTHOR]->(a:Article:Mirror)
+            WITH w, count(distinct(a)) AS articles
+            RETURN apoc.agg.percentiles(articles, [.75])[0] AS benchmark
+        """
+        benchmark = self.query(benchmark_query)[0].value()
+        return benchmark
+
+    @count_query_logging
+    def cc_writers(self, context, benchmark):
+        connect_writers = f"""
+            MATCH (author:Wallet)-[r:AUTHOR]->(article:Article:Mirror)
+            MATCH (wic:_Wic:_{self.subgraph_name}:_Context:_{context})
+            WITH author, count(distinct(article)) AS articles_count, tofloat({benchmark}) AS benchmark, wic
+            WHERE articles_count >= benchmark
+            MERGE (author)-[edge:_HAS_CONTEXT]->(wic)
+            SET edge.count = articles_count
+            RETURN count(author)
+        """
+        count = self.query(connect_writers)[0].value()
+        return count 
+    
+    @count_query_logging
+    def cc_blue_chip(self, addresses, context):
+        connect = f"""
+        MATCH (wic:_Wic:_{self.subgraph_name}:_Context:_{context})
+        MATCH (wallet:Wallet)-[r:HOLDS]->(token:Token)
+        WHERE (token.address IN {addresses} OR token.contractAddress IN {addresses})
+        WITH wallet, wic, count(distinct(token)) as count_collections
+        MERGE (wallet)-[r:_HAS_CONTEXT]->(wic)
+        SET r.count = count_collections
+        RETURN count(distinct(wallet)) AS count
+        """
+        count = self.query(connect)[0].value()
+        return count 
+
+    @count_query_logging
+    def three_letter_ens(self, context):
+        query = f"""
+        match 
+            (wic:_Wic:_{self.subgraph_name}:_Context:_{context})
+        match 
+            (wallet:Wallet)-[:HAS_ALIAS]-(alias:Alias:Ens)
+        with 
+            wallet, split(alias.name, ".eth")[0] as ens_name, wic
+        where 
+            size(ens_name) = 3 
+        with 
+            wallet, wic 
+        merge
+            (wallet)-[con:_HAS_CONTEXT]->(wic)
+        return
+            count(con)
+        """
+        count = self.query(query)[0].value() 
+
+        return count
+    @count_query_logging
+    def create_sudo_power_users(self, urls):
+        count = 0
+        for url in urls:
+            create_wallets = f"""
+            load csv with headers from '{url}' as sudo
+            merge (wallet:Wallet {{address: sudo.seller}})
+            return count(wallet)
+            """
+            count += self.query(create_wallets)[0].value()
+
+        return count
+
+    @count_query_logging
+    def connect_sudo_power_users(self, context, urls):
+        count = 0
+        for url in urls: 
+            query = f"""
+            load csv with headers from '{url}' as sudo
+            with collect(distinct(sudo.seller)) as addresses
+            match (wallet:Wallet) 
+            where wallet.address in addresses
+            with wallet
+            match (wallet)
+            match (wic:_Wic:_{self.subgraph_name}:_{context})
+            with wallet, wic
+            merge (wallet)-[r:_HAS_CONTEXT]->(wic)
+            return count(wallet)
+            """
+            logging.info(query)
+            count += self.query(query)[0].value()
+
+        return count 
+
+    @count_query_logging
+    def create_blur_power_users(self, urls):
+        count = 0
+        for url in urls:
+            create_wallets = f"""
+            load csv with headers from '{url}' as blur
+            merge (wallet:Wallet {{address: blur.address}})
+            return count(distinct(wallet))
+            """
+            logging.info(create_wallets)
+            count += self.query(create_wallets)[0].value()
+        return count
+
+    @count_query_logging
+    def connect_blur_power_users(self, context, urls):
+        count = 0
+        for url in urls: 
+            query = f"""
+            load csv with headers from '{url}' as blur
+            with collect(distinct(blur.address)) as addresses
+            match (wallet:Wallet) 
+            where wallet.address in addresses
+            with wallet
+            match (wallet)
+            match (wic:_Wic:_{self.subgraph_name}:_{context})
+            with wallet, wic
+            merge (wallet)-[r:_HAS_CONTEXT]->(wic)
+            return count(wallet)
+            """
+            logging.info(query)
+            count += self.query(query)[0].value()
+
+        return count 
+        
+    @count_query_logging
+    def create_nft_borrowers(self, context, urls):
+        count = 0 
+        for url in urls:
+            create_wallets = f"""
+            load csv with headers from '{url}' as borrower
+            merge (wallet:Wallet {{address: borrower.address}})
+            return count(distinct(wallet))
+            """
+            logging.info(create_wallets)
+            count += self.query(create_wallets)[0].value()
+    @count_query_logging
+    def connect_nft_borrowers(self, context, urls):
+        count = 0 
+        for url in urls:
+            connect_wallets = f"""
+            load csv with headers from '{url}' as borrower
+            with collect(distinct(borrower.address)) as addresses
+            match (wallet:Wallet) 
+            where wallet.address in addresses
+            with wallet
+            match (wallet)
+            match (wic:_Wic:_{self.subgraph_name}:_{context})
+            with wallet, wic
+            merge (wallet)-[r:_HAS_CONTEXT]->(wic)
+            return count(wallet) 
+            """
+            logging.info(connect_wallets)
+            count += self.query(connect_wallets)[0].value()
+        
+        return count 
 
 
-class CreatorsCollectorsAnalysis(WICAnalysis):
-    """This class reads from a local"""
-
-    def __init__(self):
-        self.subgraph_name = 'CreatorsCollectors'
-        self.conditions = {
-           "Writing": {
-               "MirrorAuthor": self.process_writing
-           },
-            "BlueChip": {
-               "BlueChipNFTCollections": self.process_NFTs_blue_chip
-           },"Rarity": {
-               "ThreeLetterEns": self.process_three_ens
-            },
-            "NftMarketplacePowerUsers": {
-                "SudoswapPowerUser": self.process_sudo_power_users,
-                "BlurPowerUser": self.process_blur_power_users,
-                "NftCollateralizedBorrower": self.process_nft_collat_borrowers
-            }
-        }
-        ## add artists, musicians, project affiliates (?)
-        self.cyphers = CreatorsCollectorsCypher(self.subgraph_name, self.conditions)
-        super().__init__("wic-creators-collectors")
-
-        ## TODOO This will need to be automated to avoid relying on this list.
-        self.seeds_addresses = list(pd.read_csv("pipelines/analytics/wic/creators-collectors/data/seeds.csv")['address'])
-        self.sudo_power_users = pd.read_csv('pipelines/analytics/wic/creators-collectors/data/sudo.csv')
-        self.blur_power_users = pd.read_csv("pipelines/analytics/wic/creators-collectors/data/blur.csv")
-        self.nft_backed_borrowers = pd.read_csv("pipelines/analytics/wic/creators-collectors/data/nft_borrowers.csv")
 
 
-    def process_writing(self, context):
-        benchmark = self.cyphers.get_writers_benchmark()
-        logging.info(f"Benchmark value for Mirror articles: {benchmark}")
-        self.cyphers.cc_writers(context, benchmark)
-
-    def process_NFTs_blue_chip(self, context):
-        logging.info("Identifying blue chips...")
-        self.cyphers.cc_blue_chip(self.seeds_addresses, context)
-
-    def process_three_ens(self, context):
-        logging.info("Identifying wallets that hold three letter ENS Names")
-        self.cyphers.three_letter_ens(context)
-
-    def process_sudo_power_users(self, context):
-        logging.info("Getting benchmark for sudo power users")
-        sudo_users = self.sudo_power_users
-        sudo_users = sudo_users.dropna(subset=['seller'])
-        sudo_benchmark = sudo_users['total_volume'].quantile(0.8)
-        logging.info(f"Benchmark value for Sudoswap power users: {sudo_benchmark}")
-        logging.info("Getting sudo power users wallet addresses...")
-        sudo_power_wallets = sudo_users.loc[sudo_users['total_volume'] > sudo_benchmark]
-        logging.info("saving power users")
-        urls = self.save_df_as_csv(sudo_power_wallets, bucket_name=self.bucket_name, file_name=f"sudo_power_wallets_{self.asOf}")
-        logging.info("creating power user nodes")
-        self.cyphers.create_sudo_power_users(urls)
-        logging.info("connecting power users")
-        self.cyphers.connect_sudo_power_users(context, urls)
-
-    def process_blur_power_users(self, context):
-        logging.info("Saving NFT marketplace power users....")
-        blur_users = self.blur_power_users
-        blur_users = blur_users.dropna(subset=['address'])
-        logging.info(blur_users.head(5))
-        urls = self.save_df_as_csv(blur_users, bucket_name=self.bucket_name, file_name=f"blur_power_wallets_{self.asOf}")
-        logging.info(urls)
-        logging.info("creating blur nodes...")
-        self.cyphers.create_blur_power_users(urls)
-        logging.info("connecting blur power users")
-        self.cyphers.connect_blur_power_users(context, urls)
-
-    def process_nft_collat_borrowers(self, context):
-        logging.info("Saving NFT-backed borrowers...")
-        nft_backed_borrowers = self.nft_backed_borrowers
-        nft_backed_borrowers = nft_backed_borrowers.dropna(subset=['address'])
-        urls = self.save_df_as_csv(nft_backed_borrowers, bucket_name=self.bucket_name, file_name=f"nft_backed_borrowers{self.asOf}")
-        logging.info("creating NFT backed borrowers...")
-        self.cyphers.create_nft_borrowers(context, urls)
-        logging.info('connect NFT backed borrowers')
-        self.cyphers.connect_nft_borrowers(context, urls)
-        logging.info("I am done cuz")
-
-    def run(self):
-        self.process_conditions()
-
-if __name__ == "__main__":
-    analysis = CreatorsCollectorsAnalysis()
-    analysis.run()
     
 
-    
+        
+        
 
-    
