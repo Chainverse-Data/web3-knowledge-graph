@@ -50,7 +50,7 @@ class TokenMetadataPostProcess(Processor):
         social_keys = {
             "website": {"label": "Website", "property": "website" , "call": self.handle_external_links},
             "email": {"label": "Email", "property": "email" , "call": self.handle_accounts},
-            "blog": {"label": "Blog:Website", "property": "blog" , "call": self.handle_external_links},
+            "blog": {"label": "Website", "property": "blog" , "call": self.handle_external_links},
             "reddit": {"label": "Reddit", "property": "reddit" , "call": self.handle_reddits},
             "slack": {"label": "Slack", "property": "slack" , "call": self.handle_hubs},
             "facebook": {"label": "Facebook", "property": "facebook" , "call": self.handle_accounts},
