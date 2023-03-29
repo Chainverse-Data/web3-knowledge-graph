@@ -17,8 +17,7 @@ class TwitterThreadsProcessor(Processor):
         self.cyphers = TwitterThreadsCyphers()
         self.twitter = Twitter()
         super().__init__("twitter-threads")
-        self.last_tweet_id = None
-        # self.last_tweet_id = self.metadata.get("last_tweet_id", None)
+        self.last_tweet_id = self.metadata.get("last_tweet_id", None)
         self.address_matcher = re.compile("(0x[a-zA-Z0-9]{40})")
         self.ens_matcher = re.compile("([-a-zA-Z0-9@:%._\+~#=]{1,256}\.eth)")
         self.current_latest_id = 0
@@ -151,8 +150,8 @@ class TwitterThreadsProcessor(Processor):
         conversations = self.get_current_threads()
         conversations += self.find_threads()
         conversations = list(set(conversations))
-        # if DEBUG:
-        #     conversations = conversations[:10]
+        if DEBUG:
+            conversations = conversations[:10]
         data = self.parallel_process(self.get_conversation, conversations, description="Getting latest tweets from conversations")
         for tweets, users, meta in data:
             self.parse_results(tweets, users, meta)

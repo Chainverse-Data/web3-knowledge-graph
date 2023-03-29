@@ -26,8 +26,8 @@ class TwitterThreadsCyphers(Cypher):
             WHERE thread.createdAt > datetime({{epochSeconds: {int(sevendaysAgo.timestamp())}}})
             RETURN thread.conversationId as conversationId
         """
-        # if DEBUG:
-        #     query += " LIMIT 10"
+        if DEBUG:
+            query += " LIMIT 10"
         results = self.query(query)
         results = [el["conversationId"] for el in results]
         return results
