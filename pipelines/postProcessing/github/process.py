@@ -315,6 +315,19 @@ class GithubProcessor(Processor):
             params["sort"] = sort
             self.github_repo_search(url, params)
 
+    def update_repositories_languages(self):
+        repos = self.cyphers.get_github_repositories()
+        repos = list(set(repos))
+        data = self.parallel_process(self.get_repository_languages, repos, description="Getting repositories languages")
+        results = []
+        for repo, languages in zip(repos, data):
+            results.append({
+                "full_name": repo,
+                "languages": languages
+            })
+        urls = self.save_json_as_csv(results)
+        self.cyphers.add_repositories_languages(urls)
+
     def ingest_github_data(self, recover=False):
         if recover:
             handles_urls = self.get_files_urls_from_s3(self.bucket_name, "processor_bad_handles_")
@@ -388,6 +401,8 @@ class GithubProcessor(Processor):
         self.ingest_github_data(recover=True)
 
     def run(self):
+        if os.environ.get("UPDATE_REPO_LANG", False):
+            self.update_repositories_languages()
         if os.environ.get("RECOVER", False):
             self.recover_ingests()
         else:

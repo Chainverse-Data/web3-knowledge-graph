@@ -34,6 +34,15 @@ class GithubCypher(Cypher):
         handles = [el["handle"] for el in self.query(query)]
         return handles
 
+    @get_query_logging
+    def get_github_repositories(self):
+        query = f"""
+            MATCH (github:Github:Repository)
+            RETURN github.full_name as full_name
+        """
+        full_names = [el["full_name"] for el in self.query(query)]
+        return full_names
+
     @count_query_logging
     def create_or_merge_users(self, urls):
         count = 0
@@ -176,6 +185,20 @@ class GithubCypher(Cypher):
                                 repo.ingestedBy = "{self.UPDATED_ID}"
                 RETURN count(repo)
             """
+            count += self.query(query)[0].value()
+        return count
+
+    @count_query_logging
+    def add_repositories_languages(self, urls):
+        count = 0
+        for url in tqdm(urls):
+            query = f"""
+                LOAD CSV WITH HEADERS FROM '{url}' AS data
+                MATCH (repo:Github:Repository {{full_name: toLower(data.full_name)}})
+                SET repo.languages = data.languages
+                RETURN count(repo)
+            """
+
             count += self.query(query)[0].value()
         return count
 
