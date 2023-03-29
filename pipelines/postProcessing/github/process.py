@@ -318,6 +318,8 @@ class GithubProcessor(Processor):
     def update_repositories_languages(self):
         repos = self.cyphers.get_github_repositories()
         repos = list(set(repos))
+        if DEBUG:
+            repos = repos[:10]
         data = self.parallel_process(self.get_repository_languages, repos, description="Getting repositories languages")
         results = []
         for repo, languages in zip(repos, data):
@@ -325,7 +327,7 @@ class GithubProcessor(Processor):
                 "full_name": repo,
                 "languages": languages
             })
-        urls = self.save_json_as_csv(results)
+        urls = self.save_json_as_csv(results, self.bucket_name, f"processor_repos_language_{self.asOf}")
         self.cyphers.add_repositories_languages(urls)
 
     def ingest_github_data(self, recover=False):
@@ -403,6 +405,7 @@ class GithubProcessor(Processor):
     def run(self):
         if os.environ.get("UPDATE_REPO_LANG", False):
             self.update_repositories_languages()
+            return None
         if os.environ.get("RECOVER", False):
             self.recover_ingests()
         else:
