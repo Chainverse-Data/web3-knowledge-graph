@@ -35,6 +35,16 @@ class GithubCypher(Cypher):
         return handles
 
     @get_query_logging
+    def get_known_github_repositories(self):
+        query = f"""
+            MATCH (github:Github:Repository)
+            WHERE (github.lastMetadataUpdateDt IS NOT NULL AND github.lastMetadataUpdateDt > datetime() - duration({{days:30}}))
+            RETURN github.full_name as full_name
+        """
+        full_names = [el["full_name"] for el in self.query(query)]
+        return full_names
+
+    @get_query_logging
     def get_github_repositories(self):
         query = f"""
             MATCH (github:Github:Repository)

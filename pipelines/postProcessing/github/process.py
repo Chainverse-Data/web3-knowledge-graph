@@ -19,6 +19,7 @@ class GithubProcessor(Processor):
         self.contributor_keys = ["login", "contributions"]
         self.repository_keys = ["id","name","full_name","private","owner","html_url","description","fork","created_at","updated_at","pushed_at","homepage","size","stargazers_count","watchers_count","language", "languages", "has_issues","has_projects","has_downloads","has_wiki","has_pages","has_discussions","forks_count","mirror_url","archived","disabled","open_issues_count","license","allow_forking","is_template","web_commit_signoff_required","topics","visibility","forks","open_issues","watchers"]
         self.known_users = set()
+        self.known_repos = set()
         
         self.chunk_size = 10
         super().__init__("github-processing")
@@ -27,6 +28,9 @@ class GithubProcessor(Processor):
         if "user" in self.data:
             for handle in self.data["users"]:
                 self.known_users.add(handle)
+        if "repositories" in self.data:
+            for full_name in self.data["repositories"]:
+                self.known_repos.add(full_name)
         self.data = {}
         self.data["users"] = {}
         self.data['bad_handles'] = []
@@ -51,6 +55,10 @@ class GithubProcessor(Processor):
     def get_known_handles(self):
         handles = self.cyphers.get_known_github_accounts()
         return handles
+
+    def get_known_repositories(self):
+        full_names = self.cyphers.get_known_github_repositories()
+        return full_names
 
     ##########################################
     #                  USERS                 #
@@ -255,7 +263,7 @@ class GithubProcessor(Processor):
         time.sleep(counter)
         if counter > 10:
             return None
-        if repository in self.data["repositories"]:
+        if repository in self.data["repositories"] or repository in self.known_repos:
             return self.data["repositories"][repository]
         url = f"https://api.github.com/repos/{repository}"
         response = self.get_request(url, headers=self.get_headers(), decode=False, json=False, retry_on_404=False)
@@ -411,6 +419,7 @@ class GithubProcessor(Processor):
         else:
             self.init_data()
             self.known_users = set(self.get_known_handles())
+            self.known_repos = set(self.get_known_repositories())
             self.get_solidity_repos()
             self.ingest_github_data()
             handles = self.get_all_handles()
