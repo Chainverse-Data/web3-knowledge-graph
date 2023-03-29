@@ -6,28 +6,50 @@ class CreatorsCollectorsCypher(WICCypher):
     def __init__(self, subgraph_name, conditions, database=None):
         WICCypher.__init__(self, subgraph_name, conditions, database)
 
-    def get_writers_benchmark(self):
-        benchmark_query = """
-            MATCH (w:Wallet)-[r:AUTHOR]->(a:Article:Mirror)
-            WITH w, count(distinct(a)) AS articles
-            RETURN apoc.agg.percentiles(articles, [.75])[0] AS benchmark
-        """
-        benchmark = self.query(benchmark_query)[0].value()
-        return benchmark
 
     @count_query_logging
-    def cc_writers(self, context, benchmark):
-        connect_writers = f"""
-            MATCH (author:Wallet)-[r:AUTHOR]->(article:Article:Mirror)
-            MATCH (wic:_Wic:_{self.subgraph_name}:_Context:_{context})
-            WITH author, count(distinct(article)) AS articles_count, tofloat({benchmark}) AS benchmark, wic
-            WHERE articles_count >= benchmark
-            MERGE (author)-[edge:_HAS_CONTEXT]->(wic)
-            SET edge.count = articles_count
-            RETURN count(author)
+    def cc_writers(self, context):
+        label = """
+        MATCH (wallet:Wallet)-[r:AUTHOR]->(a:Mirror)
+        MATCH (wallet:Wallet)-[:_HAS_CONTEXT]->(wic:_Wic:_Context)
+        WHERE NOT (wallet)-[:_HAS_CONTEXT]->(:_Farmers)
+        WITH wallet, count(distinct(wic)) as wics
+        WHERE wics >= 1
+        WITH wallet
+        MATCH (wallet:Wallet)-[r:AUTHOR]->(a:Mirror)
+        WITH wallet, count(distinct(a)) as arts
+        WHERE arts >= 2
+        SET wallet:MirrorAuthor"""
+
+        self.query(label)
+
+        connect = f"""
+        MATCH (wallet:MirrorAuthor)
+        MATCH (wic:_Wic:_Context:_{self.subgraph_name}:_{context})
+        WITH wallet, wic
+        MERGE (wallet)-[con:_HAS_CONTEXT]->(wic)
+        RETURN COUNT(DISTINCT(wallet))
         """
-        count = self.query(connect_writers)[0].value()
+        count = self.query(connect)[0].value()
         return count 
+
+    @count_query_logging
+    def get_writing_nft_collectors(self, context):
+        label = """
+        MATCH (writer:MirrorAuthor)-[r:AUTHOR]->(a:Mirror)-[:HAS_NFT]-(:ERC721)-[:HOLDS_TOKEN]-(collector:Wallet)
+        WITH collector, count(distinct(a)) as arts
+        SET collector:MirrorCollector"""
+        self.query(label)
+
+        connect = f"""
+        MATCH (wic:_Context:_Wic_{self.subgraph_name}:_{context})
+        MATCH (wallet:MirrorCollector)
+        WITH wic, wallet
+        MERGE (wallet)-[con:_HAS_CONTEXT]->(wic)
+        RETURN COUNT(DISTINCT(wallet))"""
+        count = self.query(connect)[0].value()
+
+        return count
     
     @count_query_logging
     def cc_blue_chip(self, addresses, context):
@@ -70,7 +92,7 @@ class CreatorsCollectorsCypher(WICCypher):
         for url in urls:
             create_wallets = f"""
             load csv with headers from '{url}' as sudo
-            merge (wallet:Wallet {{address: sudo.seller}})
+            merge (wallet:Wallet {{address: sudo.address}})
             return count(wallet)
             """
             count += self.query(create_wallets)[0].value()
@@ -83,7 +105,7 @@ class CreatorsCollectorsCypher(WICCypher):
         for url in urls: 
             query = f"""
             load csv with headers from '{url}' as sudo
-            with collect(distinct(sudo.seller)) as addresses
+            with collect(distinct(sudo.address)) as addresses
             match (wallet:Wallet) 
             where wallet.address in addresses
             with wallet
@@ -166,9 +188,4 @@ class CreatorsCollectorsCypher(WICCypher):
 
 
 
-
-    
-
-        
-        
 
