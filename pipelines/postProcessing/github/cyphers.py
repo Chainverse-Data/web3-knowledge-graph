@@ -40,6 +40,8 @@ class GithubCypher(Cypher):
         for url in tqdm(urls):
             query = f"""
                 LOAD CSV WITH HEADERS FROM '{url}' AS data
+                WITH data
+                WHERE data.login IS NOT NULL
                 MERGE (user:Github:Account {{handle: toLower(data.login)}})
                 ON CREATE SET   user.uuid = apoc.create.uuid(),
                                 user.id = data.id,
@@ -92,6 +94,8 @@ class GithubCypher(Cypher):
         for url in tqdm(urls):
             query = f"""
                 LOAD CSV WITH HEADERS FROM '{url}' AS data
+                WITH data
+                WHERE data.full_name IS NOT NULL
                 MERGE (repo:Github:Repository {{full_name: toLower(data.full_name)}})
                 ON CREATE SET   repo.uuid = apoc.create.uuid(),
                                 repo.id = data.id,
@@ -181,6 +185,8 @@ class GithubCypher(Cypher):
         for url in tqdm(urls):
             query = f"""
                 LOAD CSV WITH HEADERS FROM '{url}' AS data
+                WITH data
+                WHERE data.handle IS NOT NULL AND data.follower IS NOT NULL
                 MATCH (handle:Github:Account {{handle: toLower(data.handle)}})
                 MATCH (follower:Github:Account {{handle: toLower(data.follower)}})
                 MERGE (follower)-[edge:FOLLOWS]->(handle)
@@ -195,6 +201,8 @@ class GithubCypher(Cypher):
         for url in tqdm(urls):
             query = f"""
                 LOAD CSV WITH HEADERS FROM '{url}' AS data
+                WITH data
+                WHERE data.owner IS NOT NULL AND data.full_name IS NOT NULL
                 MATCH (handle:Github:Account {{handle: toLower(data.owner)}})
                 MATCH (repo:Github:Repository {{full_name: toLower(data.full_name)}})
                 MERGE (handle)-[edge:OWNER]->(repo)
@@ -209,6 +217,8 @@ class GithubCypher(Cypher):
         for url in tqdm(urls):
             query = f"""
                 LOAD CSV WITH HEADERS FROM '{url}' AS data
+                WITH data
+                WHERE data.contributor IS NOT NULL AND data.full_name IS NOT NULL
                 MATCH (handle:Github:Account {{handle: toLower(data.contributor)}})
                 MATCH (repo:Github:Repository {{full_name: toLower(data.full_name)}})
                 MERGE (handle)-[edge:CONTRIBUTOR]->(repo)
@@ -223,6 +233,8 @@ class GithubCypher(Cypher):
         for url in tqdm(urls):
             query = f"""
                 LOAD CSV WITH HEADERS FROM '{url}' AS data
+                WITH data
+                WHERE data.subscriber IS NOT NULL AND data.full_name IS NOT NULL
                 MATCH (handle:Github:Account {{handle: toLower(data.subscriber)}})
                 MATCH (repo:Github:Repository {{full_name: toLower(data.full_name)}})
                 MERGE (handle)-[edge:SUBSCRIBER]->(repo)
@@ -237,6 +249,8 @@ class GithubCypher(Cypher):
         for url in tqdm(urls):
             query = f"""
                 LOAD CSV WITH HEADERS FROM '{url}' AS data
+                WITH data
+                WHERE data.email IS NOT NULL
                 MERGE (email:Email:Account {{email: toLower(data.email)}})    
                 ON CREATE SET   email.uuid = apoc.create.uuid(),
                                 email.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
@@ -256,6 +270,8 @@ class GithubCypher(Cypher):
         for url in tqdm(urls):
             query = f"""
                 LOAD CSV WITH HEADERS FROM '{url}' AS data
+                WITH data
+                WHERE data.email IS NOT NULL AND data.handle IS NOT NULL
                 MATCH (user:Github:Account {{handle: toLower(data.handle)}})    
                 MATCH (email:Email:Account {{email: toLower(data.email)}})
                 MERGE (user)-[edge:HAS_ACCOUNT]->(email)
@@ -270,6 +286,8 @@ class GithubCypher(Cypher):
         for url in tqdm(urls):
             query = f"""
                 LOAD CSV WITH HEADERS FROM '{url}' AS data
+                WITH data
+                WHERE data.twitter IS NOT NULL
                 MERGE (twitter:Twitter:Account {{handle: toLower(data.twitter)}})
                 ON CREATE SET twitter.uuid = apoc.create.uuid(),
                         twitter.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
@@ -288,6 +306,8 @@ class GithubCypher(Cypher):
         for url in tqdm(urls):
             query = f"""
                 LOAD CSV WITH HEADERS FROM '{url}' AS data
+                WITH data
+                WHERE data.handle IS NOT NULL AND data.twitter IS NOT NULL
                 MATCH (user:Github:Account {{handle: toLower(data.handle)}})    
                 MATCH (twitter:Twitter:Account {{handle: toLower(data.twitter)}})
                 MERGE (user)-[edge:HAS_ACCOUNT]->(twitter)
@@ -302,6 +322,8 @@ class GithubCypher(Cypher):
         for url in tqdm(urls):
             query = f"""
                 LOAD CSV WITH HEADERS FROM '{url}' AS data
+                WITH data
+                WHERE data.handle IS NOT NULL
                 MATCH (user:Github:Account {{handle: toLower(data.handle)}})
                 SET user:BadHandle    
                 RETURN count(user)
