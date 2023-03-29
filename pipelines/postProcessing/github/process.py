@@ -280,9 +280,11 @@ class GithubProcessor(Processor):
     
     def get_repository_languages(self, repository):
         url = f"https://api.github.com/repos/{repository}/languages"
-        languages = self.get_request(url, headers=self.get_headers(), decode=False, json=True, retry_on_404=False)
+        response = self.get_request(url, headers=self.get_headers(), decode=False, json=False, retry_on_404=False)
+        if response and not self.check_api_rate_limit(response):
+            return self.get_repository_languages(repository)
         if languages:
-            languages = [key for key in languages]
+            languages = [key for key in response.json()]
         else:
             languages = []
         return languages
