@@ -84,7 +84,7 @@ class GithubProcessor(Processor):
             "per_page":100,
             "page":page
         }
-        response = self.get_request(url, params=params, headers=self.get_headers(), decode=False, json=False, retry_on_404=False) 
+        response = self.get_request(url, params=params, headers=self.get_headers(), decode=False, json=False, ignore_retries=True) 
         if response and not self.check_api_rate_limit(response):
             return self.get_followers(handle, followers_data=followers_data, page=page)
         
@@ -112,7 +112,7 @@ class GithubProcessor(Processor):
         if handle in self.data["users"] or handle in self.known_users:
             return None
         url = f"https://api.github.com/users/{handle}"
-        response = self.get_request(url, headers=self.get_headers(), decode=False, json=False, retry_on_404=False)
+        response = self.get_request(url, headers=self.get_headers(), decode=False, json=False, ignore_retries=True)
         if response and not self.check_api_rate_limit(response):
             return self.get_user_data(handle, follow_through=follow_through)
         if response:
@@ -137,7 +137,7 @@ class GithubProcessor(Processor):
         if counter > 10:
             return []
         url = f"https://api.github.com/users/{handle}/repos"
-        response = self.get_request(url, headers=self.get_headers(), decode=False, json=False, retry_on_404=False)
+        response = self.get_request(url, headers=self.get_headers(), decode=False, json=False, ignore_retries=True)
         if response and not self.check_api_rate_limit(response):
             return self.get_user_repos(handle)
         repositories = []
@@ -170,7 +170,7 @@ class GithubProcessor(Processor):
             "per_page":100,
             "page":page
         }
-        response = self.get_request(url, params=params, headers=self.get_headers(), decode=False, json=False, retry_on_404=False)
+        response = self.get_request(url, params=params, headers=self.get_headers(), decode=False, json=False, ignore_retries=True)
         if response and not self.check_api_rate_limit(response):
             return self.get_contributors(repository, contributors_data=contributors_data, page=page)
         if not response:
@@ -200,7 +200,7 @@ class GithubProcessor(Processor):
             "per_page":100,
             "page":page
         }
-        response = self.get_request(url, params=params, headers=self.get_headers(), decode=False, json=False, retry_on_404=False)
+        response = self.get_request(url, params=params, headers=self.get_headers(), decode=False, json=False, ignore_retries=True)
         if response and not self.check_api_rate_limit(response):
             return self.get_subscribers(repository, subscribers_data=subscribers_data, page=page)
         if not response:
@@ -222,9 +222,9 @@ class GithubProcessor(Processor):
 
     def get_repo_readme(self, repository):
         url = f"https://api.github.com/repos/{repository}/readme"
-        readme_data = self.get_request(url, headers=self.get_headers(), decode=False, json=True, retry_on_404=False)
+        readme_data = self.get_request(url, headers=self.get_headers(), decode=False, json=True, ignore_retries=True)
         if readme_data and type(readme_data) == dict and "download_url" in readme_data:
-            readme_file = self.get_request(readme_data["download_url"], decode=True, retry_on_404=False)
+            readme_file = self.get_request(readme_data["download_url"], decode=True, ignore_retries=True)
             if readme_file:
                 return readme_file
             else:
@@ -266,7 +266,7 @@ class GithubProcessor(Processor):
         if repository in self.data["repositories"] or repository in self.known_repos:
             return self.data["repositories"][repository]
         url = f"https://api.github.com/repos/{repository}"
-        response = self.get_request(url, headers=self.get_headers(), decode=False, json=False, retry_on_404=False)
+        response = self.get_request(url, headers=self.get_headers(), decode=False, json=False, ignore_retries=True)
         if response and not self.check_api_rate_limit(response):
             return self.get_repository_data(repository)
         if response:
@@ -280,7 +280,7 @@ class GithubProcessor(Processor):
     
     def get_repository_languages(self, repository):
         url = f"https://api.github.com/repos/{repository}/languages"
-        response = self.get_request(url, headers=self.get_headers(), decode=False, json=False, retry_on_404=False)
+        response = self.get_request(url, headers=self.get_headers(), decode=False, json=False, ignore_retries=True)
         if response and not self.check_api_rate_limit(response):
             return self.get_repository_languages(repository)
         if languages:
