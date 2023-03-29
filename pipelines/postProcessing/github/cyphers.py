@@ -1,4 +1,5 @@
 
+from tqdm import tqdm
 from ...helpers import Cypher, Indexes
 from ...helpers import get_query_logging, count_query_logging
 
@@ -36,7 +37,7 @@ class GithubCypher(Cypher):
     @count_query_logging
     def create_or_merge_users(self, urls):
         count = 0
-        for url in urls:
+        for url in tqdm(urls):
             query = f"""
                 LOAD CSV WITH HEADERS FROM '{url}' AS data
                 MERGE (user:Github:Account {{handle: toLower(data.login)}})
@@ -88,7 +89,7 @@ class GithubCypher(Cypher):
     @count_query_logging
     def create_or_merge_repositories(self, urls):
         count = 0
-        for url in urls:
+        for url in tqdm(urls):
             query = f"""
                 LOAD CSV WITH HEADERS FROM '{url}' AS data
                 MERGE (repo:Github:Repository {{full_name: toLower(data.full_name)}})
@@ -177,7 +178,7 @@ class GithubCypher(Cypher):
     @count_query_logging
     def link_followers(self, urls):
         count = 0
-        for url in urls:
+        for url in tqdm(urls):
             query = f"""
                 LOAD CSV WITH HEADERS FROM '{url}' AS data
                 MATCH (handle:Github:Account {{handle: toLower(data.handle)}})
@@ -191,7 +192,7 @@ class GithubCypher(Cypher):
     @count_query_logging
     def link_owners(self, urls):
         count = 0
-        for url in urls:
+        for url in tqdm(urls):
             query = f"""
                 LOAD CSV WITH HEADERS FROM '{url}' AS data
                 MATCH (handle:Github:Account {{handle: toLower(data.owner)}})
@@ -205,7 +206,7 @@ class GithubCypher(Cypher):
     @count_query_logging
     def link_contributors(self, urls):
         count = 0
-        for url in urls:
+        for url in tqdm(urls):
             query = f"""
                 LOAD CSV WITH HEADERS FROM '{url}' AS data
                 MATCH (handle:Github:Account {{handle: toLower(data.contributor)}})
@@ -219,7 +220,7 @@ class GithubCypher(Cypher):
     @count_query_logging
     def link_subscribers(self, urls):
         count = 0
-        for url in urls:
+        for url in tqdm(urls):
             query = f"""
                 LOAD CSV WITH HEADERS FROM '{url}' AS data
                 MATCH (handle:Github:Account {{handle: toLower(data.subscriber)}})
@@ -233,7 +234,7 @@ class GithubCypher(Cypher):
     @count_query_logging
     def create_or_merge_email(self, urls):
         count = 0
-        for url in urls:
+        for url in tqdm(urls):
             query = f"""
                 LOAD CSV WITH HEADERS FROM '{url}' AS data
                 MERGE (email:Email:Account {{email: toLower(data.email)}})    
@@ -252,7 +253,7 @@ class GithubCypher(Cypher):
     @count_query_logging
     def link_email(self, urls):
         count = 0
-        for url in urls:
+        for url in tqdm(urls):
             query = f"""
                 LOAD CSV WITH HEADERS FROM '{url}' AS data
                 MATCH (user:Github:Account {{handle: toLower(data.handle)}})    
@@ -266,7 +267,7 @@ class GithubCypher(Cypher):
     @count_query_logging
     def create_or_merge_twitter(self, urls):
         count = 0
-        for url in urls:
+        for url in tqdm(urls):
             query = f"""
                 LOAD CSV WITH HEADERS FROM '{url}' AS data
                 MERGE (twitter:Twitter:Account {{handle: toLower(data.twitter)}})
@@ -284,7 +285,7 @@ class GithubCypher(Cypher):
     @count_query_logging
     def link_twitter(self, urls):
         count = 0
-        for url in urls:
+        for url in tqdm(urls):
             query = f"""
                 LOAD CSV WITH HEADERS FROM '{url}' AS data
                 MATCH (user:Github:Account {{handle: toLower(data.handle)}})    
@@ -298,7 +299,7 @@ class GithubCypher(Cypher):
     @count_query_logging
     def flag_bad_handles(self, urls):
         count = 0
-        for url in urls:
+        for url in tqdm(urls):
             query = f"""
                 LOAD CSV WITH HEADERS FROM '{url}' AS data
                 MATCH (user:Github:Account {{handle: toLower(data.handle)}})
