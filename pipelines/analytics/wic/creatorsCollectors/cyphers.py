@@ -185,7 +185,3 @@ class CreatorsCollectorsCypher(WICCypher):
             count += self.query(connect_wallets)[0].value()
         
         return count 
-
-
-
-
