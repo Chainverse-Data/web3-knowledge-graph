@@ -55,6 +55,7 @@ class Requests:
                 logging.error(f"403 forbidden detected: {r.content.decode('UTF-8')}")
                 return self.get_request(url, params=params, headers=headers, allow_redirects=allow_redirects, counter=counter + 1)
             elif not ignore_retries and r.status_code != 200:
+                logging.error(f"Error: {r.content}")
                 logging.error(f"Status code not 200: {r.status_code} Retrying in {counter*10}s (counter = {counter})...")
                 return self.get_request(url, params=params, headers=headers, allow_redirects=allow_redirects, counter=counter + 1)
             if not json and decode:
