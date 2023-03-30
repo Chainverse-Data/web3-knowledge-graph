@@ -56,13 +56,15 @@ class ProfessionalsCyphers(WICCypher):
     @count_query_logging
     def get_ens_admin(self, context):
         query = f"""
-        MATCH (entity:Entity)-[:HAS_PROPOSAL]-(proposal:Proposal)<-[:VOTED]-(voter:Wallet)
-        WITH entity, count(distinct(voter)) as voters
-        WHERE voters > 100 AND (entity)-[:HAS_ALIAS]-(:Alias:Ens)
-        MATCH (entity)-[:HAS_ALIAS]-(alias:Alias:Ens)-[:HAS_ALIAS]-(ensAdmin:Wallet)
-        MATCH (context:_Wic:_{self.subgraph_name}:_Context:_{context})
-        MERGE (ensAdmin)-[r:_HAS_CONTEXT]->(context)
-        RETURN COUNT(r)
+            MATCH (entity:Entity)-[:HAS_PROPOSAL]-(proposal:Proposal)<-[:VOTED]-(voter:Wallet)
+            WITH entity, count(distinct(voter)) as voters
+            WHERE voters > 100 AND (entity)-[:HAS_ALIAS]-(:Alias:Ens)
+            MATCH (context:_Wic:_{self.subgraph_name}:_Context:_{context})
+            MATCH (entity)-[:HAS_ALIAS]-(alias:Alias:Ens)
+            MATCH (alias)-[:IS_OWNER]-(ensAdmin:Wallet)
+            WHERE NOT (ensAdmin)-[:_HAS_CONTEXT]->(context)
+            MERGE (ensAdmin)-[r:_HAS_CONTEXT]->(context)
+            RETURN COUNT(r)
         """
         count = self.query(query)[0].value()
         return count
@@ -70,12 +72,12 @@ class ProfessionalsCyphers(WICCypher):
     @count_query_logging
     def identify_founders_bios(self, context, queryString):
         query = f"""
-        CALL db.index.fulltext.queryNodes("wicBios", "{queryString}") 
-        YIELD node
-        UNWIND node AS founder
-        MATCH (wic:_Wic:_{self.subgraph_name}:_Context:_{context})
-        MERGE (founder)-[con:_HAS_CONTEXT]->(wic)
-        RETURN count(con)
+            CALL db.index.fulltext.queryNodes("wicBios", "{queryString}") 
+            YIELD node
+            UNWIND node AS founder
+            MATCH (wic:_Wic:_{self.subgraph_name}:_Context:_{context})
+            MERGE (founder)-[con:_HAS_CONTEXT]->(wic)
+            RETURN count(con)
         """
         count = self.query(query)[0].value()
         return count
@@ -89,8 +91,8 @@ class ProfessionalsCyphers(WICCypher):
             MERGE (account)-[r:_HAS_CONTEXT]->(context)
             RETURN count(r)
         """
-
         count = self.query(query)[0].value()
+        return count
 
     @count_query_logging
     def identify_podcasters_bios(self, context, queryString):
@@ -164,10 +166,10 @@ class ProfessionalsCyphers(WICCypher):
     def identify_devrel_bios(self, context, queryString):
         query =f"""
             CALL db.index.fulltext.queryNodes("wicBios", "{queryString}") YIELD node, score
-            UNWIND node as devRel
+            UNWIND node AS devRel
             WITH devRel
-            match (wic:_Wic:_{self.subgraph_name}:_Context:_{context})
-            merge (devRel)-[r:_HAS_CONTEXT]->(wic)
+            MATCH (wic:_Wic:_{self.subgraph_name}:_Context:_{context})
+            MERGE (devRel)-[r:_HAS_CONTEXT]->(wic)
             RETURN COUNT(r)
         """
         count = self.query(query)[0].value()
