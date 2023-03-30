@@ -1,33 +1,32 @@
 from .. import WICCypher
 from ....helpers import count_query_logging
-import logging 
-
+ 
 class ProfessionalsCyphers(WICCypher):
     def __init__(self, subgraph_name, conditions, database=None):
         WICCypher.__init__(self, subgraph_name, conditions, database)
-
+ 
     @count_query_logging
     def token_contract_deployer_wallets(self, context):
         query = f"""
-        MATCH (deployer:Wallet)-[:DEPLOYED]->(token:Token)
+        MATCH (deployer:Wallet)-[r:DEPLOYED]->(token:Token)
         MATCH (wic:_Wic:_{self.subgraph_name}:_Context:_{context})
-        MERGE (deployer)-[r:_HAS_CONTEXT]->(wic)
+        MERGE (deployer)-[con:_HAS_CONTEXT]->(wic)
         RETURN COUNT(r)
         """
         count = self.query(query)[0].value()
         return count
-
+ 
     @count_query_logging
     def get_org_wallet_deployers(self, context):
         query = f"""
         MATCH (wallet:Wallet)-[deploy:DEPLOYED]->(org_wallet:Wallet)-[:HAS_ACCOUNT]-(entity:Entity)
         MATCH (context:_Wic:_{self.subgraph_name}:_Context:_{context})
         MERGE (wallet)-[r:_HAS_CONTEXT]->(context)
-        RETURN COUNT(r)
+        RETURN COUNT(DISTINCT(wallet))
         """
         count = self.query(query)[0].value()
         return count
-
+ 
     @count_query_logging
     def get_org_multisig_signers(self, context):
         query = f"""
@@ -35,11 +34,11 @@ class ProfessionalsCyphers(WICCypher):
         MATCH (wallet:Wallet)-[signer:IS_SIGNER]->(multisig)
         MATCH (context:_Wic:_{self.subgraph_name}:_Context:_{context})
         MERGE (wallet)-[r:_HAS_CONTEXT]->(context)
-        RETURN COUNT(r)
+        RETURN COUNT(wallet)
         """
         count = self.query(query)[0].value()
         return count
-
+ 
     @count_query_logging
     def get_snapshot_contributors(self, context):
         query = f"""
@@ -47,160 +46,192 @@ class ProfessionalsCyphers(WICCypher):
         MATCH (walletother)-[:CONTRIBUTOR]->(entity)
         MATCH (context:_Wic:_{self.subgraph_name}:_Context:_{context})
         MERGE (walletother)-[r:_HAS_CONTEXT]->(context)
-        RETURN COUNT(r)
+        RETURN COUNT(walletother)
         """
         count = self.query(query)[0].value()
-
+ 
         return count 
-
-    @count_query_logging
-    def get_ens_admin(self, context):
-        query = f"""
-            MATCH (entity:Entity)-[:HAS_PROPOSAL]-(proposal:Proposal)<-[:VOTED]-(voter:Wallet)
-            WITH entity, count(distinct(voter)) as voters
-            WHERE voters > 100 AND (entity)-[:HAS_ALIAS]-(:Alias:Ens)
-            MATCH (context:_Wic:_{self.subgraph_name}:_Context:_{context})
-            MATCH (entity)-[:HAS_ALIAS]-(alias:Alias:Ens)
-            MATCH (alias)-[:IS_OWNER]-(ensAdmin:Wallet)
-            WHERE NOT (ensAdmin)-[:_HAS_CONTEXT]->(context)
-            MERGE (ensAdmin)-[r:_HAS_CONTEXT]->(context)
-            RETURN COUNT(r)
-        """
-        count = self.query(query)[0].value()
-        return count
-
+ 
     @count_query_logging
     def identify_founders_bios(self, context, queryString):
-        query = f"""
-            CALL db.index.fulltext.queryNodes("wicBios", "{queryString}") 
-            YIELD node
-            UNWIND node AS founder
-            MATCH (wic:_Wic:_{self.subgraph_name}:_Context:_{context})
-            MERGE (founder)-[con:_HAS_CONTEXT]->(wic)
-            RETURN count(con)
-        """
-        count = self.query(query)[0].value()
+ 
+        label = f"""
+        CALL db.index.fulltext.queryNodes("wicBios", "{queryString}") 
+        YIELD node
+        UNWIND node AS founder
+        MATCH (founder)-[:HAS_ACCOUNT]-(wallet:Wallet)
+        WHERE NOT wallet:FounderWallet
+        SET wallet:FounderWallet"""
+ 
+        self.query(label)
+ 
+        connect = f"""
+        MATCH (wallet:FounderWallet:Wallet)
+        MATCH (wic:_Wic:_Context:_{self.subgraph_name}:_{context})
+        WITH wallet, wic
+        MERGE (wallet)-[con:_HAS_CONTEXT]->(wic)
+        RETURN COUNT(DISTINCT(wallet))"""
+ 
+        count = self.query(connect)[0].value()
+ 
         return count
-    
-    @count_query_logging
-    def identify_mirror_power_users(self, context):
-        mirror_write_token="0x622236BB180256B6Ae1a935DaE08dC0356141632"
-        query = f"""
-            MATCH (t:Token {{address: toLower("{mirror_write_token}")}})-[:HOLDS]-(w:Wallet)
-            MATCH (context:_Wic:_{self.subgraph_name}:_Context:_{context})
-            MERGE (account)-[r:_HAS_CONTEXT]->(context)
-            RETURN count(r)
-        """
-        count = self.query(query)[0].value()
-        return count
-
+ 
     @count_query_logging
     def identify_podcasters_bios(self, context, queryString):
-        query =f"""
-            CALL db.index.fulltext.queryNodes("wicBios", "{queryString}") YIELD node
-            UNWIND node as podcaster
-            WITH podcaster
-            MATCH (context:_Wic:_{self.subgraph_name}:_Context:_{context})
-            MERGE (account)-[r:_HAS_CONTEXT]->(context)
-            RETURN count(distinct(account))
-        """
-        count = self.query(query)[0].value()
+ 
+        label = f"""
+        CALL db.index.fulltext.queryNodes("wicBios", "{queryString}") 
+        YIELD node
+        UNWIND node AS podcaster
+        MATCH (podcaster)-[:HAS_ACCOUNT]-(wallet:Wallet)
+        WHERE NOT wallet:PodcasterWallet
+        SET wallet:PodcasterWallet"""
+ 
+        self.query(label)
+ 
+        connect = f"""
+        MATCH (wallet:Wallet:PodcasterWallet)
+        MATCH (wic:_Wic:_Context:_{self.subgraph_name}:_{context})
+        WITH wallet, wic
+        MERGE (wallet)-[con:_HAS_CONTEXT]->(wic)
+        RETURN COUNT(DISTINCT(wallet))"""
+ 
+        count = self.query(connect)[0].value()
+ 
         return count
-
+ 
     @count_query_logging
     def identify_twitter_influencers_bios(self, context):
         query = f"""
-            MATCH (influencerTwitter:Twitter)
-            WITH influencerTwitter
-            MATCH (follower:Twitter)-[:FOLLOWS]->(influencerTwitter)
-            WITH influencerTwitter, count(distinct(follower)) as countFollowers
-            WITH apoc.agg.percentiles(countFollowers, [.75])[0] as cutoff, countFollowers, influencerTwitter
-            WHERE countFollowers >= cutoff
-            MATCH (context:_Wic:_{self.subgraph_name}:_Context:_{context})
-            MERGE (influencerTwitter)-[r:_HAS_CONTEXT]->(context)
-            RETURN COUNT(r)
+        MATCH (influencerTwitter:Twitter)-[:HAS_ACCOUNT]-(influencerWallet:Wallet)
+        WITH influencerTwitter, influencerWallet
+        MATCH (followerWallet:Wallet)-[:HAS_ACCOUNT]-(follower:Twitter)-[:FOLLOWS]->(influencerTwitter)
+        WITH influencerWallet, count(distinct(followerWallet)) as countFollowers
+        WHERE countFollowers >= 75
+        SET influencerWallet:InfluencerWallet"""
+        self.query(query)
+ 
+        connect = f"""
+        MATCH (wallet:Wallet:InfluencerWallet)
+        MATCH (wic:_Wic:_{context}:_{self.subgraph_name})
+        WITH wallet, wic
+        MERGE (wallet)-[con:_HAS_CONTEXT]->(wic)
+        RETURN COUNT(DISTINCT(wallet))
         """
-        count = self.query(query)[0].value()
+        count = self.query(connect)[0].value()
+ 
         return count
-
+ 
     @count_query_logging
     def identify_investors_bios(self, context, queryString):
-        query = f"""
-            CALL db.index.fulltext.queryNodes("wicBios", "{queryString}") YIELD node, score
-            UNWIND node as investor
-            WITH investor
-            MATCH (wic:_Wic:_{self.subgraph_name}:_Context:_{context})
-            MERGE (investor)-[r:_HAS_CONTEXT]->(wic)
-            RETURN COUNT(r)
-        """
-        count = self.query(query)[0].value()
+ 
+        label = f"""
+        CALL db.index.fulltext.queryNodes("wicBios", "{queryString}") 
+        YIELD node
+        UNWIND node AS investor
+        MATCH (investor)-[:HAS_ACCOUNT]-(wallet:Wallet)
+        WHERE NOT wallet:InvestorWallet
+        SET wallet:InvestorWallet"""
+ 
+        self.query(label)
+ 
+        connect = f"""
+        MATCH (wallet:Wallet:InvestorWallet)
+        MATCH (wic:_Wic:_Context:_{self.subgraph_name}:_{context})
+        WITH wallet, wic
+        MERGE (wallet)-[con:_HAS_CONTEXT]->(wic)
+        RETURN COUNT(DISTINCT(wallet))"""
+ 
+        count = self.query(connect)[0].value()
+ 
         return count
-
+ 
     @count_query_logging
     def identify_marketers_bios(self, context, queryString):
-        query =f"""
-            CALL db.index.fulltext.queryNodes("wicBios", "{queryString}") YIELD node, score
-            UNWIND node as marketer
-            WITH marketer
-            MATCH (wic:_Wic:_{self.subgraph_name}:_Context:_{context})
-            MERGE (marketer)-[r:_HAS_CONTEXT]->(wic)
-            RETURN COUNT(r)
-        """
-        count = self.query(query)[0].value()
+ 
+        label = f"""
+        CALL db.index.fulltext.queryNodes("wicBios", "{queryString}") 
+        YIELD node
+        UNWIND node AS marketer
+        MATCH (marketer)-[:HAS_ACCOUNT]-(wallet:Wallet)
+        WHERE NOT wallet:MarketerWallet
+        SET wallet:MarketerWallet"""
+ 
+        self.query(label)
+ 
+        connect = f"""
+        MATCH (wallet:Wallet:MarketerWallet)
+        MATCH (wic:_Wic:_Context:_{self.subgraph_name}:_{context})
+        WITH wallet, wic
+        MERGE (wallet)-[con:_HAS_CONTEXT]->(wic)
+        RETURN COUNT(DISTINCT(wallet))"""
+        count = self.query(connect)[0].value()
+ 
         return count
-
+ 
     @count_query_logging
     def identify_community_lead_bios(self, context, queryString):
-        query =f"""
-            CALL db.index.fulltext.queryNodes("wicBios", "{queryString}") YIELD node, score
-            UNWIND node as communityLead
-            WITH communityLead
-            MATCH (wic:_Wic:_{self.subgraph_name}:_Context:_{context})
-            MERGE (communityLead)-[r:_HAS_CONTEXT]->(wic)
-            RETURN COUNT(r)
-        """
-        count = self.query(query)[0].value()
+        label = f"""
+        CALL db.index.fulltext.queryNodes("wicBios", "{queryString}") 
+        YIELD node
+        UNWIND node AS communityLead
+        MATCH (communityLead)-[:HAS_ACCOUNT]-(wallet:Wallet)
+        WHERE NOT wallet:CommunityLeadWallet
+        SET wallet:CommunityLeadWallet"""
+ 
+        self.query(label)
+ 
+        connect = f"""
+        MATCH (wallet:Wallet:CommunityLeadWallet)
+        MATCH (wic:_Wic:_Context:_{self.subgraph_name}:_{context})
+        WITH wallet, wic
+        MERGE (wallet)-[con:_HAS_CONTEXT]->(wic)
+        RETURN COUNT(DISTINCT(wallet))"""
+        count = self.query(connect)[0].value()
+ 
         return count
-
+ 
+ 
     @count_query_logging
     def identify_devrel_bios(self, context, queryString):
-        query =f"""
-            CALL db.index.fulltext.queryNodes("wicBios", "{queryString}") YIELD node, score
-            UNWIND node AS devRel
-            WITH devRel
-            MATCH (wic:_Wic:_{self.subgraph_name}:_Context:_{context})
-            MERGE (devRel)-[r:_HAS_CONTEXT]->(wic)
-            RETURN COUNT(r)
-        """
-        count = self.query(query)[0].value()
+        label = f"""
+        CALL db.index.fulltext.queryNodes("wicBios", "{queryString}") 
+        YIELD node
+        UNWIND node AS devRel
+        MATCH (devRel)-[:HAS_ACCOUNT]-(wallet:Wallet)
+        WHERE NOT wallet:DevRelWallet
+        SET wallet:DevRelWallet"""
+ 
+        self.query(label)
+ 
+        connect = f"""
+        MATCH (wallet:Wallet:DevRelWallet)
+        MATCH (wic:_Wic:_Context:_{self.subgraph_name}:_{context})
+        WITH wallet, wic
+        MERGE (wallet)-[con:_HAS_CONTEXT]->(wic)
+        RETURN COUNT(DISTINCT(wallet))"""
+        count = self.query(connect)[0].value()
+ 
         return count
-
+ 
     @count_query_logging
     def identify_company_officers_bios(self, context, queryString):
-        query =f"""
-            CALL db.index.fulltext.queryNodes("wicBios", "{queryString}") YIELD node
-            UNWIND node as companyOfficer
-            WITH companyOfficer
-            MATCH (context:_Wic:_{self.subgraph_name}:_Context:_{context})
-            MERGE (companyOfficer)-[r:_HAS_CONTEXT]->(context)
-            RETURN COUNT(r)
-        """
-        count = self.query(query)[0].value()
+        label = f"""
+        CALL db.index.fulltext.queryNodes("wicBios", "{queryString}") 
+        YIELD node
+        UNWIND node AS companyOfficer
+        MATCH (companyOfficer)-[:HAS_ACCOUNT]-(wallet:Wallet)
+        WHERE NOT wallet:CompanyOfficerWallet
+        SET wallet:CompanyOfficerWallet"""
+ 
+        self.query(label)
+ 
+        connect = f"""
+        MATCH (wallet:Wallet:CompanyOfficerWallet)
+        MATCH (wic:_Wic:_Context:_{self.subgraph_name}:_{context})
+        WITH wallet, wic
+        MERGE (wallet)-[con:_HAS_CONTEXT]->(wic)
+        RETURN COUNT(DISTINCT(wallet))"""
+        count = self.query(connect)[0].value()
+ 
         return count
-
-    @count_query_logging
-    def connect_account_contexts_to_wallets(self):
-        connectWallets = f"""
-            CALL apoc.periodic.commit("
-                MATCH (wallet:Wallet)-[:HAS_ACCOUNT]-(account:Account)-[:_HAS_CONTEXT]->(context:_Wic:_{self.subgraph_name}:_Context)
-                WHERE NOT (wallet)-[:_HAS_CONTEXT]->(context)
-                WITH wallet
-                LIMIT 10000
-                MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
-                RETURN COUNT(*)
-            ")
-        """
-        count = self.query(connectWallets)[0].value()
-        return count
-        
-        
