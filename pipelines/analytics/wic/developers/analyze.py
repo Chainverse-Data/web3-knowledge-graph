@@ -7,7 +7,9 @@ class DevelopersAnalysis(WICAnalysis):
         self.conditions = {
             "DevContributor": {
                 "DevAccount": self.process_dev_accounts,
-                "GitcoinBountyFulfill":self.process_bounty_fullfilers
+                "GitcoinBountyFulfill":self.process_bounty_fullfilers,
+                "SolidityDeveloper": self.process_solidity_devs
+
             },
             "DevEcosystem": {
                 "GitcoinBountyAdmin": self.process_gitcoin_bounty_admin
@@ -16,6 +18,9 @@ class DevelopersAnalysis(WICAnalysis):
         self.subgraph_name = "Developers"
         self.cyphers = DevelopersCyphers(self.subgraph_name, self.conditions)
         super().__init__("wic-developers")
+
+    def process_solidity_devs(self, context):
+        self.cyphers.is_solidity_developer(context)
 
     def process_dev_accounts(self, context):
         self.cyphers.has_github(context)
