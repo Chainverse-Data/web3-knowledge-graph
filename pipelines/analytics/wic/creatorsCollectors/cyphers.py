@@ -185,3 +185,27 @@ class CreatorsCollectorsCypher(WICCypher):
             count += self.query(connect_wallets)[0].value()
         
         return count 
+
+    @count_query_logging
+    def get_mirror_collectors(self, context):
+        query = f"""
+        MATCH (author:Wallet)-[r:AUTHOR]->(a:Mirror)
+        MATCH (author:Wallet)-[:_HAS_CONTEXT]->(wic:_Wic:_Context)
+        WHERE NOT (author)-[:_HAS_CONTEXT]->(:_Farmers)
+        WITH wallet, count(distinct(wic)) as wics
+        WHERE wics >= 1
+        WITH author
+        MATCH (author:Wallet)-[r:AUTHOR]->(a:Mirror)
+        WITH wallet, count(distinct(a)) as arts
+        WHERE arts >= 2
+        MATCH (author:Wallet)-[r:AUTHOR]->(a:Mirror)-[:HAS_NFT]-(:ERC721)-[:HOLDS_TOKEN]-(collector:Wallet)
+        WITH collector, count(distinct(a)) as arts
+        WHERE arts >= 2
+        MATCH (wic:_Wic:_Context:_{context}:_{self.subgraph_name})
+        MERGE (collector)-[con:_HAS_CONTEXT]->(wic)
+        RETURN COUNT(DISTINCT(collector))
+        """
+        count = self.query(query)[0].value()
+
+        return count 
+

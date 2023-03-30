@@ -85,6 +85,10 @@ class CreatorsCollectorsAnalysis(WICAnalysis):
         self.cyphers.connect_nft_borrowers(context, urls)
         logging.info("I am done cuz")
 
+    def process_mirror_collectors(self, context):
+        logging.info("Idenitfying legit Mirror NFT collectors...")
+        self.cyphers.get_mirror_collectors(context)
+
     def run(self):
         self.process_conditions()
 
