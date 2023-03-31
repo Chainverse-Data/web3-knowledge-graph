@@ -1,5 +1,5 @@
 from ...helpers.decorators import count_query_logging
-from ...helpers.cypher import Cypher
+from ...helpers import Cypher, Indexes
 
 class WICCypher(Cypher):
     def __init__(self, subgraph_name, conditions, database=None):
@@ -10,6 +10,10 @@ class WICCypher(Cypher):
         self.create_main()
         self.create_conditions()
         self.create_contexts()
+
+    def create_indexes(self):
+        indexes = Indexes()
+        indexes.wicIndexes()
 
     @count_query_logging
     def clear_subgraph(self):

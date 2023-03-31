@@ -8,7 +8,7 @@ class ProtocolPoliticiansAnalysis(WICAnalysis):
             "Voting": {
                 "EngagedVoter": self.process_engaged_voters    
             },
-            "ProposalAuthor": {
+            "Proposals": {
                 "ProposalAuthor": self.process_proposal_authors
             }, 
             "Delegation": {
@@ -42,4 +42,3 @@ class ProtocolPoliticiansAnalysis(WICAnalysis):
 if __name__=="__main__":
     analysis = ProtocolPoliticiansAnalysis()
     analysis.run()
-
