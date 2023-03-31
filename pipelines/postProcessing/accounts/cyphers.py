@@ -102,3 +102,34 @@ class AccountsCyphers(Cypher):
         count = self.query(query)[0].values()
 
         return count
+
+    @count_query_logging
+    def create_mirror_accounts(self):
+        query = f"""
+        CALL apoc.periodic.commit('match (m:Article)-[:AUTHOR]-(wallet:Wallet)
+        MATCH (m:Mirror:Account)
+        OPTIONAL MATCH (wallet)-[:HAS_ALIAS]-(alias:Alias {{primary:True}})
+        WHERE NOT wallet.address = m.author
+        WITH wallet.address AS address, coalesce(alias.name, wallet.address) AS handle, "https://mirror.xyz/" + wallet.address AS url LIMIT 10000
+        MERGE (account:Mirror:Account {{author:address}})
+        ON CREATE SET account.url = url, account.handle = handle, account.accountType = "Mirror", account.uuid = apoc.create.uuid()
+        ON MATCH SET account.lastUpdateDt = timestamp()
+        RETURN COUNT(*)')
+        """
+        count = self.query(query)[0].value()
+
+        return count 
+
+    def link_mirror_accounts(self):
+        query = """
+        CALL apoc.periodic.commit('MATCH (wallet:Wallet)
+        MATCH (account:Account:Mirror)
+        WHERE NOT (wallet)-[:HAS_ACCOUNT]-(:Mirror:Account)
+        AND wallet.address = account.author 
+        WITH wallet, account limit 5000
+        MERGE (wallet)-[accn:HAS_ACCOUNT]->(account)
+        RETURN count(*)')
+        """
+        count = self.query(query)[0].value()
+
+        return count 
