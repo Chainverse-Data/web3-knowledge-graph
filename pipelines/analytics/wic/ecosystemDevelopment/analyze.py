@@ -5,7 +5,7 @@ from .cyphers import EcoDevCyphers
 class EcoDevAnalysis(WICAnalysis):
     """This class builds out the ecosystem development wallet in context (Wic) subgraph"""
     def __init__(self):
-        self.subgraph_name = 'EcoDev'
+        self.subgraph_name = 'PublicGoods'
         self.conditions = {
             "Grants": {
                 "GitcoinGrantAdmin": {
