@@ -84,7 +84,7 @@ class TwitterRelationsCyphers(Cypher):
     def get_twitter_websites(self):
         query = """
             MATCH (t:Twitter:Account)
-            WHERE (t.website IS NOT NULL OR t.website_bio IS NOT NULL) AND NOT (t)-[:HAS_WEBSITE]->(:Website)
+            WHERE (t.website IS NOT NULL OR t.website_bio IS NOT NULL) AND NOT (t)-[:HAS_ACCOUNT]->(:Website)
             RETURN distinct t.handle as handle, t.website as website, t.website_bio as website_bio
         """
         if DEBUG:
@@ -154,7 +154,7 @@ class TwitterRelationsCyphers(Cypher):
                 LOAD CSV WITH HEADERS FROM "{url}" as websites
                 MATCH (website:Website {{url: websites.url}})
                 MATCH (twitter:Twitter:Account {{handle: websites.handle}})
-                MERGE (twitter)-[edge:HAS_WEBSITE]->(website)
+                MERGE (twitter)-[edge:HAS_ACCOUNT]->(website)
                 ON CREATE SET edge.createdDt = ingestDate,
                               edge.lastUpdateDt = ingestDate
                 ON MATCH SET edge.lastUpdateDt = ingestDate

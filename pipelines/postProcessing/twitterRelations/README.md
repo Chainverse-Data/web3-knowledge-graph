@@ -17,7 +17,7 @@ Creates new nodes:
 
 It creates the following relationships
 - (Twitter)-[:BIO_MENTIONED]->(Twitter)
-- (Twitter)-[:HAS_WEBSITE]->(Website)
+- (Twitter)-[:HAS_ACCOUNT]->(Website)
 - (Website)-[:HAS_DOMAIN]->(Domain)
 
 ## Bucket
