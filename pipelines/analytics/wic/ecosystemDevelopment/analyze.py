@@ -33,10 +33,8 @@ class EcoDevAnalysis(WICAnalysis):
             },
             "Incubators": {
                 "Incubator": {
-                    "call": {
-                        "type": TYPES["interests"],
-                        "call": self.process_incubator
-                    },
+                    "type": TYPES["interests"],
+                    "call": self.process_incubator,
                     "subcontexts": {
                         "IncubatorMember": {
                         "type": TYPES["interests"],
