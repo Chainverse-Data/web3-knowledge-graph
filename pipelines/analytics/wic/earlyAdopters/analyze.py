@@ -1,6 +1,7 @@
 
 from .cyphers import EarlyAdoptersCyphers
 from .. import WICAnalysis
+from ..WICAnalysis import TYPES
 
 class EarlyAdopterAnalysis(WICAnalysis):
     def __init__(self) -> None:
@@ -9,13 +10,28 @@ class EarlyAdopterAnalysis(WICAnalysis):
 
         self.conditions = {
             "EarlyDappUser": {
-                "EarlyDaoHaus": self.process_early_daohaus_users,
-                "EarlySnapshot": self.process_early_snapshot_users,
+                "EarlyDaoHaus": {
+                    "type": TYPES["interests"],
+                    "call": self.process_early_daohaus_users
+                    },
+                "EarlySnapshot": {
+                    "type": TYPES["interests"],
+                    "call": self.process_early_snapshot_users
+                    },
             },
             "DappPowerUser": {
-                "DaoSummoner": self.process_dao_summoners,
-                "DaoAdmin": self.process_dao_admins,
-                "NftSubscriptionAdmin": self.process_nft_sub_admins
+                "DaoSummoner": {
+                    "type": TYPES["interests"],
+                    "call": self.process_dao_summoners
+                    },
+                "DaoAdmin": {
+                    "type": TYPES["interests"],
+                    "call": self.process_dao_admins
+                    },
+                "NftSubscriptionAdmin": {
+                    "type": TYPES["interests"],
+                    "call": self.process_nft_sub_admins
+                    }
             }
         }
 

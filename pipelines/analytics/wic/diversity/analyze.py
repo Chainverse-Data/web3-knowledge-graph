@@ -1,4 +1,5 @@
 from .. import WICAnalysis
+from ..WICAnalysis import TYPES
 from .cyphers import DiversityCyphers
 
 class DiversityAnalysis(WICAnalysis):
@@ -6,18 +7,42 @@ class DiversityAnalysis(WICAnalysis):
         self.subgraph_name = 'Dei'
         self.conditions = {
             "Voting": {
-                "GenderFocusedProposal": self.process_gendered_focused_proposals, 
-                "UrmFocusedProposal": self.process_urm_focuses_proposals
+                "GenderFocusedProposal": {
+                    "type": TYPES["interests"],
+                    "call": self.process_gendered_focused_proposals
+                    }, 
+                "UrmFocusedProposal": {
+                    "type": TYPES["interests"],
+                    "call": self.process_urm_focuses_proposals
+                    }
             },
             "Writing": {
-                "GenderFocusedArticle": self.process_gendered_focused_articles,
-                "UrmFocusedArticle": self.process_urm_focused_articles, 
-                "UrmFocusedBio": self.process_urm_focused_bio, 
-                "GenderFocusedBio":self.process_gendered_focused_bio
+                "GenderFocusedArticle": {
+                    "type": TYPES["interests"],
+                    "call": self.process_gendered_focused_articles
+                    },
+                "UrmFocusedArticle": {
+                    "type": TYPES["interests"],
+                    "call": self.process_urm_focused_articles
+                    }, 
+                "UrmFocusedBio": {
+                    "type": TYPES["interests"],
+                    "call": self.process_urm_focused_bio
+                    }, 
+                "GenderFocusedBio":{
+                    "type": TYPES["interests"],
+                    "call": self.process_gendered_focused_bio
+                    }
             },
             "FinancialSupporter": {
-                "GenderFocusedGrant": self.process_gendered_focused_grant, 
-                "UrmFocusedGrant": self.process_urm_focused_grant
+                "GenderFocusedGrant": {
+                    "type": TYPES["interests"],
+                    "call": self.process_gendered_focused_grant
+                    }, 
+                "UrmFocusedGrant": {
+                    "type": TYPES["interests"],
+                    "call": self.process_urm_focused_grant
+                    }
             }
         }
         self.cyphers = DiversityCyphers(self.subgraph_name, self.conditions)

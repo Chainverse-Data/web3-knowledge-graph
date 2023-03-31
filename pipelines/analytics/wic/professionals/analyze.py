@@ -1,4 +1,5 @@
 from .. import WICAnalysis
+from ..WICAnalysis import TYPES
 from .cyphers import ProfessionalsCyphers
 import logging
  
@@ -7,22 +8,58 @@ class ProfessionalsAnalysis(WICAnalysis):
     def __init__(self):
         self.conditions = {
            "DaoContributors": {
-                "CommunityWalletDeployers": self.process_org_wallet_deployers,
-                "SnapshotContributors": self.process_org_snapshot_contributors,
-                "CommunityMultisigSigners": self.process_org_multisig_signers
+                "CommunityWalletDeployers": {
+                        "type": TYPES["interests"],
+                        "call": self.process_org_wallet_deployers
+                    },
+                "SnapshotContributors": {
+                        "type": TYPES["interests"],
+                        "call": self.process_org_snapshot_contributors
+                    },
+                "CommunityMultisigSigners": {
+                        "type": TYPES["interests"],
+                        "call": self.process_org_multisig_signers
+                    }
            },
             "Web3Professionals": {
-                "TokenContractDeployers": self.process_token_contract_deployer_wallets,
-                "Founders": self.process_founder_bios,
-                "Investors": self.process_investor_bios,
-                "Marketers": self.process_marketers_bios,
-                "CompanyOfficer": self.process_company_officer_bios,
-                "CommunityLeads": self.process_community_people_bios,
-                "DeveloperRelations": self.process_devrel_bios
+                "TokenContractDeployers": {
+                        "type": TYPES["interests"],
+                        "call": self.process_token_contract_deployer_wallets
+                    },
+                "Founders": {
+                        "type": TYPES["interests"],
+                        "call": self.process_founder_bios
+                    },
+                "Investors": {
+                        "type": TYPES["interests"],
+                        "call": self.process_investor_bios
+                    },
+                "Marketers": {
+                        "type": TYPES["interests"],
+                        "call": self.process_marketers_bios
+                    },
+                "CompanyOfficer": {
+                        "type": TYPES["interests"],
+                        "call": self.process_company_officer_bios
+                    },
+                "CommunityLeads": {
+                        "type": TYPES["interests"],
+                        "call": self.process_community_people_bios
+                    },
+                "DeveloperRelations": {
+                        "type": TYPES["interests"],
+                        "call": self.process_devrel_bios
+                    }
             },
             "Influencers": {
-                "TwitterInfluencers": self.process_twitter_influencers,
-                "Podcasters": self.process_podcaster_bios
+                "TwitterInfluencers": {
+                        "type": TYPES["interests"],
+                        "call": self.process_twitter_influencers
+                    },
+                "Podcasters": {
+                        "type": TYPES["interests"],
+                        "call": self.process_podcaster_bios
+                    }
             }
         }
         self.subgraph_name = "Professionals"

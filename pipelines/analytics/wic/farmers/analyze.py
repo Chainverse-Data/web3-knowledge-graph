@@ -1,4 +1,5 @@
 from .. import WICAnalysis
+from ..WICAnalysis import TYPES
 from .cyphers import FarmerCyphers
 
 class IncentiveFarmerAnalysis(WICAnalysis):
@@ -7,19 +8,34 @@ class IncentiveFarmerAnalysis(WICAnalysis):
         self.subgraph_name = "IncentiveFarming"
         self.conditions = {
             "GovernanceFarming": {
-                "SuspiciousSnapshot": self.process_suspicious_snapshot_daos
+                "SuspiciousSnapshot": {
+                        "type": TYPES["interests"],
+                        "call": self.process_suspicious_snapshot_daos
+                    }
             }, 
             "MarketplaceFarming": {
-                "Mirror": self.process_suspicious_mirror
+                "Mirror": {
+                        "type": TYPES["interests"],
+                        "call": self.process_suspicious_mirror
+                    }
             },
             "WashTrading": {
-                "NftWashTrading": self.process_nft_wash_trading
+                "NftWashTrading": {
+                        "type": TYPES["interests"],
+                        "call": self.process_nft_wash_trading
+                    }
             },
             "Spammers": {
-                "SpamContractDeployer": self.process_spam_contract_deployment
+                "SpamContractDeployer": {
+                        "type": TYPES["interests"],
+                        "call": self.process_spam_contract_deployment
+                    }
             },
             "FarmersAffiliates": {
-                "FarmerCosigner": self.process_suspicious_cosigners
+                "FarmerCosigner": {
+                        "type": TYPES["interests"],
+                        "call": self.process_suspicious_cosigners
+                    }
         }
     }
         

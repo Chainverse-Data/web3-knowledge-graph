@@ -1,4 +1,5 @@
 from .. import WICAnalysis
+from ..WICAnalysis import TYPES
 from .cyphers import EcoDevCyphers
 
 class EcoDevAnalysis(WICAnalysis):
@@ -7,20 +8,44 @@ class EcoDevAnalysis(WICAnalysis):
         self.subgraph_name = 'EcoDev'
         self.conditions = {
             "Grants": {
-                "GitcoinGrantAdmin": self.process_gitcoin_grant_admins, 
-                "GitcoinGrantDonor": self.process_gitcoin_grant_donor,
-                "GrantsDao": self.process_grants_dao
+                "GitcoinGrantAdmin": {
+                        "type": TYPES["interests"],
+                        "call": self.process_gitcoin_grant_admins
+                    }, 
+                "GitcoinGrantDonor": {
+                        "type": TYPES["interests"],
+                        "call": self.process_gitcoin_grant_donor
+                    },
+                "GrantsDao": {
+                        "type": TYPES["interests"],
+                        "call": self.process_grants_dao
+                    }
             },
             "Bounties": {
-                "GitcoinBountyAdmin": self.process_gitcoin_bounty_creators,
-                "GitcoinBountyFulfill": self.process_gitcoin_bounty_fulfillers, 
+                "GitcoinBountyAdmin": {
+                        "type": TYPES["interests"],
+                        "call": self.process_gitcoin_bounty_creators
+                    },
+                "GitcoinBountyFulfill": {
+                        "type": TYPES["interests"],
+                        "call": self.process_gitcoin_bounty_fulfillers
+                    }, 
             },
             "Incubators": {
                 "Incubator": {
-                    "call": self.process_incubator, 
+                    "call": {
+                        "type": TYPES["interests"],
+                        "call": self.process_incubator
+                    },
                     "subcontexts": {
-                        "IncubatorMember": self.process_incubator_member, 
-                        "IncubatorParticipant": self.process_incubator_participant
+                        "IncubatorMember": {
+                        "type": TYPES["interests"],
+                        "call": self.process_incubator_member
+                    }, 
+                        "IncubatorParticipant": {
+                        "type": TYPES["interests"],
+                        "call": self.process_incubator_participant
+                    }
                     }
                 }
             } 

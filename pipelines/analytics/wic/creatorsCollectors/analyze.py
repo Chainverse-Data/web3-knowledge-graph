@@ -2,7 +2,7 @@ import logging
 from .. import WICAnalysis
 from .cyphers import CreatorsCollectorsCypher
 import pandas as pd
-
+from ..WICAnalysis import TYPES
 
 class CreatorsCollectorsAnalysis(WICAnalysis):
     """This class reads from a local"""
@@ -11,17 +11,36 @@ class CreatorsCollectorsAnalysis(WICAnalysis):
         self.subgraph_name = 'CreatorsCollectors'
         self.conditions = {
            "Writing": {
-               "MirrorAuthor": self.process_writing
+               "MirrorAuthor": {
+                   "type": TYPES["interests"],
+                   "call": self.process_writing,
+               } 
+               
            },
             "BlueChip": {
-               "BlueChipNFTCollections": self.process_NFTs_blue_chip
+               "BlueChipNFTCollections": {
+                   "type": TYPES["interests"],
+                   "call": self.process_NFTs_blue_chip,
+               } 
            },"Rarity": {
-               "ThreeLetterEns": self.process_three_ens
+               "ThreeLetterEns": {
+                   "type": TYPES["interests"],
+                   "call": self.process_three_ens,
+               } 
             },
             "NftMarketplacePowerUsers": {
-                "SudoswapPowerUser": self.process_sudo_power_users,
-                "BlurPowerUser": self.process_blur_power_users,
-                "NftCollateralizedBorrower": self.process_nft_collat_borrowers
+                "SudoswapPowerUser": {
+                   "type": TYPES["interests"],
+                   "call": self.process_sudo_power_users,
+                },
+                "BlurPowerUser": {
+                   "type": TYPES["interests"],
+                   "call": self.process_blur_power_users,
+                },
+                "NftCollateralizedBorrower": {
+                   "type": TYPES["interests"],
+                   "call": self.process_nft_collat_borrowers,
+                }
             }
         }
         self.cyphers = CreatorsCollectorsCypher(self.subgraph_name, self.conditions)
