@@ -9,31 +9,31 @@ class IncentiveFarmerAnalysis(WICAnalysis):
         self.conditions = {
             "GovernanceFarming": {
                 "SuspiciousSnapshot": {
-                        "type": TYPES["interests"],
+                        "type": TYPES["experiences"],
                         "call": self.process_suspicious_snapshot_daos
                     }
             }, 
             "MarketplaceFarming": {
                 "Mirror": {
-                        "type": TYPES["interests"],
+                        "type": TYPES["experiences"],
                         "call": self.process_suspicious_mirror
                     }
             },
             "WashTrading": {
                 "NftWashTrading": {
-                        "type": TYPES["interests"],
+                        "type": TYPES["experiences"],
                         "call": self.process_nft_wash_trading
                     }
             },
             "Spammers": {
                 "SpamContractDeployer": {
-                        "type": TYPES["interests"],
+                        "type": TYPES["experiences"],
                         "call": self.process_spam_contract_deployment
                     }
             },
             "FarmersAffiliates": {
                 "FarmerCosigner": {
-                        "type": TYPES["interests"],
+                        "type": TYPES["experiences"],
                         "call": self.process_suspicious_cosigners
                     }
         }

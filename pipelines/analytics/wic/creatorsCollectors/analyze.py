@@ -12,29 +12,29 @@ class CreatorsCollectorsAnalysis(WICAnalysis):
         self.conditions = {
            "Writing": {
                "MirrorAuthor": {
-                   "type": TYPES["interests"],
+                   "type": TYPES["influence"],
                    "call": self.process_writing,
                } 
                
            },
             "BlueChip": {
                "BlueChipNFTCollections": {
-                   "type": TYPES["interests"],
+                   "type": TYPES["experiences"],
                    "call": self.process_NFTs_blue_chip,
                } 
            },"Rarity": {
                "ThreeLetterEns": {
-                   "type": TYPES["interests"],
+                   "type": TYPES["experiences"],
                    "call": self.process_three_ens,
                } 
             },
             "NftMarketplacePowerUsers": {
                 "SudoswapPowerUser": {
-                   "type": TYPES["interests"],
+                   "type": TYPES["experiences"],
                    "call": self.process_sudo_power_users,
                 },
                 "BlurPowerUser": {
-                   "type": TYPES["interests"],
+                   "type": TYPES["experiences"],
                    "call": self.process_blur_power_users,
                 },
                 "NftCollateralizedBorrower": {

@@ -4,9 +4,10 @@ from tqdm import tqdm
 from ..helpers import Analysis
 
 TYPES = {
-    "experience": "Experience",
+    "experiences": "Experience",
     "interests": "Interest",
     "influences": "Influence",
+    "professions": "Profession"
 }
 
 class WICAnalysis(Analysis):

@@ -8,30 +8,30 @@ class ProtocolPoliticiansAnalysis(WICAnalysis):
         self.conditions = {
             "Voting": {
                 "EngagedVoter": {
-                    "type": TYPES["interests"],
+                    "type": TYPES["experiences"],
                     "call": self.process_engaged_voters
                     }    
             },
             "Proposals": {
                 "ProposalAuthor": {
-                    "type": TYPES["interests"],
+                    "type": TYPES["experiences"],
                     "call": self.process_proposal_authors
                     }
             }, 
             "Delegation": {
                 "Delegate": {
-                    "type": TYPES["interests"],
+                    "type": TYPES["experiences"],
                     "call": self.process_delegates
                     }
             },
             "Leadership": {
                 "DaoAdmin": {
-                    "type": TYPES["interests"],
+                    "type": TYPES["experiences"],
                     "call": self.process_dao_admins
                     }
             }
         }
-        self.subgraph_name = "ProtocolPoliticians"
+        self.subgraph_name = "ProtocolGovernance"
 
         self.cyphers = ProtocolPoliticiansCyphers(self.subgraph_name, self.conditions)
         super().__init__("wic-protocol-politicians")

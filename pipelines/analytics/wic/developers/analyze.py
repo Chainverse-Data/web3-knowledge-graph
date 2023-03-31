@@ -14,19 +14,19 @@ class DevelopersAnalysis(WICAnalysis):
                     },
                 "GitcoinBountyFulfill":
                     {
-                        "type": TYPES["experience"],
+                        "type": TYPES["experiences"],
                         "call": self.process_bounty_fullfilers
                     },
                 "SolidityDeveloper": {
                     "call": self.process_solidity_devs,
-                    "type": TYPES["experience"]
+                    "type": TYPES["experiences"]
                 }
             },
             "DevEcosystem": {
                 "GitcoinBountyAdmin": 
                     {
                         "call": self.process_gitcoin_bounty_admin,
-                        "type": TYPES["experience"]
+                        "type": TYPES["experiences"]
                     }
             }
         }

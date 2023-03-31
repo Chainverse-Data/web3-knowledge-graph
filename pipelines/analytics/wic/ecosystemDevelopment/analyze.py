@@ -9,11 +9,11 @@ class EcoDevAnalysis(WICAnalysis):
         self.conditions = {
             "Grants": {
                 "GitcoinGrantAdmin": {
-                        "type": TYPES["interests"],
+                        "type": TYPES["experiences"],
                         "call": self.process_gitcoin_grant_admins
                     }, 
                 "GitcoinGrantDonor": {
-                        "type": TYPES["interests"],
+                        "type": TYPES["experiences"],
                         "call": self.process_gitcoin_grant_donor
                     },
                 "GrantsDao": {
@@ -23,25 +23,21 @@ class EcoDevAnalysis(WICAnalysis):
             },
             "Bounties": {
                 "GitcoinBountyAdmin": {
-                        "type": TYPES["interests"],
+                        "type": TYPES["experiences"],
                         "call": self.process_gitcoin_bounty_creators
-                    },
-                "GitcoinBountyFulfill": {
-                        "type": TYPES["interests"],
-                        "call": self.process_gitcoin_bounty_fulfillers
-                    }, 
+                    }
             },
             "Incubators": {
                 "Incubator": {
-                    "type": TYPES["interests"],
+                    "type": TYPES["experiences"],
                     "call": self.process_incubator,
                     "subcontexts": {
                         "IncubatorMember": {
-                        "type": TYPES["interests"],
+                        "type": TYPES["experiences"],
                         "call": self.process_incubator_member
                     }, 
                         "IncubatorParticipant": {
-                        "type": TYPES["interests"],
+                        "type": TYPES["experiences"],
                         "call": self.process_incubator_participant
                     }
                     }
