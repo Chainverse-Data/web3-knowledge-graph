@@ -21,7 +21,10 @@ class TwitterThreadsProcessor(Processor):
         self.address_matcher = re.compile("(0x[a-zA-Z0-9]{40})")
         self.ens_matcher = re.compile("([-a-zA-Z0-9@:%._\+~#=]{1,256}\.eth)")
         self.current_latest_id = 0
-        self.search_queries = ["Drop ENS -is:retweet"]
+        self.search_queries = [
+            "Drop ENS -is:retweet",
+            'drop wallet (eth OR BNB) -is:retweet',
+            ]
         self.data["users"] = {}
         self.data["matches"] = {}
         self.data["threads"] = {}
