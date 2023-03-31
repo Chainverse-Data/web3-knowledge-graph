@@ -56,13 +56,13 @@ class WICCypher(Cypher):
         for condition in self.conditions:
             for context in self.conditions[condition]:
                 context_type = self.conditions[condition][context]["type"]
-                if type(self.conditions[condition][context]) == dict:
+                if "subcontexts" in self.conditions[condition][context]:
                     count += self.create_context_query(condition, context, context_type)
                     for subcontext in self.conditions[condition][context]["subcontexts"]:
                         subcontext_type = self.conditions[condition][context]["subcontexts"][subcontext]["type"]
                         count += self.create_context_query(condition, subcontext, subcontext_type)
                 else:
-                    count += self.create_context_query(condition, context)
+                    count += self.create_context_query(condition, context, context_type)
         return count
         
     def create_context_query(self, condition, context, type):

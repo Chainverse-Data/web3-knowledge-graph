@@ -1,4 +1,5 @@
 from .. import WICAnalysis
+from ..WICAnalysis import TYPES
 from .cyphers import DevelopersCyphers
 
 class DevelopersAnalysis(WICAnalysis):
@@ -6,17 +7,27 @@ class DevelopersAnalysis(WICAnalysis):
     def __init__(self):
         self.conditions = {
             "DevContributor": {
-                "DevAccount": self.process_dev_accounts,
-                "GitcoinBountyFulfill":self.process_bounty_fullfilers,
-                "SolidityDeveloper": self.process_solidity_devs
-
+                "DevAccount": 
+                    {
+                        "type": TYPES["interests"],
+                        "call": self.process_dev_accounts
+                    },
+                "GitcoinBountyFulfill":
+                    {
+                        "type": TYPES["experience"],
+                        "call": self.process_bounty_fullfilers
+                    },
+                "SolidityDeveloper": {
+                    "call": self.process_solidity_devs,
+                    "type": TYPES["experience"]
+                }
             },
             "DevEcosystem": {
-                "GitcoinBountyAdmin": {
-                    "call": self.process_gitcoin_bounty_admin,
-                    "type": self.types["experience"]
+                "GitcoinBountyAdmin": 
+                    {
+                        "call": self.process_gitcoin_bounty_admin,
+                        "type": TYPES["experience"]
                     }
-
             }
         }
         self.subgraph_name = "Developers"
