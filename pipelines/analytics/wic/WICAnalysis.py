@@ -9,6 +9,11 @@ class WICAnalysis(Analysis):
             assert len(self.conditions) > 0, "No conditions found!"
         except:
             raise ValueError("Conditions must be declared before instancing with super().init")
+        self.types = {
+            "experience": "Experience",
+            "interests": "Interest",
+            "influences": "Influence",
+        }
         Analysis.__init__(self, bucket_name)
 
     def process_conditions(self):
@@ -20,6 +25,6 @@ class WICAnalysis(Analysis):
                     self.conditions[condition][context]["call"](context)
                     for subcontext in tqdm(self.conditions[condition][context]["subcontexts"], position=2):
                         logging.info(f"Processing Subcontext: {subcontext}")
-                        self.conditions[condition][context]["subcontexts"][subcontext](context, subcontext)
+                        self.conditions[condition][context]["subcontexts"][subcontext]["call"](context, subcontext)
                 else:
-                    self.conditions[condition][context](context)
+                    self.conditions[condition][context]["call"](context)

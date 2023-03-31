@@ -12,7 +12,11 @@ class DevelopersAnalysis(WICAnalysis):
 
             },
             "DevEcosystem": {
-                "GitcoinBountyAdmin": self.process_gitcoin_bounty_admin
+                "GitcoinBountyAdmin": {
+                    "call": self.process_gitcoin_bounty_admin,
+                    "type": self.types["experience"]
+                    }
+
             }
         }
         self.subgraph_name = "Developers"
