@@ -1,5 +1,6 @@
 from .. import WICCypher
 from ....helpers import count_query_logging
+import logging
 
 class FarmerCyphers(WICCypher):
     def __init__(self, subgraph_name, conditions, database=None):
@@ -8,16 +9,13 @@ class FarmerCyphers(WICCypher):
     @count_query_logging
     def connect_suspicious_snapshot_daos(self, context):
         connect_wallets = f"""
-            WITH datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')) AS timeNow
             MATCH (context:_Wic:_{self.subgraph_name}:_Context:_{context})
-            MATCH (wallet:Wallet)-[r:VOTED]->(p:Proposal)-[:HAS_PROPOSAL]-(entity:Entity)-[:HAS_STRATEGY]-(token:Token)
-            WHERE token.symbol in ['DAI', 'USDC', 'ETH', 'WETH', 'USDT']
-            WITH wallet, context, timeNow, entity.snapshotId AS snapshotId
+            MATCH (wallet:Wallet)-[r:VOTED]->(p:Proposal)-[:HAS_PROPOSAL]-(entity:SuspiciousDao)
+            WITH wallet, context
             MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
-            SET con.createdDt = timeNow
-            SET con._context = "This wallet participated in a DAO that does not use its native token to establish voting power: " +  snapshotId + " ."
             RETURN count(distinct(wallet)) AS count
         """
+        logging.info(connect_wallets)
         count = self.query(connect_wallets)[0].value()
         return count 
 
@@ -37,7 +35,7 @@ class FarmerCyphers(WICCypher):
         get_extreme = """
             MATCH (w:Wallet)-[r:AUTHOR]->(a:Article)
             WITH w, count(distinct(a)) AS articles
-            WITH apoc.agg.percentiles(articles)[4] AS arts
+            WITH apoc.agg.percentiles(articles)[3] * 1.25 AS arts
             RETURN arts AS cutoff
         """
         cutoff = self.query(get_extreme)[0].value()
@@ -82,14 +80,15 @@ class FarmerCyphers(WICCypher):
         return count
 
     @count_query_logging
-    def identify_nft_wash_traders(self, context):
+    def identify_nft_wash_traders(self, context, addresses):
         ## needs to be replaced lol
         ## this comes from an export of a dune dashboard
         query = f"""
-        MATCH (wallet:ActualWashTrader) // comes
+        MATCH (wallet:Wallet) 
+        WHERE wallet.address in {addresses}
+        WITH wallet
         MATCH (context:_Context:_Wic:_{context}:_{self.subgraph_name})
-        WITH wallet, context
-        MATCH (wallet)-[con:_CONTEXT]->(context)
+        MERGE (wallet)-[con:_CONTEXT]->(context)
         RETURN COUNT(DISTINCT(wallet))
         """
         count = self.query(query)[0].value()
@@ -129,6 +128,29 @@ class FarmerCyphers(WICCypher):
             RETURN count(otherwallet)
         """
         count = self.query(connect)[0].value()
+        return count
+
+    @count_query_logging
+    def connect_farmer_counterparties(self, context):
+        label = """
+        MATCH (counterParty:Wallet)-[trans:TRANSFERRED]-(farmer:Wallet)-[:_HAS_CONTEXT]-(wic:_Farmers:_Context)
+        WHERE NOT wic:_FarmerCosigner
+        AND NOT counterParty:IgnoreForFarmers
+        AND NOT (counterParty)-[:_HAS_CONTEXT]-(:_Farmers)
+        AND trans.nb_transfer >= 3
+        SET counterParty:FarmerCounterParty
+        """
+        self.query(label)
+
+        connect = f"""
+        MATCH (counterParty:FarmerCounterParty)
+        MATCH (wic:_Wic:_Context:_{self.subgraph_name}:_{context})
+        WITH counterParty, wic
+        MERGE (counterParty)-[con:_HAS_CONTEXT]->(wic)
+        RETURN COUNT(DISTINCT(counterParty))
+        """
+        count = self.query(connect)[0].value()
+
         return count
 
 
