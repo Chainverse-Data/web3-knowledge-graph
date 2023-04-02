@@ -6,7 +6,7 @@ from ..helpers import Analysis
 TYPES = {
     "experiences": "Experience",
     "interests": "Interest",
-    "influences": "Influence",
+    "influence": "Influence",
     "professions": "Profession"
 }
 
