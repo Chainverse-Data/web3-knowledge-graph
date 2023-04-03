@@ -18,17 +18,19 @@ class Twitter(Requests):
         for token in self.twitter_api_tokens:
             self.rate_limited[token] = False
 
-    def check_rate_limit(self, response, token):
+    def is_rate_limited(self, response, token):
         try:
             content = response.json()
         except:
-            return False
-        if content["title"] == "Too Many Requests":
+            return True
+        if "title" in content and content["title"] == "Too Many Requests":
             self.rate_limited[token] = True
             time_to_wait = int(response.headers["x-rate-limit-reset"]) - int(datetime.now(timezone.utc).timestamp())
             logging.warning(f"Rate limit exceeded. Waiting {time_to_wait} seconds.")
             time.sleep(time_to_wait)
             self.rate_limited[token] = False
+            return True
+        return False
 
     def get_headers(self):
         token = np.random.choice(self.twitter_api_tokens)
@@ -37,13 +39,14 @@ class Twitter(Requests):
         twitter_headers = {
             "Authorization": f"Bearer {token}",
         }
-        return twitter_headers
+        return twitter_headers, token
 
     def get_request(self, url, params=None, counter=0):
         if counter > 10:
             return None
-        response = super().get_request(url, params=params, headers=self.get_headers(), json=False, decode=False, ignore_retries=True)
-        if not self.check_rate_limit(response) or response.status_code != 200:
+        headers, token = self.get_headers()
+        response = super().get_request(url, params=params, headers=headers, json=False, decode=False, ignore_retries=True)
+        if self.is_rate_limited(response, token) or response.status_code != 200:
             return self.get_request(url, params=params, counter=counter+1)
         return response.json()
 
