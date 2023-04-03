@@ -247,4 +247,4 @@ wic_professionals = ECSOperator(
 )
 
 
-wic_incentive_farming >> [wic_creators_collectors, wic_developers, wic_diversity, wic_ecosystem_development, wic_protocol_politicians, wic_early_adopters, wic_professionals]
+wic_incentive_farming >> [wic_creators_collectors, wic_developers, wic_ecosystem_development, wic_protocol_politicians, wic_professionals]
