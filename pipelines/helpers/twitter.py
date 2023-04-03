@@ -67,7 +67,7 @@ class Twitter(Requests):
                      users: list = [], 
                      meta: dict = {"newest_id": 0, "oldest_id": np.inf}, 
                      max_results: int = 100, 
-                     next_token: str|None = None) -> tuple(list, list, list):
+                     next_token: str|None = None) -> tuple[list, list, list]:
         """
         Search tweet API wrapper. This performs a search for tweets given a keyword query as defined by the Twitter Search API query syntax.
         Parameters:
@@ -106,7 +106,7 @@ class Twitter(Requests):
                               conversation_id: str, 
                               user_info: bool = False, 
                               since_id: int|None = None, 
-                              max_results: int = 100) -> tuple(list, list, list):
+                              max_results: int = 100) -> tuple[list, list, list]:
         """Convenience function over the search API to retrieve all tweets in a twitter thread using the conversation ID.
         Parameters:
           - conversation_id: The id of the conversation defined in the tweet json body from the search or tweet API

@@ -22,7 +22,7 @@ class Analysis(S3Utils, Requests, Multiprocessing):
         self.runtime = datetime.now()
         self.asOf = f"{self.runtime.year}-{self.runtime.month}-{self.runtime.day}"
         self.bucket_name = os.environ["AWS_BUCKET_PREFIX"] + bucket_name
-        self.bucket = self.create_or_get_bucket(self.bucket_name)
+        self.bucket = self.create_or_get_bucket()
 
     def run(self):
         "Main function to be called. Every analytics must implement its own run function!"

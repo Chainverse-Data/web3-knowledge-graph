@@ -31,7 +31,7 @@ class Multiprocessing:
             tqdm_object.close()
 
     def parallel_process(self, 
-                         function: function, 
+                         function, 
                          array: list, 
                          description: str = "Multithreaded processing running... Give me a description!") -> list:
         """
