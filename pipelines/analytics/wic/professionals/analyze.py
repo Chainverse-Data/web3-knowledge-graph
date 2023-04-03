@@ -8,61 +8,51 @@ class ProfessionalsAnalysis(WICAnalysis):
     def __init__(self):
         self.conditions = {
            "DaoContributors": {
-                "CommunityWalletDeployers": {
-                        "type": TYPES["interests"],
+                "OpsAdmin": {
+                        "type": TYPES["experiences"],
                         "call": self.process_org_wallet_deployers
                     },
-                "SnapshotContributors": {
-                        "type": TYPES["interests"],
+                "GovernanceAdmin": {
+                        "type": TYPES["experiences"],
                         "call": self.process_org_snapshot_contributors
                     },
-                "CommunityMultisigSigners": {
-                        "type": TYPES["interests"],
+                "MultisigSigner": {
+                        "type": TYPES["experiences"],
                         "call": self.process_org_multisig_signers
+                    },
+                "TokenContractDeployer": {
+                        "type": TYPES["professions"],
+                        "call": self.process_token_contract_deployer_wallets
                     }
            },
-            "Web3Professionals": {
-                "TokenContractDeployers": {
-                        "type": TYPES["interests"],
-                        "call": self.process_token_contract_deployer_wallets
-                    },
-                "Founders": {
-                        "type": TYPES["interests"],
+            "Company": {
+                "Founder": {
+                        "type": TYPES["professions"],
                         "call": self.process_founder_bios
                     },
-                "Investors": {
-                        "type": TYPES["interests"],
+                "Investor": {
+                        "type": TYPES["professions"],
                         "call": self.process_investor_bios
                     },
-                "Marketers": {
-                        "type": TYPES["interests"],
+                "Marketer": {
+                        "type": TYPES["professions"],
                         "call": self.process_marketers_bios
                     },
                 "CompanyOfficer": {
-                        "type": TYPES["interests"],
+                        "type": TYPES["professions"],
                         "call": self.process_company_officer_bios
                     },
-                "CommunityLeads": {
-                        "type": TYPES["interests"],
+                "CommunityLead": {
+                        "type": TYPES["professions"],
                         "call": self.process_community_people_bios
                     },
-                "DeveloperRelations": {
-                        "type": TYPES["interests"],
+                "DeveloperRelationProfessional": {
+                        "type": TYPES["professions"],
                         "call": self.process_devrel_bios
-                    }
-            },
-            "Influencers": {
-                "TwitterInfluencers": {
-                        "type": TYPES["interests"],
-                        "call": self.process_twitter_influencers
-                    },
-                "Podcasters": {
-                        "type": TYPES["interests"],
-                        "call": self.process_podcaster_bios
                     }
             }
         }
-        self.subgraph_name = "Professionals"
+        self.subgraph_name = "Professions"
         self.cyphers = ProfessionalsCyphers(self.subgraph_name, self.conditions)
         super().__init__("wic-professionals")
  
