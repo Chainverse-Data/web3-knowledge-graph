@@ -33,12 +33,12 @@ class WalletCommunityAnalysis(Analysis):
         data = self.prepare_partitions_data(
             partitions, labels, partitionTarget)
 
-        urls = self.s3.save_json_as_csv(
-            data["labels"], self.bucket_name, f"{self.name}_partitions_labels_{self.asOf}")
+        urls = self.save_json_as_csv(
+            data["labels"], f"{self.name}_partitions_labels_{self.asOf}")
         self.cyphers.create_or_merge_partitions(urls, self.name)
 
-        urls = self.s3.save_json_as_csv(
-            data["partitions"], self.bucket_name, f"{self.name}_partitions_{self.asOf}")
+        urls = self.save_json_as_csv(
+            data["partitions"], f"{self.name}_partitions_{self.asOf}")
         self.cyphers.link_partitions(
             urls, partitionTarget, "address", self.name)
 

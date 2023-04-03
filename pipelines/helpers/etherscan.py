@@ -27,7 +27,11 @@ class Etherscan(Requests):
         self.w3utils = Web3Utils()
         super().__init__()
 
-    def is_valid_response(self, response, response_type=dict, is_list=True):
+    def is_valid_response(self, 
+                          response: dict|list|str|int, 
+                          response_type:type = dict, 
+                          is_list: bool = True) -> bool:
+        "Checks if the body of the response is valid by checking if it matches the expected type."
         if response == None:
             return False
         if type(response) != response_type:
@@ -40,7 +44,7 @@ class Etherscan(Requests):
             return False
         return True
 
-    def convert_etherscan_log_to_web3_log(self, log):
+    def convert_etherscan_log_to_web3_log(self, log: dict) -> dict:
         log["transactionHash"] = HexBytes(log["transactionHash"])
         log["blockHash"] = HexBytes(log["blockHash"])
         log["topics"] = [HexBytes(topic) for topic in log["topics"]]
@@ -56,7 +60,9 @@ class Etherscan(Requests):
             log["transactionIndex"] = 0
         return log
 
-    def get_last_block_number(self, chain="ethereum", counter=0):
+    def get_last_block_number(self, 
+                              chain: str = "ethereum", 
+                              counter: int = 0) -> int|None:
         """
             Helper method to get the latests block number.
             parameters:
@@ -79,7 +85,12 @@ class Etherscan(Requests):
             return self.get_last_block_number(chain=chain, counter=counter+1)
         return block_number
 
-    def get_token_holders(self, tokenAddress, page=1, offset=1000, chain="ethereum", counter = 0):
+    def get_token_holders(self, 
+                          tokenAddress: str, 
+                          page: int = 1, 
+                          offset: int = 1000, 
+                          chain: str = "ethereum", 
+                          counter: int = 0) -> list[dict]|None:
         """
             Helper method to get the token holders of any token from Etherscan
             parameters:
@@ -112,7 +123,10 @@ class Etherscan(Requests):
             return self.get_token_holders(tokenAddress, page=page, offset=offset, counter=counter+1)
         return results
         
-    def get_token_information(self, tokenAddress, chain="ethereum", counter = 0):
+    def get_token_information(self, 
+                              tokenAddress: str, 
+                              chain: str = "ethereum", 
+                              counter: int = 0) -> dict|None:
         """
             Helper method to get the token metadata of any token from Etherscan
             parameters:
@@ -137,7 +151,10 @@ class Etherscan(Requests):
         else:
             self.get_token_information(tokenAddress, counter=counter+1)
 
-    def get_contract_deployer(self, contractAddresses, chain="ethereum", counter=0):
+    def get_contract_deployer(self, 
+                              contractAddresses: str, 
+                              chain: str = "ethereum", 
+                              counter: int = 0) -> dict|None:
         """
             Helper method to get the address of the deployer of a contract.
             parameters:
@@ -165,14 +182,14 @@ class Etherscan(Requests):
             self.get_contract_deployer(contractAddresses, counter=counter+1)
 
     def get_event_logs(self, 
-                        address, 
-                        fromBlock=None, 
-                        toBlock=None, 
-                        topic0=None, 
-                        page=1,
-                        offset=1000,
-                        chain="ethereum",
-                        counter=0):
+                       address: str, 
+                       fromBlock: int|None = None, 
+                       toBlock: int|None = None, 
+                       topic0: str|None = None, 
+                       page: int = 1,
+                       offset: int = 1000,
+                       chain: str = "ethereum",
+                       counter: str = 0) -> list[dict]|None:
         """
             Helper method to get the transactions logs of a smart contract.
             parameters:
@@ -210,7 +227,24 @@ class Etherscan(Requests):
             return self.get_event_logs(address, fromBlock=fromBlock, toBlock=toBlock, topic0=topic0, chain=chain, page=page, offset=offset, counter=counter+1)
         return results
 
-    def parse_event_logs(self, contractAddress, logs, eventName, topic=None, chain="ethereum"):
+    def parse_event_logs(self, 
+                         contractAddress: str, 
+                         logs: list[dict], 
+                         eventName: str, 
+                         topic: str|None = None, 
+                         abi: dict|None = None,
+                         chain: str = "ethereum") -> list[dict]|None:
+        """
+        Parse the event logs from a transaction. 
+        If the ABI is not provided in the parameters, it automatically retrieves the abi of the contract using the etherscan API.
+        Parameters:
+          - contractAddress: The address of the deployed contract.
+          - logs: The list of logs to parse
+          - eventName: The name of the event to parse.
+          - topic: Optional filter to filter for only a given topic (only valid for topic0)
+          - abi: Optional a dictionary object of the contract ABI
+          - chain: The chain where the contract is deployed
+        """
         abi = self.get_smart_contract_ABI(contractAddress, chain)
         contract = self.w3utils.get_smart_contract(contractAddress, abi)
         
@@ -225,12 +259,12 @@ class Etherscan(Requests):
         return results
 
     def get_decoded_event_logs(self, 
-                        address, 
-                        eventName,
-                        fromBlock=None, 
-                        toBlock=None, 
-                        topic0=None, 
-                        chain="ethereum"):
+                               address: str, 
+                               eventName: str,
+                               fromBlock: int|None = None, 
+                               toBlock: int|None = None, 
+                               topic0: str|None = None, 
+                               chain: str = "ethereum") -> list[dict]|None:
         """
             Wrapper method that calls internal functions to get the decoded transactions logs of a smart contract for a given Event.
             It is recommended to use the topic0 filter to make the queries faster!
@@ -246,7 +280,15 @@ class Etherscan(Requests):
         decoded_logs = self.parse_event_logs(address, raw_logs, eventName, topic=topic0, chain=chain)
         return decoded_logs
 
-    def get_internal_transactions(self, address, startBlock, endBlock, page=1, offset=10000, sort="asc", chain="ethereum", counter=0):
+    def get_internal_transactions(self, 
+                                  address: str, 
+                                  startBlock: int, 
+                                  endBlock: int, 
+                                  sort: str = "asc", 
+                                  page: int = 1, 
+                                  offset: int = 10000, 
+                                  chain: str = "ethereum", 
+                                  counter: int = 0) -> list[dict]|None:
         """
             Helper method to get the internal transactions of a smart contract.
             parameters:
@@ -287,7 +329,10 @@ class Etherscan(Requests):
             return self.get_internal_transactions(address, startBlock, endBlock, sort=sort, page=page+1, offset=offset, counter=counter+1)
         return results
 
-    def get_smart_contract_ABI(self, address, chain="ethereum", counter=0):
+    def get_smart_contract_ABI(self, 
+                               address: str, 
+                               chain: str = "ethereum", 
+                               counter: int = 0) -> dict|None:
         """
             Helper method to get the ABI of a published smart contract. The smart contract needs to have verified its ABI.
             parameters:

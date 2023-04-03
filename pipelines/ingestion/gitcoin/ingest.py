@@ -13,25 +13,25 @@ class GitCoinIngestor(Ingestor):
         logging.info("Ingesting grants data...")
         grants_data = self.process_grants_data()
 
-        urls = self.save_json_as_csv(grants_data["grants"], self.bucket_name, f"ingestor_grants_{self.asOf}")
+        urls = self.save_json_as_csv(grants_data["grants"], f"ingestor_grants_{self.asOf}")
         self.cyphers.create_or_merge_grants(urls)
         self.cyphers.set_grant_round(grants_data["grants"])
 
-        urls = self.save_json_as_csv(grants_data["tags"], self.bucket_name, f"ingestor_tags_{self.asOf}")
+        urls = self.save_json_as_csv(grants_data["tags"], f"ingestor_tags_{self.asOf}")
         self.cyphers.create_or_merge_grants_tags(urls)
         
-        urls = self.save_json_as_csv(grants_data["grants_tags"], self.bucket_name, f"ingestor_grants_tags_{self.asOf}")
+        urls = self.save_json_as_csv(grants_data["grants_tags"], f"ingestor_grants_tags_{self.asOf}")
         self.cyphers.link_grants_tag(urls)
 
-        urls = self.save_json_as_csv(grants_data["team_members"], self.bucket_name, f"ingestor_team_members_{self.asOf}")
+        urls = self.save_json_as_csv(grants_data["team_members"], f"ingestor_team_members_{self.asOf}")
         self.cyphers.create_or_merge_team_members(urls)
         self.cyphers.link_or_merge_team_members(urls)
 
-        urls = self.save_json_as_csv(grants_data["admin_wallets"], self.bucket_name, f"ingestor_admins_{self.asOf}")
+        urls = self.save_json_as_csv(grants_data["admin_wallets"], f"ingestor_admins_{self.asOf}")
         self.cyphers.create_or_merge_admins(urls)
         self.cyphers.link_or_merge_admin_wallet(urls)
 
-        urls = self.save_json_as_csv(grants_data["twitter_accounts"], self.bucket_name, f"ingestor_twitter_{self.asOf}")
+        urls = self.save_json_as_csv(grants_data["twitter_accounts"], f"ingestor_twitter_{self.asOf}")
         self.cyphers.create_or_merge_twitter_accounts(urls)
         self.cyphers.link_or_merge_twitter_accounts(urls)
 
@@ -109,7 +109,7 @@ class GitCoinIngestor(Ingestor):
     def ingest_donations(self):
         "This function ingests the donnations loaded in the self.data"
         donations_data = self.process_donations()
-        urls = self.save_json_as_csv(donations_data, self.bucket_name, f"ingestor_donations_{self.asOf}")
+        urls = self.save_json_as_csv(donations_data, f"ingestor_donations_{self.asOf}")
         self.cyphers.create_or_merge_donators(urls)
         self.cyphers.link_or_merge_donations(urls)
 
@@ -134,30 +134,30 @@ class GitCoinIngestor(Ingestor):
         "This function ingests the bounties loaded in the self.data"
         bounties_data = self.process_bounty_data()
 
-        urls = self.save_json_as_csv(bounties_data["bounties"], self.bucket_name, f"ingestor_bounties_{self.asOf}")
+        urls = self.save_json_as_csv(bounties_data["bounties"], f"ingestor_bounties_{self.asOf}")
         self.cyphers.create_or_merge_bounties(urls)
 
-        urls = self.save_json_as_csv(bounties_data["bounty_orgs"], self.bucket_name, f"ingestor_bounties_orgs_{self.asOf}")
+        urls = self.save_json_as_csv(bounties_data["bounty_orgs"], f"ingestor_bounties_orgs_{self.asOf}")
         self.cyphers.create_or_merge_bounties_orgs(urls)
         self.cyphers.link_or_merge_bounties_orgs(urls)
 
-        urls = self.save_json_as_csv(bounties_data["bounties_owners"], self.bucket_name, f"ingestor_bounties_owners_{self.asOf}")
+        urls = self.save_json_as_csv(bounties_data["bounties_owners"], f"ingestor_bounties_owners_{self.asOf}")
         self.cyphers.create_or_merge_bounties_owners(urls)
         self.cyphers.link_or_merge_bounties_owners(urls)
 
-        urls = self.save_json_as_csv(bounties_data["bounties_owners_addresses"], self.bucket_name, f"ingestor_bounties_owners_{self.asOf}")
+        urls = self.save_json_as_csv(bounties_data["bounties_owners_addresses"], f"ingestor_bounties_owners_{self.asOf}")
         self.cyphers.create_or_merge_bounty_owner_wallets(urls)
         self.cyphers.link_or_merge_bounty_owner_wallets(urls)
 
-        urls = self.save_json_as_csv(bounties_data["bounties_fullfilments"], self.bucket_name, f"ingestor_bounties_fullfilments_{self.asOf}")
+        urls = self.save_json_as_csv(bounties_data["bounties_fullfilments"], f"ingestor_bounties_fullfilments_{self.asOf}")
         self.cyphers.create_or_merge_bounties_fullfilers(urls)
         self.cyphers.link_or_merge_bounties_fullfilers(urls)
 
-        urls = self.save_json_as_csv(bounties_data["bounties_fullfilments_addresses"], self.bucket_name, f"ingestor_bounties_fullfilments_{self.asOf}")
+        urls = self.save_json_as_csv(bounties_data["bounties_fullfilments_addresses"], f"ingestor_bounties_fullfilments_{self.asOf}")
         self.cyphers.create_or_merge_bounties_fullfilers_wallets(urls)
         self.cyphers.link_or_merge_bounties_fullfilers_wallets(urls)
 
-        urls = self.save_json_as_csv(bounties_data["bounties_interests"], self.bucket_name, f"ingestor_bounties_interests_{self.asOf}")
+        urls = self.save_json_as_csv(bounties_data["bounties_interests"], f"ingestor_bounties_interests_{self.asOf}")
         self.cyphers.create_or_merge_bounties_interested(urls)
         self.cyphers.link_or_merge_bounties_interested(urls)
 

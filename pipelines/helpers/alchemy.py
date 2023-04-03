@@ -6,7 +6,7 @@ from . import Requests
 DEBUG = os.environ.get("DEBUG", False)
 
 class Alchemy(Requests):
-    def __init__(self, max_retries=5):
+    def __init__(self, max_retries: int = 5) -> None:
         self.chains = ["ethereum", "optimism", "arbitrum", "polygon"]
         self.alchemy_api_url = {
             "ethereum": f"https://eth-mainnet.g.alchemy.com/v2/{os.environ['ALCHEMY_API_KEY']}",
@@ -23,7 +23,12 @@ class Alchemy(Requests):
         self.headers = {"Content-Type": "application/json"}
         self.max_retries = max_retries
     
-    def getNFTMetadata(self, tokenAddress, chain="ethereum", tokenId=0, tokenType=None, counter=0):
+    def getNFTMetadata(self, 
+                       tokenAddress: str, 
+                       chain: str = "ethereum", 
+                       tokenId: int = 0, 
+                       tokenType: str|None = None, 
+                       counter: int = 0) -> dict|None: 
         """
             Helper function to get a ERC721 or ERC1155 token Metadata from alchemy.
             Parameters are:
@@ -49,7 +54,10 @@ class Alchemy(Requests):
             return self.getNFTMetadata(tokenAddress, chain=chain, tokenId=tokenId, tokenType=tokenType, counter=counter+1)
         return result
 
-    def getTokenMetadata(self, tokenAddress, chain="ethereum", counter=0):
+    def getTokenMetadata(self, 
+                         tokenAddress: str, 
+                         chain: str = "ethereum", 
+                         counter: int = 0) -> dict|None:
         """
             Helper function to get a token Metadata from alchemy.
             Parameters are:
@@ -74,12 +82,12 @@ class Alchemy(Requests):
             return self.getTokenMetadata(tokenAddress, chain=chain, counter=counter+1)
 
     def getOwnersForCollection(self, 
-                               token,
-                               block=None,
-                               withTokenBalances=True,
-                               chain="ethereum",
-                               pageKey=None, 
-                               counter=0):
+                               token: str,
+                               block: int|None = None,
+                               withTokenBalances: bool = True,
+                               chain: str = "ethereum", 
+                               pageKey: str|None = None, 
+                               counter: int = 0) -> list[dict]|None:
         """
             Helper function to automate getting the balance and holders data from Alchemy for NFT tokens (ERC721 and ERC1155).
             Parameters are:
@@ -108,30 +116,30 @@ class Alchemy(Requests):
         results.extend(content["ownerAddresses"])
         pageKey = content.get("pageKey", None)
         if pageKey:
-            next_results = self.getOwnersForCollection(token, pageKey=pageKey, counter=0)
+            next_results = self.getOwnersForCollection(token, pageKey=pageKey)
             if next_results:
                 results.extend(next_results)
         return results
 
     def getAssetTransfers(self, 
-                          tokens=None, 
-                          fromBlock=None, 
-                          toBlock=None, 
-                          fromAddress=None, 
-                          toAddress=None, 
-                          maxCount=None, 
-                          excludeZeroValue=True, 
-                          external=True,
-                          internal=True,
-                          erc20=True,
-                          erc721=True,
-                          erc1155=True,
-                          specialnft=True,
-                          order="asc",
-                          chain="ethereum",
-                          pageKey=None,
-                          pageKeyIterate=True,
-                          counter=0):
+                          tokens: list[str]|None = None, 
+                          fromBlock: int|None = None, 
+                          toBlock: int|None = None, 
+                          fromAddress: str|None = None, 
+                          toAddress: str|None = None, 
+                          maxCount: int|None = None, 
+                          excludeZeroValue: bool = True, 
+                          external: bool = True,
+                          internal: bool = True,
+                          erc20: bool = True,
+                          erc721: bool = True,
+                          erc1155: bool = True,
+                          specialnft: bool = True,
+                          order: str|None = "asc",
+                          chain: str|None = "ethereum",
+                          pageKey: str|None = None,
+                          pageKeyIterate: bool|None = True,
+                          counter: int = 0) -> list[dict]|None:
         """
             Helper function to automate getting the transfers data from Alchemy for any tokens.
             Parameters are:
@@ -200,11 +208,11 @@ class Alchemy(Requests):
         return results
     
     def getTokenBalances(self, 
-                                  tokens, 
-                                  address, 
-                                  chain="ethereum",
-                                  pageKey=None,
-                                  counter=0):
+                         tokens: list[str], 
+                         address: str, 
+                         chain: str = "ethereum", 
+                         pageKey=None,
+                         counter: int = 0) -> list[dict]|None:
         """
             Helper function to automate getting the transfers data from Alchemy for any tokens.
             Parameters are:
@@ -244,7 +252,11 @@ class Alchemy(Requests):
                 return self.getTokenBalances(tokens, address, chain=chain, pageKey=pageKey, counter=counter+1)
         return results
     
-    def getBlockByNumber(self, block, full_transaction=False, chain="ethereum", counter=0):
+    def getBlockByNumber(self, 
+                         block: int, 
+                         full_transaction: bool = False, 
+                         chain: str = "ethereum", 
+                         counter: int = 0) -> dict|None:
         """
             Helper function to automate getting the transfers data from Alchemy for any tokens.
             Parameters are:
@@ -274,7 +286,9 @@ class Alchemy(Requests):
         else:
             return self.getBlockByNumber(block, full_transaction=full_transaction, chain=chain, counter=counter+1)
 
-    def getSpamContracts(self, chain="ethereum", counter=0):
+    def getSpamContracts(self, 
+                         chain: str = "ethereum", 
+                         counter: int = 0) -> list[str]:
         """
             Helper function to get the list of Alchemy defines spam contracts.
                 - chain: (ethereum|arbitrum|polygon|optimism) which chain to get this data from
@@ -291,7 +305,14 @@ class Alchemy(Requests):
             return self.getSpamContracts(chain=chain, counter=counter+1)
         return result
 
-    def getLogs(self, contractAddress, fromBlock=0, toBlock="latest", topics=None, blockHash=None, chain="ethereum", counter=0):
+    def getLogs(self, 
+                contractAddress: str, 
+                fromBlock: str|int = 0, 
+                toBlock: str|int = "latest", 
+                topics: list[str]|None = None, 
+                blockHash: str|None = None, 
+                chain: str = "ethereum", 
+                counter: int = 0) -> list[dict] | None:
         """
             Helper function to automate getting the log data for a contract, filtered by block time, block hash and topics.
             Parameters are:

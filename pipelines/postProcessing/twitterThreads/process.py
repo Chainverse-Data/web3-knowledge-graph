@@ -131,10 +131,10 @@ class TwitterThreadsProcessor(Processor):
                 replies.append({"handle": handle, "created_at": reply["created_at"], "conversation_id": thread})
         replies = pd.DataFrame.from_dict(replies).drop_duplicates()
 
-        addresses_urls = self.save_json_as_csv(addresses, self.bucket_name, f"process_addresses_{self.asOf}")
-        ens_urls = self.save_json_as_csv(ens, self.bucket_name, f"process_ens_{self.asOf}")
-        threads_urls = self.save_json_as_csv(threads, self.bucket_name, f"process_threads_{self.asOf}")
-        replies_urls = self.save_df_as_csv(replies, self.bucket_name, f"process_replies_{self.asOf}")
+        addresses_urls = self.save_json_as_csv(addresses, f"process_addresses_{self.asOf}")
+        ens_urls = self.save_json_as_csv(ens, f"process_ens_{self.asOf}")
+        threads_urls = self.save_json_as_csv(threads, f"process_threads_{self.asOf}")
+        replies_urls = self.save_df_as_csv(replies, f"process_replies_{self.asOf}")
 
         self.cyphers.create_or_merge_threads(threads_urls)
         self.cyphers.link_or_merge_thread_authors(threads_urls)

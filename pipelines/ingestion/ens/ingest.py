@@ -26,16 +26,16 @@ class ENSIngestor(Ingestor):
         logging.info("Ingesting Domains")
         domains, resolvedAddresses, owners, wallets = self.prepare_domains()
 
-        urls = self.save_json_as_csv(wallets, self.bucket_name, f"ingest_domains_wallets_{self.asOf}")
+        urls = self.save_json_as_csv(wallets, f"ingest_domains_wallets_{self.asOf}")
         self.cyphers.queries.create_wallets(urls)
 
-        urls = self.save_df_as_csv(domains, self.bucket_name, f"ingest_domains_{self.asOf}")
+        urls = self.save_df_as_csv(domains, f"ingest_domains_{self.asOf}")
         self.cyphers.create_or_merge_ens_domains(urls)
 
-        urls = self.save_df_as_csv(resolvedAddresses, self.bucket_name, f"ingest_resolvedAddresses_{self.asOf}")
+        urls = self.save_df_as_csv(resolvedAddresses, f"ingest_resolvedAddresses_{self.asOf}")
         self.cyphers.link_ENS_resolved_addresses(urls)
 
-        urls = self.save_df_as_csv(owners, self.bucket_name, f"ingest_owners_{self.asOf}")
+        urls = self.save_df_as_csv(owners, f"ingest_owners_{self.asOf}")
         self.cyphers.link_ENS_owners(urls)
     
     def prepare_registrations(self):
@@ -50,10 +50,10 @@ class ENSIngestor(Ingestor):
         logging.info("Ingesting Registrations")
         registrations, wallets = self.prepare_registrations()
 
-        urls = self.save_json_as_csv(wallets, self.bucket_name, f"ingest_registrations_wallets_{self.asOf}")
+        urls = self.save_json_as_csv(wallets, f"ingest_registrations_wallets_{self.asOf}")
         self.cyphers.queries.create_wallets(urls)
 
-        urls = self.save_df_as_csv(registrations, self.bucket_name, f"ingest_registrations_{self.asOf}")
+        urls = self.save_df_as_csv(registrations, f"ingest_registrations_{self.asOf}")
         self.cyphers.link_ENS_registrations(urls)
 
     def prepare_transfers(self):
@@ -73,13 +73,13 @@ class ENSIngestor(Ingestor):
         logging.info("Ingesting Transfers")
         transfers, burns, wallets = self.prepare_transfers()
 
-        urls = self.save_json_as_csv(wallets, self.bucket_name, f"ingest_transfers_wallets_{self.asOf}")
+        urls = self.save_json_as_csv(wallets, f"ingest_transfers_wallets_{self.asOf}")
         self.cyphers.queries.create_wallets(urls)
 
-        urls = self.save_df_as_csv(burns, self.bucket_name, f"ingest_burns_{self.asOf}")
+        urls = self.save_df_as_csv(burns, f"ingest_burns_{self.asOf}")
         self.cyphers.link_ENS_burns(urls)
 
-        urls = self.save_df_as_csv(transfers, self.bucket_name, f"ingest_transfers_{self.asOf}")
+        urls = self.save_df_as_csv(transfers, f"ingest_transfers_{self.asOf}")
         self.cyphers.link_ENS_transfers(urls)
 
     def run(self):

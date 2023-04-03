@@ -26,16 +26,16 @@ class GamingNFTIngestor(Ingestor):
 
     def ingest_nft_data(self):
         data, wallets, eth_nfts, poly_nfts = self.prepare_data()
-        urls = self.save_json_as_csv(wallets, self.bucket_name, f"ingestor_wallets_{self.asOf}")
+        urls = self.save_json_as_csv(wallets, f"ingestor_wallets_{self.asOf}")
         self.cyphers.queries.create_wallets(urls)
 
-        urls = self.save_json_as_csv(eth_nfts, self.bucket_name, f"ingestor_eth_tokens_{self.asOf}")
+        urls = self.save_json_as_csv(eth_nfts, f"ingestor_eth_tokens_{self.asOf}")
         self.cyphers.queries.create_or_merge_tokens(urls, "ERC721")
 
-        urls = self.save_json_as_csv(poly_nfts, self.bucket_name, f"ingestor_poly_tokens_{self.asOf}")
+        urls = self.save_json_as_csv(poly_nfts, f"ingestor_poly_tokens_{self.asOf}")
         self.cyphers.queries.create_or_merge_tokens(urls, "ERC721", chain_id=137)
 
-        urls = self.save_json_as_csv(data, self.bucket_name, f"ingestor_holdings_{self.asOf}")
+        urls = self.save_json_as_csv(data, f"ingestor_holdings_{self.asOf}")
         self.cyphers.link_or_merge_holdings(urls)
 
     def run(self):

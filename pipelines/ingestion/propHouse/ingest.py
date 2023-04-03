@@ -28,7 +28,7 @@ class PropHouseIngestor(Ingestor):
 
     def ingest_communities(self):
         communities = self.process_communities()
-        urls = self.save_df_as_csv(communities, self.bucket_name, f"ingestor_communities_{self.asOf}")
+        urls = self.save_df_as_csv(communities, f"ingestor_communities_{self.asOf}")
         self.cyphers.create_communities(urls)
         self.cyphers.create_tokens(urls)
         self.cyphers.link_communities_tokens(urls)
@@ -44,7 +44,7 @@ class PropHouseIngestor(Ingestor):
 
     def ingest_auctions(self):
         auctions = self.process_auctions()
-        urls = self.save_df_as_csv(auctions, self.bucket_name, f"ingestor_auctions_{self.asOf}")
+        urls = self.save_df_as_csv(auctions, f"ingestor_auctions_{self.asOf}")
         self.cyphers.create_auctions(urls)
         self.cyphers.link_auctions_communities(urls)
 
@@ -58,17 +58,17 @@ class PropHouseIngestor(Ingestor):
         proposals = self.process_proposals()
 
         addresses = [{"address": x} for x in proposals["address"].unique()]
-        urls = self.save_json_as_csv(addresses, self.bucket_name, f"ingestor_proposal_addresses_{self.asOf}")
+        urls = self.save_json_as_csv(addresses, f"ingestor_proposal_addresses_{self.asOf}")
         self.cyphers.create_wallets(urls)
 
-        urls = self.save_df_as_csv(proposals, self.bucket_name, f"ingestor_proposals_{self.asOf}")
+        urls = self.save_df_as_csv(proposals, f"ingestor_proposals_{self.asOf}")
         self.cyphers.create_proposals(urls)
         self.cyphers.link_auction_proposals(urls)
         self.cyphers.link_proposal_wallets(urls)
         self.cyphers.link_proposals_entities(urls)
 
         proposals = proposals[proposals["winner"] == True]
-        urls = self.save_df_as_csv(proposals, self.bucket_name, f"ingestor_proposals_winner_{self.asOf}")
+        urls = self.save_df_as_csv(proposals, f"ingestor_proposals_winner_{self.asOf}")
         self.cyphers.add_winner_labels(urls)
 
     def process_votes(self):
@@ -81,10 +81,10 @@ class PropHouseIngestor(Ingestor):
         votes = self.process_votes()
 
         addresses = [{"address": x} for x in votes["address"].unique()]
-        urls = self.save_json_as_csv(addresses, self.bucket_name, f"ingestor_vote_addresses_{self.asOf}")
+        urls = self.save_json_as_csv(addresses, f"ingestor_vote_addresses_{self.asOf}")
         self.cyphers.create_wallets(urls)
 
-        urls = self.save_df_as_csv(votes, self.bucket_name, f"ingestor_votes_{self.asOf}")
+        urls = self.save_df_as_csv(votes, f"ingestor_votes_{self.asOf}")
         self.cyphers.create_votes(urls)
 
     def run(self):

@@ -19,12 +19,12 @@ class ENSTwitterIngestor(Ingestor):
     def ingest_twitter_ens_data(self):
         ens_names, wallets = self.prepare_twitter_ens_data()
         print(wallets)
-        urls = self.save_df_as_csv(ens_names, self.bucket_name, f"ingestor_ens_names_{self.asOf}")
+        urls = self.save_df_as_csv(ens_names, f"ingestor_ens_names_{self.asOf}")
         self.cyphers.queries.create_or_merge_twitter(urls)
         self.cyphers.queries.create_or_merge_ens_alias(urls)
         self.cyphers.link_or_merge_ens_names(urls)
 
-        urls = self.save_df_as_csv(wallets, self.bucket_name, f"ingestor_wallets_{self.asOf}")
+        urls = self.save_df_as_csv(wallets, f"ingestor_wallets_{self.asOf}")
         self.cyphers.queries.create_wallets(urls)
         self.cyphers.link_or_merge_wallets(urls)
 

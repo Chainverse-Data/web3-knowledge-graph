@@ -25,10 +25,10 @@ class GitCoinAnalysis(Analysis):
         grants_partitions, grants_labels = self.create_grants_communities()
         data = self.prepare_partitions_data(grants_partitions, grants_labels, partitionTarget)
         
-        urls = self.s3.save_json_as_csv(data["labels"], self.bucket_name, f"grants_partitions_labels_{self.asOf}")
+        urls = self.save_json_as_csv(data["labels"], f"grants_partitions_labels_{self.asOf}")
         self.cyphers.create_or_merge_partitions(urls)
         
-        urls = self.s3.save_json_as_csv(data["partitions"], self.bucket_name, f"grants_partitions_{self.asOf}")
+        urls = self.save_json_as_csv(data["partitions"], f"grants_partitions_{self.asOf}")
         self.cyphers.link_partitions(urls, partitionTarget, "id")
         
     def donors_partitions(self):
@@ -37,10 +37,10 @@ class GitCoinAnalysis(Analysis):
         donors_partitions, donors_labels = self.create_donors_communities()
         data = self.prepare_partitions_data(donors_partitions, donors_labels, partitionTarget)
         
-        urls = self.s3.save_json_as_csv(data["labels"], self.bucket_name, f"donors_partitions_labels_{self.asOf}")
+        urls = self.save_json_as_csv(data["labels"], f"donors_partitions_labels_{self.asOf}")
         self.cyphers.create_or_merge_partitions(urls)
         
-        urls = self.s3.save_json_as_csv(data["partitions"], self.bucket_name, f"donors_partitions_{self.asOf}")
+        urls = self.save_json_as_csv(data["partitions"], f"donors_partitions_{self.asOf}")
         self.cyphers.link_partitions(urls, partitionTarget, "address")
         
     def prepare_partitions_data(self, partitions, labels, partitionTarget):

@@ -48,7 +48,7 @@ class TwitterRelationsProcessor(Processor):
     
     def process_references(self):
         bios = self.extract_accounts_from_bio()
-        urls = self.save_df_as_csv(bios, self.bucket_name, "processing_bios_handles_refs_" + self.asOf)
+        urls = self.save_df_as_csv(bios, "processing_bios_handles_refs_" + self.asOf)
         self.cyphers.create_metionned_handles(urls)
         self.cyphers.ingest_references(urls)
 
@@ -93,7 +93,7 @@ class TwitterRelationsProcessor(Processor):
             results = self.parallel_process(self.extract_website_data, accounts[i: i+self.chunk_size], "Extracting URLs and domains from twitter accounts bios")
             results = [result for result in results if result]
 
-            urls = self.s3.save_json_as_csv(results, self.bucket_name, f"process_website_{self.asOf}_{i}")
+            urls = self.s3.save_json_as_csv(results, f"process_website_{self.asOf}_{i}")
             self.cyphers.create_domains(urls)
             self.cyphers.create_websites(urls)
             self.cyphers.link_websites_domains(urls)

@@ -16,4 +16,4 @@ class Ingestor(Base):
     def save_metadata(self):
         "Saves the current metadata to S3"
         self.metadata["last_date_ingested"] = f"{self.runtime.year}-{self.runtime.month}-{self.runtime.day}"
-        self.save_json(self.bucket_name, self.metadata_filename, self.metadata)
+        self.save_json(self.metadata_filename, self.metadata)

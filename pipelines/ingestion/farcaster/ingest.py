@@ -16,10 +16,10 @@ class FarcasterIngestor(Ingestor):
 
         wallets = set(users["address"])
         wallets = [{"address": wallet} for wallet in wallets]
-        urls = self.save_json_as_csv(wallets, self.bucket_name, f"ingestor_farcaster_wallets_{self.asOf}")
+        urls = self.save_json_as_csv(wallets, f"ingestor_farcaster_wallets_{self.asOf}")
         self.cyphers.create_farcaster_wallets(urls)
 
-        urls = self.save_df_as_csv(users, self.bucket_name, f"ingestor_users_{self.asOf}")
+        urls = self.save_df_as_csv(users, f"ingestor_users_{self.asOf}")
         self.cyphers.create_or_merge_farcaster_users(urls)
         self.cyphers.link_users_wallets(urls)
 

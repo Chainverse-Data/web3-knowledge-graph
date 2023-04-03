@@ -4,6 +4,7 @@ import os
 import time
 
 import numpy as np
+import requests
 from .requests import Requests
 
 DEBUG = os.environ.get("DEBUG", False)
@@ -18,7 +19,7 @@ class Twitter(Requests):
         for token in self.twitter_api_tokens:
             self.rate_limited[token] = False
 
-    def is_rate_limited(self, response, token):
+    def is_rate_limited(self, response: requests.models.Response, token: str) -> bool:
         try:
             content = response.json()
         except:
@@ -32,7 +33,11 @@ class Twitter(Requests):
             return True
         return False
 
-    def get_headers(self):
+    def get_headers(self) -> tuple[dict, str]:
+        """
+        Returns an authorization header chosing a random API token from the provided tokens. 
+        Returns the token along with the headers.
+        Checks that the token is not marked as rate limited."""
         token = np.random.choice(self.twitter_api_tokens)
         while self.rate_limited[token]:
             token = np.random.choice(self.twitter_api_tokens)
@@ -41,7 +46,11 @@ class Twitter(Requests):
         }
         return twitter_headers, token
 
-    def get_request(self, url, params=None, counter=0):
+    def get_request(self, 
+                    url: str, 
+                    params: dict|None = None, 
+                    counter: int = 0) -> dict|None:
+        "Wrapper over the Request.get_request that adds a check for rate limit and sleeps the required amount."
         if counter > 10:
             return None
         headers, token = self.get_headers()
@@ -50,7 +59,24 @@ class Twitter(Requests):
             return self.get_request(url, params=params, counter=counter+1)
         return response.json()
 
-    def search_tweet(self, query, user_info=False, since_id=None, tweets=[], users=[], meta={"newest_id": 0, "oldest_id": np.inf}, max_results=100, next_token=None):
+    def search_tweet(self, 
+                     query: str, 
+                     user_info: bool = False, 
+                     since_id: int|None = None, 
+                     tweets: list = [], 
+                     users: list = [], 
+                     meta: dict = {"newest_id": 0, "oldest_id": np.inf}, 
+                     max_results: int = 100, 
+                     next_token: str|None = None) -> tuple(list, list, list):
+        """
+        Search tweet API wrapper. This performs a search for tweets given a keyword query as defined by the Twitter Search API query syntax.
+        Parameters:
+          - query: Text search query.
+          - user_info: Wether to return the name and username fields in the includes
+          - since_id: If set to an ID, filter only tweet that happened after this ID
+          - max_results: defaults to 100, can be changed to less than 100 (Twitter API limit)
+        """
+        
         if DEBUG and len(tweets) > 500:
             return tweets, users, meta
         params = {
@@ -76,10 +102,18 @@ class Twitter(Requests):
                     return self.search_tweet(query, user_info=user_info, since_id=since_id, tweets=tweets, users=users, meta=meta, max_results=max_results, next_token=result["meta"]["next_token"])
         return tweets, users, meta
 
-    def get_tweet_conversation(self, conversation_id, user_info=False, since_id=None, max_results=100):
+    def get_tweet_conversation(self, 
+                              conversation_id: str, 
+                              user_info: bool = False, 
+                              since_id: int|None = None, 
+                              max_results: int = 100) -> tuple(list, list, list):
+        """Convenience function over the search API to retrieve all tweets in a twitter thread using the conversation ID.
+        Parameters:
+          - conversation_id: The id of the conversation defined in the tweet json body from the search or tweet API
+          - user_info: Wether to return the name and username in the includes for all users in tweets.
+          - since_id: If set to an ID, filter only tweet that happened after this ID
+          - max_results: defaults to 100, can be changed to less than 100 (Twitter API limit)
+        """
         query = f"conversation_id:{conversation_id}"
         tweets, users, meta = self.search_tweet(query, user_info=user_info, since_id=since_id, max_results=max_results)
         return tweets, users, meta
-
-
-    

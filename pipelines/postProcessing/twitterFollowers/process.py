@@ -168,13 +168,13 @@ class TwitterFollowersPostProcess(Processor):
             handles.add(entry.get("follower"))
         handles = [{"handle": handle, "profileUrl": f"https://twitter.com/{handle}"} for handle in handles]
 
-        handle_urls = self.save_json_as_csv(handles, self.bucket_name, f"processor_handles_{self.asOf}")
+        handle_urls = self.save_json_as_csv(handles, f"processor_handles_{self.asOf}")
         self.cyphers.create_or_merge_twitter_nodes(handle_urls)
 
-        follower_urls = self.save_json_as_csv(self.data["followers"], self.bucket_name, f"processor_followers_{self.asOf}")
+        follower_urls = self.save_json_as_csv(self.data["followers"], f"processor_followers_{self.asOf}")
         self.cyphers.merge_followers_relationships(follower_urls)
 
-        following_urls = self.save_json_as_csv(self.data["following"], self.bucket_name, f"processor_following_{self.asOf}")
+        following_urls = self.save_json_as_csv(self.data["following"], f"processor_following_{self.asOf}")
         self.cyphers.merge_following_relationships(following_urls)
 
         self.metadata["last_date_ingested"] = f"{self.runtime.year}-{self.runtime.month}-{self.runtime.day}"

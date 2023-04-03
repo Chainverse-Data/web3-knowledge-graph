@@ -29,7 +29,7 @@ class ContractDeployersProcessor(Processor):
                 } 
                 for result in results
             ]
-            urls = self.save_json_as_csv(results, self.bucket_name, f"process_multisig_{self.asOf}_{i}")
+            urls = self.save_json_as_csv(results, f"process_multisig_{self.asOf}_{i}")
             self.cyphers.queries.create_wallets(urls)
             self.cyphers.link_or_merge_deployers(urls, "MultiSig")
 
@@ -51,7 +51,7 @@ class ContractDeployersProcessor(Processor):
                 } 
                 for result in results
             ]
-            urls = self.save_json_as_csv(results, self.bucket_name, f"process_multisig_{self.asOf}_{i}")
+            urls = self.save_json_as_csv(results, f"process_multisig_{self.asOf}_{i}")
             self.cyphers.queries.create_wallets(urls)
             self.cyphers.link_or_merge_deployers(urls, "Token")
 

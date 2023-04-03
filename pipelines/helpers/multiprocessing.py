@@ -30,8 +30,12 @@ class Multiprocessing:
             joblib.parallel.BatchCompletionCallBack = old_batch_callback
             tqdm_object.close()
 
-    def parallel_process(self, function, array, description="Multithreaded processing running... Give me a description!"):
-        """Function to do parallel processing of a function. 
+    def parallel_process(self, 
+                         function: function, 
+                         array: list, 
+                         description: str = "Multithreaded processing running... Give me a description!") -> list:
+        """
+        Wrapper to execute a function as a parallel process using jobLib. 
         It expects the following:
         - The function takes a single argument. This argument can be expanded inside the function if needed
         - The array contains the arguments for the function to be processed.py

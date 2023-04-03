@@ -21,7 +21,7 @@ class TwitterEnsIngestor(Ingestor):
         self.scraper_data["accounts"] = df.to_dict("records")
 
         urls = self.save_json_as_csv(
-            self.scraper_data["accounts"], self.bucket_name, f"ingestor_accounts_{self.asOf}"
+            self.scraper_data["accounts"], f"ingestor_accounts_{self.asOf}"
         )
         # self.cyphers.create_or_merge_twitter_wallets(urls)  # add wallet nodes
         # self.cyphers.create_or_merge_twitter_alias(urls)  # add alias nodes

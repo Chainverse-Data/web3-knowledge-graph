@@ -55,7 +55,7 @@ class LastActivityPostProcess(Processor):
             data = self.parallel_process(self.get_last_tx, wallets[i: i+self.chunk_size], description="Getting last transactions data")
             for chain in self.alchemy.chains:
                 tmp = [{"address": element["address"], "date": element[chain]} for element in data if element[chain]]
-                urls = self.save_json_as_csv(tmp, self.bucket_name, f"processor_last_transactions_{chain}-{self.asOf}_{i}")
+                urls = self.save_json_as_csv(tmp, f"processor_last_transactions_{chain}-{self.asOf}_{i}")
                 self.cyphers.set_last_active_date(urls, chain)
         logging.info("Last transactions done")
 
@@ -66,7 +66,7 @@ class LastActivityPostProcess(Processor):
             data = self.parallel_process(self.get_fisrt_tx, wallets[i: i+self.chunk_size], description="Getting first transactions data")
             for chain in self.alchemy.chains:
                 tmp = [{"address": element["address"], "date": element[chain]} for element in data if element[chain]]
-                urls = self.save_json_as_csv(tmp, self.bucket_name, f"processor_first_transactions_{chain}-{self.asOf}_{i}")
+                urls = self.save_json_as_csv(tmp, f"processor_first_transactions_{chain}-{self.asOf}_{i}")
                 self.cyphers.set_first_active_date(urls, chain)
         logging.info("first transactions done")
 

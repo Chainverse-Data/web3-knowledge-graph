@@ -39,7 +39,7 @@ class MirrorNFTProcessor(Processor):
                             "balance": balance["balance"]
                         }
                         results.append(tmp)
-            urls = self.save_json_as_csv(results, self.bucket_name, f"process_nft_tokens_{self.asOf}_{i}")
+            urls = self.save_json_as_csv(results, f"process_nft_tokens_{self.asOf}_{i}")
             self.cyphers.queries.create_wallets(urls)
             self.cyphers.link_or_merge_NFT_token_holding(urls)
     

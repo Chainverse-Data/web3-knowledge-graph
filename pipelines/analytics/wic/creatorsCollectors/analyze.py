@@ -68,21 +68,21 @@ class CreatorsCollectorsAnalysis(WICAnalysis):
         logging.info("Getting benchmark for sudo power users")
         sudo_power_users = self.sudo_power_users
         logging.info("Getting sudo power users wallet addresses...")
-        urls = self.save_df_as_csv(sudo_power_users, bucket_name=self.bucket_name, file_name=f"sudo_power_wallets_{self.asOf}")
+        urls = self.save_df_as_csv(sudo_power_users, file_name=f"sudo_power_wallets_{self.asOf}")
         self.cyphers.queries.create_wallets(urls)
         self.cyphers.connect_sudo_power_users(context, urls)
 
     def process_blur_power_users(self, context):
         logging.info("Saving NFT marketplace power users....")
         blur_power_users = self.blur_power_users.dropna(subset=['address'])
-        urls = self.save_df_as_csv(blur_power_users, bucket_name=self.bucket_name, file_name=f"blur_power_wallets_{self.asOf}")
+        urls = self.save_df_as_csv(blur_power_users, file_name=f"blur_power_wallets_{self.asOf}")
         self.cyphers.queries.create_wallets(urls)
         self.cyphers.connect_blur_power_users(context, urls)
 
     def process_nft_collat_borrowers(self, context):
         logging.info("Saving NFT-backed borrowers...")
         nft_backed_borrowers = self.nft_backed_borrowers.dropna(subset=['address'])
-        urls = self.save_df_as_csv(nft_backed_borrowers, bucket_name=self.bucket_name, file_name=f"nft_backed_borrowers{self.asOf}")
+        urls = self.save_df_as_csv(nft_backed_borrowers, file_name=f"nft_backed_borrowers{self.asOf}")
         self.cyphers.queries.create_wallets(urls)
         self.cyphers.connect_nft_borrowers(context, urls)
 

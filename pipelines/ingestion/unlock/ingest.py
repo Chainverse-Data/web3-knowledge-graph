@@ -18,7 +18,7 @@ class UnlockIngestor(Ingestor):
         "This function ingests the unlock data loaded in self.data"
         logging.info("Ingesting lock data...")
         locks_data = self.process_locks()
-        urls = self.save_json_as_csv(locks_data, self.bucket_name, f"ingestor_locks_{self.asOf}")
+        urls = self.save_json_as_csv(locks_data, f"ingestor_locks_{self.asOf}")
 
         return urls
 
@@ -47,7 +47,7 @@ class UnlockIngestor(Ingestor):
         "This function ingests the managers data loaded in self.data"
         logging.info("Ingesting managers data...")
         managers_data = self.process_managers()
-        urls = self.save_json_as_csv(managers_data, self.bucket_name, f"ingestor_managers_{self.asOf}")
+        urls = self.save_json_as_csv(managers_data, f"ingestor_managers_{self.asOf}")
         
         return urls
     
@@ -70,7 +70,7 @@ class UnlockIngestor(Ingestor):
         "This function ingests the keys data loaded in self.data"
         logging.info("Ingesting keys data...")
         keys_data = self.process_keys() 
-        urls = self.save_json_as_csv(keys_data, self.bucket_name, f"ingestor_keys_{self.asOf}")
+        urls = self.save_json_as_csv(keys_data, f"ingestor_keys_{self.asOf}")
         
         return urls
 
@@ -98,7 +98,7 @@ class UnlockIngestor(Ingestor):
         "This function ingests the holders loaded in self.data"
         logging.info("Ingesting holders data...")    
         holders_data = self.process_holders()
-        urls = self.save_json_as_csv(holders_data, self.bucket_name, f"ingestor_holders_{self.asOf}")
+        urls = self.save_json_as_csv(holders_data, f"ingestor_holders_{self.asOf}")
 
         return urls
 

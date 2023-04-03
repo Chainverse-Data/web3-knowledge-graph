@@ -36,7 +36,7 @@ class TwitterWebsitePostProcess(Processor):
         return websites
 
     def handle_ingestion(self, websites):
-        urls = self.save_json_as_csv(websites, self.bucket_name, f"websites_{self.asOf}")
+        urls = self.save_json_as_csv(websites, f"websites_{self.asOf}")
         self.cyphers.set_website(urls)
 
     def run(self):

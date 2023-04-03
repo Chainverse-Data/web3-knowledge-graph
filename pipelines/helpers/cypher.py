@@ -1,12 +1,13 @@
 from datetime import datetime
 import time
-from neo4j import GraphDatabase
+from neo4j import GraphDatabase, Neo4jDriver
 import os
 import logging
+from neo4j.data import Record
 
 
 class Cypher:
-    def __init__(self, database=None):
+    def __init__(self, database=None) -> None:
         self.database = database
         if "NEO_DB" in os.environ:
             self.database = os.environ["NEO_DB"]
@@ -17,11 +18,14 @@ class Cypher:
         self.create_constraints()
         self.create_indexes()
 
-    def get_driver(self, uri, username, password):
+    def get_driver(self, 
+                   uri: str, 
+                   username: str, 
+                   password: str) -> Neo4jDriver:
         neo4j_driver = GraphDatabase.driver(uri, auth=(username, password))
         return neo4j_driver
 
-    def get_drivers(self):
+    def get_drivers(self) -> list[Neo4jDriver]:
         uris = [uri.strip() for uri in os.environ["NEO_URI"].split(',')]
         usernames = [uri.strip() for uri in os.environ["NEO_USERNAME"].split(',')]
         passwords = [uri.strip() for uri in os.environ["NEO_PASSWORD"].split(',')]
@@ -38,7 +42,12 @@ class Cypher:
     def create_indexes(self):
         logging.warning("This function should be implemented in the children class.")
 
-    def run_query(self, neo4j_driver, query, parameters=None, counter=0):
+    def run_query(self, 
+                  neo4j_driver: Neo4jDriver, 
+                  query: str, 
+                  parameters: dict|None = None, 
+                  counter: int = 0):
+        """Run a query using the passed driver. Injects the parameter dict to the query."""
         time.sleep(counter * 10)
         assert neo4j_driver is not None, "Driver not initialized!"
         
@@ -59,8 +68,14 @@ class Cypher:
         neo4j_driver.close()
         return response
 
-    def query(self, query, parameters=None, last_response_only=True):
-        """Wrapper function that will query all instances of neo4J set in the NEO_URI env var."""
+    def query(self, 
+              query: str, 
+              parameters: dict|None = None, 
+              last_response_only: bool = True) -> list[Record]:
+        """
+        Wrapper function that will query all instances of neo4J set in the NEO_URI env var.
+        Returns the result from the RETURN statement.
+        """
         neo4j_drivers = self.get_drivers()
         responses = []
         for neo4j_driver in neo4j_drivers:
@@ -70,8 +85,12 @@ class Cypher:
             return responses[-1]
         return responses
 
-    def sanitize_text(self, string):
-        if string:
-            return string.rstrip().replace('\r', '').replace('\\', '').replace('"', '').replace("'", "").replace("`", "").replace("\n", "")
+    def sanitize_text(self, text: str|None) -> str:
+        """
+        Helper function to sanitize text before injecting it into a Neo4J query. 
+        Useful for ingesting body of text from any source.
+        """
+        if text:
+            return text.rstrip().replace('\r', '').replace('\\', '').replace('"', '').replace("'", "").replace("`", "").replace("\n", "")
         else:
             return ""

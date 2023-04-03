@@ -5,9 +5,7 @@ import tqdm
 
 class PropHouseScraper(Scraper):
     def __init__(self):
-        self.bucket_name="prop-house"
-
-        super().__init__(self.bucket_name)
+        super().__init__("prop-house")
 
         self.graph_url = "https://prod.backend.prop.house/graphql"
         self.headers = {"accept": "application/json", "content-type": "application/json"}

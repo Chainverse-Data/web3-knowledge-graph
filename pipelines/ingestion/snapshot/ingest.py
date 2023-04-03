@@ -20,7 +20,7 @@ class SnapshotIngestor(Ingestor):
         space_data = self.process_spaces()
 
         # add space nodes
-        urls = self.save_json_as_csv(space_data["spaces"], self.bucket_name, f"ingestor_spaces_{self.asOf}")
+        urls = self.save_json_as_csv(space_data["spaces"], f"ingestor_spaces_{self.asOf}")
         self.cyphers.create_or_merge_spaces(urls)
 
         # add twitter nodes, twitter-space relationships
@@ -29,33 +29,33 @@ class SnapshotIngestor(Ingestor):
         ].drop_duplicates(subset=["handle"])
         twitter_df = twitter_df[twitter_df["handle"] != ""]
         twitter_dict = twitter_df.to_dict("records")
-        urls = self.save_json_as_csv(twitter_dict, self.bucket_name, f"ingestor_twitter_{self.asOf}")
+        urls = self.save_json_as_csv(twitter_dict, f"ingestor_twitter_{self.asOf}")
         self.cyphers.create_or_merge_space_twitter(urls)
         self.cyphers.link_space_twitter(urls)
 
         # add token nodes
-        urls = self.save_json_as_csv(space_data["tokens"], self.bucket_name, f"ingestor_tokens_{self.asOf}")
+        urls = self.save_json_as_csv(space_data["tokens"], f"ingestor_tokens_{self.asOf}")
         self.cyphers.create_or_merge_space_tokens(urls)
 
         # add strategy relationships (token-space)
         urls = self.save_json_as_csv(
-            space_data["strategy_relationships"], self.bucket_name, f"ingestor_strategies_{self.asOf}"
+            space_data["strategy_relationships"], f"ingestor_strategies_{self.asOf}"
         )
         self.cyphers.link_strategies(urls)
 
         # add ens nodes, ens relationships, space-alias relationships
-        urls = self.save_json_as_csv(space_data["ens"], self.bucket_name, f"ingestor_ens_{self.asOf}")
+        urls = self.save_json_as_csv(space_data["ens"], f"ingestor_ens_{self.asOf}")
         self.cyphers.create_or_merge_space_ens(urls)
         self.cyphers.link_space_ens(urls)
         self.cyphers.link_space_alias(urls)
 
         # add member wallet nodes, member-space relationships
-        urls = self.save_json_as_csv(space_data["members"], self.bucket_name, f"ingestor_members_{self.asOf}")
+        urls = self.save_json_as_csv(space_data["members"], f"ingestor_members_{self.asOf}")
         self.cyphers.create_or_merge_members(urls)
         self.cyphers.link_member_spaces(urls)
 
         # add admin wallet nodes, admin-space relationships
-        urls = self.save_json_as_csv(space_data["admins"], self.bucket_name, f"ingestor_admins_{self.asOf}")
+        urls = self.save_json_as_csv(space_data["admins"], f"ingestor_admins_{self.asOf}")
         self.cyphers.create_or_merge_members(urls)
         self.cyphers.link_admin_spaces(urls)
 
@@ -64,7 +64,7 @@ class SnapshotIngestor(Ingestor):
         proposal_data = self.process_proposals()
 
         # add proposal nodes, proposal-space relationships, proposal author wallet nodes, proposal-author relationships
-        urls = self.save_json_as_csv(proposal_data["proposals"], self.bucket_name, f"ingestor_proposals_{self.asOf}")
+        urls = self.save_json_as_csv(proposal_data["proposals"], f"ingestor_proposals_{self.asOf}")
         self.cyphers.create_or_merge_proposals(urls)
         self.cyphers.link_proposal_spaces(urls)
         self.cyphers.create_or_merge_authors(urls)
@@ -81,11 +81,11 @@ class SnapshotIngestor(Ingestor):
         ]
 
         # add vote wallet nodes
-        urls = self.save_json_as_csv(wallet_dict, self.bucket_name, f"ingestor_wallets_{self.asOf}")
+        urls = self.save_json_as_csv(wallet_dict, f"ingestor_wallets_{self.asOf}")
         self.cyphers.create_or_merge_voters(urls)
 
         # add vote relationships (proposal-wallet)
-        urls = self.save_json_as_csv(vote_data["votes"], self.bucket_name, f"ingestor_votes_{self.asOf}")
+        urls = self.save_json_as_csv(vote_data["votes"], f"ingestor_votes_{self.asOf}")
         self.cyphers.link_votes(urls)
 
     def process_spaces(self) -> Dict[str, Dict[str, List[Dict[str, Any]]]]:

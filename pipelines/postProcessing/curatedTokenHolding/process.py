@@ -54,7 +54,7 @@ class CuratedTokenHoldingProcessor(Processor):
                             "balance": balance["balance"]
                         }
                         results.append(tmp)
-            urls = self.save_json_as_csv(results, self.bucket_name, f"process_nft_tokens_{self.asOf}_{i}")
+            urls = self.save_json_as_csv(results, f"process_nft_tokens_{self.asOf}_{i}")
             self.cyphers.queries.create_wallets(urls)
             self.cyphers.clean_NFT_token_holding(urls)
             self.cyphers.link_or_merge_NFT_token_holding(urls)
@@ -82,7 +82,7 @@ class CuratedTokenHoldingProcessor(Processor):
                     "numericBalance": numericBalance
                 }
                 results.append(tmp)
-            urls = self.save_json_as_csv(results, self.bucket_name, f"process_erc20_tokens_{self.asOf}_{i}")
+            urls = self.save_json_as_csv(results, f"process_erc20_tokens_{self.asOf}_{i}")
             self.cyphers.queries.create_wallets(urls)
             self.cyphers.link_or_merge_ERC20_token_holding(urls)
 

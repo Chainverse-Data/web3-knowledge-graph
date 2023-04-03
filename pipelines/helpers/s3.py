@@ -21,7 +21,7 @@ class S3Utils:
         
         if bucket_name:
             self.bucket_name = os.environ["AWS_BUCKET_PREFIX"] + bucket_name
-            self.bucket = self.create_or_get_bucket(self.bucket_name)
+            self.bucket = self.create_or_get_bucket()
         else:
             logging.error("bucket_name is not defined! If this is voluntary, ignore this message.")
         
@@ -44,7 +44,7 @@ class S3Utils:
             self.allow_override = True
         self.data_filename = "data_{}-{}-{}".format(datetime.now().year, datetime.now().month, datetime.now().day)
 
-    def set_start_end_date(self):
+    def set_start_end_date(self) -> None:
         "Sets the start and end date from either params, env or metadata"
         if not self.start_date and "INGEST_FROM_DATE" in os.environ and os.environ["INGEST_FROM_DATE"].strip():
             self.start_date = os.environ["INGEST_FROM_DATE"]
@@ -59,7 +59,9 @@ class S3Utils:
         if self.end_date:
             self.end_date = datetime.strptime(self.end_date, "%Y-%m-%d")
 
-    def get_size(self, obj, seen=None):
+    def get_size(self, 
+                 obj: dict|list, 
+                 seen: bool|None = None) -> int:
         """Recursively finds size of objects"""
         size = sys.getsizeof(obj)
         if seen is None:
@@ -79,7 +81,9 @@ class S3Utils:
             size += sum([self.get_size(i, seen) for i in obj])
         return size
 
-    def save_json(self, bucket_name, filename, data):
+    def save_json(self, 
+                  filename: str, 
+                  data: list|dict) -> None:
         "This will save the data field to the S3 bucket set during initialization. The data must be a JSON compliant python object."
         try:
             content = bytes(json.dumps(data).encode("UTF-8"))
@@ -87,49 +91,35 @@ class S3Utils:
             logging.error("The data does not seem to be JSON compliant.")
             raise e
         try:
-            self.s3_client.put_object(Bucket=bucket_name, Key=filename, Body=content)
+            self.s3_client.put_object(Bucket=self.bucket_name, Key=filename, Body=content)
         except Exception as e:
             logging.error("Something went wrong while uploading to S3!")
             raise e
 
-    def save_file(self, bucket_name, local_path, s3_path):
-        "This will save the data field to the S3 bucket set during initialization. The data must be a JSON compliant python object."
+    def save_file(self, 
+                  local_path: str, 
+                  s3_path: str) -> None:
+        "This will save the data file to the S3 bucket set during initialization. The data must be a JSON compliant python object."
         try:
-            self.s3_client.upload_file(local_path, bucket_name, s3_path)
+            self.s3_client.upload_file(local_path, self.bucket_name, s3_path)
         except Exception as e:
             logging.error("Something went wrong while uploading to S3!")
             raise e
-            
-    def save_df_as_csv(self, df, bucket_name, file_name, ACL='public-read'):
-        """Function to save a Pandas DataFrame to a CSV file in S3.
+      
+    def save_df_as_csv(self, 
+                       df: pd.DataFrame, 
+                       file_name: str, 
+                       ACL: str = 'public-read', 
+                       max_lines: int = 10000, 
+                       max_size: int = 10000000)-> list[str]:
+        """
+        Function to save a Pandas DataFrame to a CSV file in S3.
         This functions takes care of splitting the dataframe if the resulting CSV is more than 10Mb.
         parameters:
         - df: the dataframe to be saved.
-        - bucket_name: The bucket name.
         - file_name: The file name (without .csv at the end).
-        - ACL: (Optional) defaults to public-read for neo4J ingestion."""
-        chunks = [df]
-        # Check if the dataframe is bigger than the max allowed size of Neo4J (10Mb)
-        if df.memory_usage(index=False).sum() > 10000000:
-            chunks = self.split_dataframe(df)
-
-        urls = []
-        for chunk, chunk_id in zip(chunks, range(len(chunks))):
-            chunk.to_csv(f"s3://{bucket_name}/{file_name}--{chunk_id}.csv", index=False)
-            self.s3_resource.ObjectAcl(bucket_name, f"{file_name}--{chunk_id}.csv").put(ACL=ACL)
-            location = self.s3_client.get_bucket_location(Bucket=bucket_name)["LocationConstraint"]
-            urls.append("https://s3-%s.amazonaws.com/%s/%s" % (location, bucket_name, f"{file_name}--{chunk_id}.csv"))
-        return urls
-
-
-    def save_df_as_csv(self, df, bucket_name, file_name, ACL='public-read', max_lines=10000, max_size=10000000):
-        """Function to save a Pandas DataFrame to a CSV file in S3.
-        This functions takes care of splitting the dataframe if the resulting CSV is more than 10Mb.
-        parameters:
-        - df: the dataframe to be saved.
-        - bucket_name: The bucket name.
-        - file_name: The file name (without .csv at the end).
-        - ACL: (Optional) defaults to public-read for neo4J ingestion."""
+        - ACL: (Optional) defaults to public-read for neo4J ingestion.
+        """
         chunks = [df]
         # Check if the dataframe is bigger than the max allowed size of Neo4J (10Mb)
         if df.memory_usage(index=False).sum() > max_size or len(df) > max_lines:
@@ -138,60 +128,72 @@ class S3Utils:
         logging.info("Uploading data...")
         urls = []
         for chunk, chunk_id in zip(chunks, range(len(chunks))):
-            chunk.to_csv(f"s3://{bucket_name}/{file_name}--{chunk_id}.csv", index=False, escapechar='\\')
-            self.s3_resource.ObjectAcl(bucket_name, f"{file_name}--{chunk_id}.csv").put(ACL=ACL)
-            location = self.s3_client.get_bucket_location(Bucket=bucket_name)["LocationConstraint"]
-            urls.append("https://s3-%s.amazonaws.com/%s/%s" % (location, bucket_name, f"{file_name}--{chunk_id}.csv"))
+            chunk.to_csv(f"s3://{self.bucket_name}/{file_name}--{chunk_id}.csv", index=False, escapechar='\\')
+            self.s3_resource.ObjectAcl(self.bucket_name, f"{file_name}--{chunk_id}.csv").put(ACL=ACL)
+            location = self.s3_client.get_bucket_location(Bucket=self.bucket_name)["LocationConstraint"]
+            urls.append("https://s3-%s.amazonaws.com/%s/%s" % (location, self.bucket_name, f"{file_name}--{chunk_id}.csv"))
         return urls
 
-    def save_json_as_csv(self, data, bucket_name, file_name, ACL="public-read", max_lines=10000, max_size=10000000):
-        """Function to save a python list of dictionaries (json compatible) to a CSV in S3.
+    def save_json_as_csv(self, 
+                         data: list[dict], 
+                         file_name: str, 
+                         ACL: str = "public-read", 
+                         max_lines: int = 10000, 
+                         max_size: int = 10000000) -> list[str]:
+        """
+        Function to save a python list of dictionaries (json compatible) to a CSV in S3.
         This functions takes care of splitting the array if the resulting CSV is more than 10Mb.
         parameters:
         - data: the data array.
-        - bucket_name: The bucket name
         - file_name: The file name (without .csv at the end)
-        - ACL: (Optional) defaults to public-read for neo4J ingestion."""
+        - ACL: (Optional) defaults to public-read for neo4J ingestion.
+        """
         df = pd.DataFrame.from_dict(data)
-        return self.save_df_as_csv(df, bucket_name, file_name, ACL=ACL, max_lines=max_lines, max_size=max_size)
+        return self.save_df_as_csv(df, file_name, ACL=ACL, max_lines=max_lines, max_size=max_size)
 
-    def save_full_json_as_csv(self, data, bucket_name, file_name, ACL="public-read"):
+    def save_full_json_as_csv(self, 
+                              data: dict|list, 
+                              file_name: str, 
+                              ACL: str = "public-read") -> str:
         df = pd.DataFrame.from_dict(data)
-        df.to_csv(f"s3://{bucket_name}/{file_name}.csv", index=False)
-        self.s3_resource.ObjectAcl(bucket_name, f"{file_name}.csv").put(ACL=ACL)
-        location = self.s3_client.get_bucket_location(Bucket=bucket_name)["LocationConstraint"]
-        url = "https://s3-%s.amazonaws.com/%s/%s" % (location, bucket_name, f"{file_name}.csv")
+        df.to_csv(f"s3://{self.bucket_name}/{file_name}.csv", index=False)
+        self.s3_resource.ObjectAcl(self.bucket_name, f"{file_name}.csv").put(ACL=ACL)
+        location = self.s3_client.get_bucket_location(Bucket=self.bucket_name)["LocationConstraint"]
+        url = "https://s3-%s.amazonaws.com/%s/%s" % (location, self.bucket_name, f"{file_name}.csv")
         return url
 
-    def load_csv(self, bucket_name, file_name):
-        """Convenience function to retrieve a S3 saved CSV loaded as a pandas dataframe."""
+    def load_csv(self, file_name: str) -> pd.DataFrame | None:
+        """
+        Convenience function to retrieve a S3 saved CSV loaded as a pandas dataframe.
+        """
         try:
-            df = pd.read_csv(f"s3://{bucket_name}/{file_name}", lineterminator="\n")
+            df = pd.read_csv(f"s3://{self.bucket_name}/{file_name}", lineterminator="\n")
             return df
         except:
             return None
 
-    def split_dataframe(self, df, chunk_size=10000):
+    def split_dataframe(self, df: pd.DataFrame, chunk_size: int = 10000) -> list[pd.DataFrame]:
+        "Convenience function to split a dataframe into multiple small dataframes"
         chunks = list()
         num_chunks = len(df) // chunk_size + (1 if len(df) % chunk_size else 0)
         for i in range(num_chunks):
             chunks.append(df[i * chunk_size : (i + 1) * chunk_size])
         return chunks
 
-    def load_json(self, bucket_name, filename):
+    def load_json(self, filename: str) -> dict:
         "Retrieves a JSON formated content from the S3 bucket"
         try:
-            result = self.s3_client.get_object(Bucket=bucket_name, Key=filename)
+            result = self.s3_client.get_object(Bucket=self.bucket_name, Key=filename)
         except Exception as e:
             logging.error("An error occured while retrieving data from S3!")
             raise e
         data = json.loads(result["Body"].read().decode("UTF-8"))
         return data
 
-    def check_if_file_exists(self, bucket_name, filename):
+    def check_if_file_exists(self, filename: str) -> bool:
         "This checks if the filename to be saved already exists and raises an error if so."
         try:
-            boto3.resource("s3").Object(bucket_name, filename).load()
+            boto3.resource("s3").Object(self.bucket_name, filename).load()
         except ClientError as e:
             if e.response["Error"]["Code"] != "404":
                 logging.error("Something went wrong while checking if the data file already existed in the bucket!")
@@ -201,38 +203,42 @@ class S3Utils:
         else:
             return True
 
-    def create_or_get_bucket(self, bucket_name):
+    def create_or_get_bucket(self):
         response = self.s3_client.list_buckets()
-        if bucket_name not in [el["Name"] for el in response["Buckets"]]:
+        if self.bucket_name not in [el["Name"] for el in response["Buckets"]]:
             try:
-                logging.warning("Bucket not found! Creating {}".format(bucket_name))
+                logging.warning("Bucket not found! Creating {}".format(self.bucket_name))
                 location = {"LocationConstraint": os.environ["AWS_DEFAULT_REGION"]}
-                self.s3_client.create_bucket(Bucket=bucket_name, CreateBucketConfiguration=location)
-                logging.info(f"Creating bucket: {bucket_name}")
+                self.s3_client.create_bucket(Bucket=self.bucket_name, CreateBucketConfiguration=location)
+                logging.info(f"Creating bucket: {self.bucket_name}")
             except ClientError as e:
-                logging.error(f"An error occured during the creation of the bucket: {bucket_name}")
+                logging.error(f"An error occured during the creation of the bucket: {self.bucket_name}")
                 raise e
         else:
-            logging.info(f"Using existing bucket: {bucket_name}")
-        return boto3.resource("s3").Bucket(bucket_name)
+            logging.info(f"Using existing bucket: {self.bucket_name}")
+        return boto3.resource("s3").Bucket(self.bucket_name)
 
-    def read_metadata(self):
+    def read_metadata(self) -> dict:
         "Access the S3 bucket to read the metadata and returns a dictionary that corresponds to the saved JSON object"
         logging.info("Loading the metadata from S3 ...")
         if "REINITIALIZE" in os.environ and os.environ["REINITIALIZE"] == "1":
             return {}
-        if self.check_if_file_exists(self.bucket_name, self.metadata_filename):
-            return self.load_json(self.bucket_name, self.metadata_filename)
+        if self.check_if_file_exists(self.metadata_filename):
+            return self.load_json(self.metadata_filename)
         else:
             return {}
 
-    def save_metadata(self):
+    def save_metadata(self) -> None:
         "Saves the current metadata to S3"
         logging.info("Saving the metadata to S3 ...")
-        self.save_json(self.bucket_name, self.metadata_filename, self.metadata)
+        self.save_json(self.metadata_filename, self.metadata)
 
-    def save_data(self, chunk_prefix=""):
-        "Saves the current data to S3. This will take care of chunking the data to less than 5Gb for AWS S3 requierements."
+    def save_data(self, chunk_prefix: str = "") -> None:
+        """
+        Saves the current data to S3. 
+        This will take care of chunking the data to less than 5Gb for AWS S3 requierements.
+        You can specify a chunk_prefix to add to the filename to avoid name collision.
+        """
         logging.info("Saving the results to S3 ...")
         logging.info("Measuring data size...")
         data_size = self.get_size(self.data)
@@ -255,15 +261,15 @@ class S3Utils:
                     else:
                         data_chunk[key] = self.data[key][i*len_data[key]:min((i+1)*len_data[key], len(self.data[key]))]
                 filename = self.data_filename + f"_{chunk_prefix}{i}.json"
-                if not self.allow_override and self.check_if_file_exists(self.bucket_name, filename):
+                if not self.allow_override and self.check_if_file_exists(filename):
                     logging.error("The data file for this day has already been created!")
                     sys.exit(0)
                 logging.info(f"Saving chunk {i}...")
-                self.save_json(self.bucket_name, filename, data_chunk)
+                self.save_json(filename, data_chunk)
         else:
-            self.save_json(self.bucket_name, self.data_filename + f"_{chunk_prefix}.json", self.data)
+            self.save_json(self.data_filename + f"_{chunk_prefix}.json", self.data)
 
-    def get_datafile_from_s3(self):
+    def get_datafile_from_s3(self) -> list[str]:
         "Get the list of datafiles in the S3 bucket from the start date to the end date (if defined)"
         logging.info("Collecting data files")
         datafiles = []
@@ -290,26 +296,26 @@ class S3Utils:
         logging.info("Datafiles for ingestion: {}".format(",".join(datafiles_to_keep)))
         return datafiles_to_keep
 
-    def get_files_urls_from_s3(self, bucket_name, filter):
+    def get_files_urls_from_s3(self, filter: str) -> list[str]:
         "Get the list of datafiles in the S3 bucket from the start date to the end date (if defined)"
         logging.info("Collecting data files")
         datafiles = []
         for el in map(lambda x: (x.bucket_name, x.key), self.bucket.objects.all()):
             if filter in el[1]:
                 datafiles.append(el[1])
-        location = self.s3_client.get_bucket_location(Bucket=bucket_name)["LocationConstraint"]
+        location = self.s3_client.get_bucket_location(Bucket=self.bucket_name)["LocationConstraint"]
         locations = []
         for file_name in datafiles:
-            url = "https://s3-%s.amazonaws.com/%s/%s" % (location, bucket_name, file_name)
+            url = "https://s3-%s.amazonaws.com/%s/%s" % (location, self.bucket_name, file_name)
             locations.append(url)
         return locations
 
-    def load_data(self):
+    def load_data(self) -> None:
         "Loads the data filtered by date saved in the S3 bucket"
         datafiles_to_keep = self.get_datafile_from_s3()
         logging.info("Datafiles for ingestion: {}".format(",".join(datafiles_to_keep)))
         for datafile in datafiles_to_keep:
-            tmp_data = self.load_json(self.bucket_name, datafile)
+            tmp_data = self.load_json(datafile)
             for root_key in tmp_data:
                 if root_key not in self.scraper_data:
                     self.scraper_data[root_key] = type(tmp_data[root_key])()
@@ -319,14 +325,14 @@ class S3Utils:
                     self.scraper_data[root_key] += tmp_data[root_key]
         logging.info("Data files loaded")
 
-    def load_data_iterate(self, nb_files=1):
+    def load_data_iterate(self, nb_files=1) -> list[dict]:
         "Generator function to load the datafiles one file at a time. Returns the content of N datafile at a time, N being the nb_files parameter."
         datafiles_to_keep = self.get_datafile_from_s3()
         counter = 0
         data = {}
         for datafile in datafiles_to_keep:
             logging.info(f"Loading datafile: {datafile}")
-            tmp_data = self.load_json(self.bucket_name, datafile)
+            tmp_data = self.load_json(datafile)
             for root_key in tmp_data:
                 if root_key not in data:
                     data[root_key] = type(tmp_data[root_key])()

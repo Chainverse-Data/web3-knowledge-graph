@@ -14,32 +14,32 @@ class Requests:
         pass
 
     def get_request(self, 
-                    url, 
-                    params=None, 
-                    headers=None, 
-                    allow_redirects=True, 
-                    decode=True, 
-                    json=False, 
-                    ignore_retries=False, 
-                    retry_on_403=False, 
-                    retry_on_404=True, 
-                    counter=0, 
-                    max_retries=10):
+                    url: str, 
+                    params: dict|None = None, 
+                    headers: dict|None = None, 
+                    allow_redirects: bool = True, 
+                    decode: bool = True, 
+                    json: bool = False, 
+                    ignore_retries: bool = False, 
+                    retry_on_403: bool = False, 
+                    retry_on_404: bool = True, 
+                    counter: int = 0, 
+                    max_retries: int = 10) -> None | dict | str | requests.models.Response:
         """This makes a GET request to a url and return the data.
         It can take params and headers as parameters following python's request library.
         The method can return the raw request content, you must then parse the content with the correct parser.
         By default, it handles it for you as a text or json with the arguments decode or json
             arguments:
-                - url: (string) The url for the get request
-                - params: (dict|None) a dictionary containing the query parameter for the request
-                - headers: (dict|None) a dictionary containing the headers for the request
-                - allow_redirects: (bool) Wether or not to allow redirects
-                - decode: (bool) Used to decode the returned value in the case were it is not a json object (ex: a README file)
-                - json: (bool) Automaticallyt decodes the returned values as a JSON
-                - ignore_retries: (bool) if True, will return None on any failure, if False will retry the query
-                - retry_on_403: (bool) If True, will retry the query on a 403 Forbidden error
-                - retry_on_404: (bool) If True, will retry the query on a 404 Missing error
-                - max_retries: (bool) Change this to change the max number of allowed retries
+                - url: The url for the get request
+                - params: a dictionary containing the query parameter for the request
+                - headers: a dictionary containing the headers for the request
+                - allow_redirects: Wether or not to allow redirects
+                - decode: Used to decode the returned value in the case were it is not a json object (ex: a README file)
+                - json: Automaticallyt decodes the returned values as a JSON
+                - ignore_retries: if True, will return None on any failure, if False will retry the query
+                - retry_on_403: If True, will retry the query on a 403 Forbidden error
+                - retry_on_404: If True, will retry the query on a 404 Missing error
+                - max_retries: Change this to change the max number of allowed retries
         """
         time.sleep(counter * max_retries)
         if counter > 10:
@@ -68,31 +68,31 @@ class Requests:
             return self.get_request(url, params=params, headers=headers, allow_redirects=allow_redirects, counter=counter + 1)
 
     def post_request(self, 
-                     url, 
-                     data=None, 
-                     json=None, 
-                     headers=None, 
-                     decode=True, 
-                     return_json=False, 
-                     ignore_retries=False, 
-                     retry_on_403=False, 
-                     retry_on_404=True,
-                     counter=0, 
-                     max_retries=10):
+                     url: str, 
+                     data: dict|None = None, 
+                     json: dict|None = None, 
+                     headers: dict|None = None, 
+                     decode: bool = True, 
+                     return_json: bool = False, 
+                     ignore_retries: bool = False, 
+                     retry_on_403: bool = False, 
+                     retry_on_404: bool = True,
+                     counter: int = 0, 
+                     max_retries:int = 10) -> None | dict | str | requests.models.Response:
         """This makes a POST request to a url and return the data.
         It can take params. json payload and headers as parameters following python's request library.
         The method returns the raw request content, you must then parse the content with the correct parser.
             arguments:
-                - url: (string) The url for the get request
-                - data: (dict|None) a dictionary containing the query parameter for the request
-                - json: (dict|None) a dictionary containing the json payload for the request
-                - headers: (dict|None) a dictionary containing the headers for the request
-                - decode: (bool) Used to decode the returned value in the case were it is not a json object (ex: a README file)
-                - return_json: (bool) Automaticallyt decodes the returned values as a JSON
-                - ignore_retries: (bool) if True, will return None on any failure, if False will retry the query
-                - retry_on_403: (bool) If True, will retry the query on a 403 Forbidden error
-                - retry_on_404: (bool) If True, will retry the query on a 404 Missing error
-                - max_retries: (bool) Change this to change the max number of allowed retries
+                - url: The url for the get request
+                - data: a dictionary containing the query parameter for the request
+                - json: a dictionary containing the json payload for the request
+                - headers: a dictionary containing the headers for the request
+                - decode: Used to decode the returned value in the case were it is not a json object (ex: a README file)
+                - return_json: Automaticallyt decodes the returned values as a JSON
+                - ignore_retries: if True, will return None on any failure, if False will retry the query
+                - retry_on_403: If True, will retry the query on a 403 Forbidden error
+                - retry_on_404: If True, will retry the query on a 404 Missing error
+                - max_retries: Change this to change the max number of allowed retries
         """
 
         time.sleep(counter * max_retries)
@@ -118,15 +118,21 @@ class Requests:
             logging.error(f"An unrecoverable exception occurred: {e}")
             return self.post_request(url, data=data, json=json, headers=headers, decode=decode, ignore_retries=ignore_retries, retry_on_403=retry_on_403, retry_on_404=retry_on_404, counter=counter + 1, max_retries=max_retries)
 
-    def call_the_graph_api(self, graph_url, query, variables={}, result_names=[], counter=0, max_retries=10):
+    def call_the_graph_api(self, 
+                           graph_url: str, 
+                           query: str, 
+                           variables: dict = {}, 
+                           result_names: list = [], 
+                           counter: int = 0, 
+                           max_retries: int = 10):
         """
         Helper function to call the Graph API to handle the graphQL handling.
         arguments:
-            - graph_url: (string) the URL for the API endpoint of the subgraph to target
-            - query: (string) the graphQL query string as a string (not a gql object!) 
-            - variables: (dict|None) The dictionary of variables to pass to the graphQL query  
-            - result_names: (list|None) The list of expected variable names for the response (used to check that the query was succesful)
-            - max_retries: (int|None) The number of max_retries allowed.
+            - graph_url: the URL for the API endpoint of the subgraph to target
+            - query: the graphQL query string as a string (not a gql object!) 
+            - variables: The dictionary of variables to pass to the graphQL query  
+            - result_names: The list of expected variable names for the response (used to check that the query was succesful)
+            - max_retries: The number of max_retries allowed.
         """
         time.sleep(counter)
         if counter > max_retries:
