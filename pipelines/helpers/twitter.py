@@ -33,7 +33,7 @@ class Twitter(Requests):
         if next_token: params["next_token"] = next_token
         url = self.tweets_api_url + "/search/recent"
         result = self.get_request(url, params=params, headers=self.get_headers(), json=True)
-        if result:
+        if result and type(result) == dict:
             if "data" in result: 
                 tweets.extend(result["data"])
             if "includes" in result and "users" in result["includes"]:
