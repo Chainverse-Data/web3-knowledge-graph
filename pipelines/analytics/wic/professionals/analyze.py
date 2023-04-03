@@ -10,54 +10,66 @@ class ProfessionalsAnalysis(WICAnalysis):
            "DaoContributors": {
                 "CommunityWalletDeployers": {
                         "type": TYPES["interests"],
+                        "definition": "TBD",
                         "call": self.process_org_wallet_deployers
                     },
                 "SnapshotContributors": {
                         "type": TYPES["interests"],
+                        "definition": "TBD",
                         "call": self.process_org_snapshot_contributors
                     },
                 "CommunityMultisigSigners": {
                         "type": TYPES["interests"],
+                        "definition": "TBD",
                         "call": self.process_org_multisig_signers
                     }
            },
             "Web3Professionals": {
                 "TokenContractDeployers": {
                         "type": TYPES["interests"],
+                        "definition": "TBD",
                         "call": self.process_token_contract_deployer_wallets
                     },
                 "Founders": {
                         "type": TYPES["interests"],
+                        "definition": "TBD",
                         "call": self.process_founder_bios
                     },
                 "Investors": {
                         "type": TYPES["interests"],
+                        "definition": "TBD",
                         "call": self.process_investor_bios
                     },
                 "Marketers": {
                         "type": TYPES["interests"],
+                        "definition": "TBD",
                         "call": self.process_marketers_bios
                     },
                 "CompanyOfficer": {
                         "type": TYPES["interests"],
+                        "definition": "TBD",
                         "call": self.process_company_officer_bios
                     },
                 "CommunityLeads": {
                         "type": TYPES["interests"],
+                        "definition": "TBD",
                         "call": self.process_community_people_bios
                     },
                 "DeveloperRelations": {
                         "type": TYPES["interests"],
+                        "definition": "TBD",
                         "call": self.process_devrel_bios
                     }
             },
             "Influencers": {
                 "TwitterInfluencers": {
                         "type": TYPES["interests"],
+                        "definition": "TBD",
                         "call": self.process_twitter_influencers
                     },
                 "Podcasters": {
                         "type": TYPES["interests"],
+                        "definition": "TBD",
                         "call": self.process_podcaster_bios
                     }
             }

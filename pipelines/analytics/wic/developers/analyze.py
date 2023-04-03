@@ -10,15 +10,18 @@ class DevelopersAnalysis(WICAnalysis):
                 "DevAccount": 
                     {
                         "type": TYPES["interests"],
+                        "definition": "This wallet has a GitHub account.",
                         "call": self.process_dev_accounts
                     },
                 "GitcoinBountyFulfill":
                     {
                         "type": TYPES["experiences"],
+                        "definition": "TBD",
                         "call": self.process_bounty_fullfilers
                     },
                 "SolidityDeveloper": {
                     "call": self.process_solidity_devs,
+                    "definition": "TBD",
                     "type": TYPES["experiences"]
                 }
             },
@@ -26,6 +29,7 @@ class DevelopersAnalysis(WICAnalysis):
                 "GitcoinBountyAdmin": 
                     {
                         "call": self.process_gitcoin_bounty_admin,
+                        "definition": "TBD",
                         "type": TYPES["experiences"]
                     }
             }

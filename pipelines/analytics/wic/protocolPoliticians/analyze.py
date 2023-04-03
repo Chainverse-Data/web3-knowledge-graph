@@ -9,24 +9,28 @@ class ProtocolPoliticiansAnalysis(WICAnalysis):
             "Voting": {
                 "EngagedVoter": {
                     "type": TYPES["experiences"],
+                    "definition": "TBD",
                     "call": self.process_engaged_voters
                     }    
             },
             "Proposals": {
                 "ProposalAuthor": {
                     "type": TYPES["experiences"],
+                    "definition": "TBD",
                     "call": self.process_proposal_authors
                     }
             }, 
             "Delegation": {
                 "Delegate": {
                     "type": TYPES["experiences"],
+                    "definition": "TBD",
                     "call": self.process_delegates
                     }
             },
             "Leadership": {
                 "DaoAdmin": {
                     "type": TYPES["experiences"],
+                    "definition": "TBD",
                     "call": self.process_dao_admins
                     }
             }

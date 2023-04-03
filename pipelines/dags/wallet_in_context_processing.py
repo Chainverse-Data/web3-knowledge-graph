@@ -158,8 +158,8 @@ wic_diversity = ECSOperator(
     awslogs_stream_prefix=ecs_awslogs_stream_prefix
 )
 
-wic_ecosystem_development = ECSOperator(
-    task_id="wic_ecosystem_development",
+wic_public_goods = ECSOperator(
+    task_id="wic_public_goods",
     dag=dag,
     aws_conn_id="aws_ecs",
     cluster=ecs_cluster,
@@ -170,7 +170,7 @@ wic_ecosystem_development = ECSOperator(
         "containerOverrides": [
             {
                 "name": "data-pipelines",
-                "command": ["python3", "-m", "pipelines.analytics.wic.ecosystemDevelopment.analyze"],
+                "command": ["python3", "-m", "pipelines.analytics.wic.publicGoods.analyze"],
                 "environment": env_vars
             },
         ],
@@ -247,4 +247,4 @@ wic_professionals = ECSOperator(
 )
 
 
-wic_incentive_farming >> [wic_creators_collectors, wic_developers, wic_protocol_politicians, wic_professionals]
+wic_incentive_farming >> [wic_creators_collectors, wic_developers, wic_protocol_politicians, wic_professionals, wic_public_goods]

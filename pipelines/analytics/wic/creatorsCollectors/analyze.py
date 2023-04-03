@@ -13,31 +13,37 @@ class CreatorsCollectorsAnalysis(WICAnalysis):
            "Writing": {
                "MirrorAuthor": {
                    "type": TYPES["influence"],
+                   "definition": "TBD",
                    "call": self.process_writing,
                } 
            },
             "BlueChip": {
                "BlueChipNFTCollections": {
                    "type": TYPES["experiences"],
+                   "definition": "TBD",
                    "call": self.process_NFTs_blue_chip,
                } 
            },"Rarity": {
                "ThreeLetterEns": {
                    "type": TYPES["experiences"],
+                   "definition": "TBD",
                    "call": self.process_three_ens,
                } 
             },
             "NftMarketplacePowerUsers": {
                 "SudoswapPowerUser": {
                    "type": TYPES["experiences"],
+                   "definition": "TBD",
                    "call": self.process_sudo_power_users,
                 },
                 "BlurPowerUser": {
                    "type": TYPES["experiences"],
+                   "definition": "TBD",
                    "call": self.process_blur_power_users,
                 },
                 "NftCollateralizedBorrower": {
                    "type": TYPES["interests"],
+                   "definition": "TBD",
                    "call": self.process_nft_collat_borrowers
                 }
             }
