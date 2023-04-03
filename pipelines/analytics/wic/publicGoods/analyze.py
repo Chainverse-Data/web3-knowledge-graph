@@ -10,34 +10,41 @@ class EcoDevAnalysis(WICAnalysis):
             "Grants": {
                 "GitcoinGrantAdmin": {
                         "type": TYPES["experiences"],
+                        "definition": "TBD",
                         "call": self.process_gitcoin_grant_admins
                     }, 
                 "GitcoinGrantDonor": {
                         "type": TYPES["experiences"],
+                        "definition": "TBD",
                         "call": self.process_gitcoin_grant_donor
                     },
                 "GrantsDao": {
                         "type": TYPES["interests"],
+                        "definition": "TBD",
                         "call": self.process_grants_dao
                     }
             },
             "Bounties": {
                 "GitcoinBountyAdmin": {
                         "type": TYPES["experiences"],
+                        "definition": "TBD",
                         "call": self.process_gitcoin_bounty_creators
                     }
             },
             "Incubators": {
                 "Incubator": {
                     "type": TYPES["experiences"],
+                    "definition": "TBD",
                     "call": self.process_incubator,
                     "subcontexts": {
                         "IncubatorMember": {
                         "type": TYPES["experiences"],
+                        "definition": "TBD",
                         "call": self.process_incubator_member
                     }, 
                         "IncubatorParticipant": {
                         "type": TYPES["experiences"],
+                        "definition": "TBD",
                         "call": self.process_incubator_participant
                     }
                     }
