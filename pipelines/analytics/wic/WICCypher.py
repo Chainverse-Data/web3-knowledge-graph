@@ -55,20 +55,23 @@ class WICCypher(Cypher):
         count = 0
         for condition in self.conditions:
             for context in self.conditions[condition]:
-                if type(self.conditions[condition][context]) == dict:
-                    count += self.create_context_query(condition, context)
+                context_type = self.conditions[condition][context]["type"]
+                if "subcontexts" in self.conditions[condition][context]:
+                    count += self.create_context_query(condition, context, context_type)
                     for subcontext in self.conditions[condition][context]["subcontexts"]:
-                        count += self.create_context_query(condition, subcontext)
+                        subcontext_type = self.conditions[condition][context]["subcontexts"][subcontext]["type"]
+                        count += self.create_context_query(condition, subcontext, subcontext_type)
                 else:
-                    count += self.create_context_query(condition, context)
+                    count += self.create_context_query(condition, context, context_type)
         return count
         
-    def create_context_query(self, condition, context):
+    def create_context_query(self, condition, context, type):
         create_context = f"""
-            MERGE (context:_Wic:_Context:_{self.subgraph_name}:_{condition}:_{context})
+            MERGE (context:_Wic:_Context:_{self.subgraph_name}:_{condition}:_{context}:_{type})
             SET context._condition = '{condition}'
             SET context._displayName = '{context}'
             SET context._main = '{self.subgraph_name}'
+            SET context._type = '{type}'
             WITH context
             MATCH (condition:_Wic:_Condition:_{self.subgraph_name}:_{condition})
             WITH context, condition

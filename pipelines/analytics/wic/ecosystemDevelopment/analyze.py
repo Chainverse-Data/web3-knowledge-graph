@@ -1,26 +1,45 @@
 from .. import WICAnalysis
+from ..WICAnalysis import TYPES
 from .cyphers import EcoDevCyphers
 
 class EcoDevAnalysis(WICAnalysis):
     """This class builds out the ecosystem development wallet in context (Wic) subgraph"""
     def __init__(self):
-        self.subgraph_name = 'EcoDev'
+        self.subgraph_name = 'PublicGoods'
         self.conditions = {
             "Grants": {
-                "GitcoinGrantAdmin": self.process_gitcoin_grant_admins, 
-                "GitcoinGrantDonor": self.process_gitcoin_grant_donor,
-                "GrantsDao": self.process_grants_dao
+                "GitcoinGrantAdmin": {
+                        "type": TYPES["experiences"],
+                        "call": self.process_gitcoin_grant_admins
+                    }, 
+                "GitcoinGrantDonor": {
+                        "type": TYPES["experiences"],
+                        "call": self.process_gitcoin_grant_donor
+                    },
+                "GrantsDao": {
+                        "type": TYPES["interests"],
+                        "call": self.process_grants_dao
+                    }
             },
             "Bounties": {
-                "GitcoinBountyAdmin": self.process_gitcoin_bounty_creators,
-                "GitcoinBountyFulfill": self.process_gitcoin_bounty_fulfillers, 
+                "GitcoinBountyAdmin": {
+                        "type": TYPES["experiences"],
+                        "call": self.process_gitcoin_bounty_creators
+                    }
             },
             "Incubators": {
                 "Incubator": {
-                    "call": self.process_incubator, 
+                    "type": TYPES["experiences"],
+                    "call": self.process_incubator,
                     "subcontexts": {
-                        "IncubatorMember": self.process_incubator_member, 
-                        "IncubatorParticipant": self.process_incubator_participant
+                        "IncubatorMember": {
+                        "type": TYPES["experiences"],
+                        "call": self.process_incubator_member
+                    }, 
+                        "IncubatorParticipant": {
+                        "type": TYPES["experiences"],
+                        "call": self.process_incubator_participant
+                    }
                     }
                 }
             } 

@@ -1,4 +1,5 @@
 from .. import WICAnalysis
+from ..WICAnalysis import TYPES
 from .cyphers import ProtocolPoliticiansCyphers
 
 class ProtocolPoliticiansAnalysis(WICAnalysis):
@@ -6,19 +7,31 @@ class ProtocolPoliticiansAnalysis(WICAnalysis):
     def __init__(self):
         self.conditions = {
             "Voting": {
-                "EngagedVoter": self.process_engaged_voters    
+                "EngagedVoter": {
+                    "type": TYPES["experiences"],
+                    "call": self.process_engaged_voters
+                    }    
             },
             "Proposals": {
-                "ProposalAuthor": self.process_proposal_authors
+                "ProposalAuthor": {
+                    "type": TYPES["experiences"],
+                    "call": self.process_proposal_authors
+                    }
             }, 
             "Delegation": {
-                "Delegate": self.process_delegates
+                "Delegate": {
+                    "type": TYPES["experiences"],
+                    "call": self.process_delegates
+                    }
             },
             "Leadership": {
-                "DaoAdmin": self.process_dao_admins
+                "DaoAdmin": {
+                    "type": TYPES["experiences"],
+                    "call": self.process_dao_admins
+                    }
             }
         }
-        self.subgraph_name = "ProtocolPoliticians"
+        self.subgraph_name = "ProtocolGovernance"
 
         self.cyphers = ProtocolPoliticiansCyphers(self.subgraph_name, self.conditions)
         super().__init__("wic-protocol-politicians")

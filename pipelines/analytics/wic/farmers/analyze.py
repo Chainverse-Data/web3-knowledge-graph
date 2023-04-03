@@ -1,5 +1,8 @@
 from .. import WICAnalysis
+from ..WICAnalysis import TYPES
 from .cyphers import FarmerCyphers
+import pandas as pd
+import logging
 
 class IncentiveFarmerAnalysis(WICAnalysis):
     """This class reads from the Neo4J instance for Twitter nodes to call the Twitter API and retreive extra infos"""
@@ -7,26 +10,48 @@ class IncentiveFarmerAnalysis(WICAnalysis):
         self.subgraph_name = "IncentiveFarming"
         self.conditions = {
             "GovernanceFarming": {
-                "SuspiciousSnapshot": self.process_suspicious_snapshot_daos
+                "SuspiciousSnapshot": {
+                        "type": TYPES["experiences"],
+                        "call": self.process_suspicious_snapshot_daos
+                    }
             }, 
             "MarketplaceFarming": {
-                "Mirror": self.process_suspicious_mirror
+                "Mirror": {
+                        "type": TYPES["experiences"],
+                        "call": self.process_suspicious_mirror
+                    }
             },
             "WashTrading": {
-                "NftWashTrading": self.process_nft_wash_trading
+                "NftWashTrading": {
+                        "type": TYPES["experiences"],
+                        "call": self.process_nft_wash_trading
+                    }
             },
             "Spammers": {
-                "SpamContractDeployer": self.process_spam_contract_deployment
+                "SpamContractDeployer": {
+                        "type": TYPES["experiences"],
+                        "call": self.process_spam_contract_deployment
+                    }
             },
             "FarmersAffiliates": {
-                "FarmerCosigner": self.process_suspicious_cosigners
+                "FarmerCounterparty": {
+                        "type": TYPES['experiences'],
+                        "call": self.process_farmer_counterparties
+                },
+                "FarmerCosigner": {
+                        "type": TYPES["experiences"],
+                        "call": self.process_suspicious_cosigners
+                }
         }
     }
         
         self.cyphers = FarmerCyphers(self.subgraph_name, self.conditions)
         super().__init__("wic-farming")
+        self.washTraders = pd.read_csv('pipelines/analytics/wic/farmers/data/wash_trading_202302.csv')
+        self.susDao = pd.read_csv('pipelines/analytics/wic/farmers/data/susdao.csv')
 
     def process_suspicious_snapshot_daos(self, context):
+        susDao = self.susDao
         self.cyphers.connect_suspicious_snapshot_daos(context)
     
     def process_suspicious_mirror(self, context):
@@ -37,13 +62,19 @@ class IncentiveFarmerAnalysis(WICAnalysis):
         self.cyphers.clean()
 
     def process_nft_wash_trading(self, context):
-        self.cyphers.identify_nft_wash_traders(context)
+        wash_traders = self.washTraders
+        addresses = list(set(wash_traders['seller']))
+        self.cyphers.identify_nft_wash_traders(context, addresses)
     
     def process_spam_contract_deployment(self, context):
         self.cyphers.identify_spam_contract_deployers(context)
 
+    def process_farmer_counterparties(self, context):
+        self.cyphers.connect_farmer_counterparties(context)
+
     def process_suspicious_cosigners(self, context):
         self.cyphers.connect_cosigner_expansion(context)
+
 
     def run(self):
         self.process_conditions()

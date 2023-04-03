@@ -3,12 +3,20 @@ import logging
 from tqdm import tqdm
 from ..helpers import Analysis
 
+TYPES = {
+    "experiences": "Experience",
+    "interests": "Interest",
+    "influence": "Influence",
+    "professions": "Profession"
+}
+
 class WICAnalysis(Analysis):
     def __init__(self, bucket_name) -> None:
         try:
             assert len(self.conditions) > 0, "No conditions found!"
         except:
             raise ValueError("Conditions must be declared before instancing with super().init")
+
         Analysis.__init__(self, bucket_name)
 
     def process_conditions(self):
@@ -16,10 +24,10 @@ class WICAnalysis(Analysis):
             logging.info(f"Processing Condition: {condition}")
             for context in tqdm(self.conditions[condition], position=1):
                 logging.info(f"Processing Context: {context}")
-                if type(self.conditions[condition][context]) == dict:
+                if "subcontexts" in self.conditions[condition][context]:
                     self.conditions[condition][context]["call"](context)
                     for subcontext in tqdm(self.conditions[condition][context]["subcontexts"], position=2):
                         logging.info(f"Processing Subcontext: {subcontext}")
-                        self.conditions[condition][context]["subcontexts"][subcontext](context, subcontext)
+                        self.conditions[condition][context]["subcontexts"][subcontext]["call"](context, subcontext)
                 else:
-                    self.conditions[condition][context](context)
+                    self.conditions[condition][context]["call"](context)
