@@ -203,7 +203,7 @@ class S3Utils:
         else:
             return True
 
-    def create_or_get_bucket(self) -> boto3.Bucket:
+    def create_or_get_bucket(self):
         response = self.s3_client.list_buckets()
         if self.bucket_name not in [el["Name"] for el in response["Buckets"]]:
             try:
