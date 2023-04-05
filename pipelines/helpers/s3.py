@@ -61,7 +61,7 @@ class S3Utils:
 
     def get_size(self, 
                  obj: dict|list, 
-                 seen: bool|None = None) -> int:
+                 seen = None) -> int:
         """Recursively finds size of objects"""
         size = sys.getsizeof(obj)
         if seen is None:
