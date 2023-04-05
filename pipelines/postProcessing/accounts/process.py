@@ -29,6 +29,9 @@ class AccountsProcessor(Processor):
     def process_mirror_author_ref_twitter(self):
         self.cyphers.link_mirror_authors_to_twitter(threshold=3, proportion=0.8)
 
+    def process_connect_accounts_for_convenience(self):
+        self.cyphers.connect_accounts_wallets_twitter()
+
     def run(self):
         self.process_wallets_account_labeling()
         self.process_acount_types()
