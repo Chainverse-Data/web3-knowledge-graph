@@ -6,7 +6,7 @@ from ..helpers import Processor
 class AccountsProcessor(Processor):
     def __init__(self):
         self.cyphers = AccountsCyphers()
-        self.account_types_labels = ["Wallet", "Twitter", "Github", "Gitcoin", "Email", "Farcaster"]
+        self.account_types_labels = ["Wallet", "Twitter", "Github", "Gitcoin", "Email", "Farcaster", "Dune"]
         super().__init__(bucket_name="accounts-processing")
 
     def process_acount_types(self):
