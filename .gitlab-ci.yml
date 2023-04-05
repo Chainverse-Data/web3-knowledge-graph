@@ -43,7 +43,7 @@ docker-build:
       fi
     - docker build --pull -t "$CI_REGISTRY_IMAGE${tag}" .
     - docker push "$CI_REGISTRY_IMAGE${tag}"
-    - docker run -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY -e AWS_DEFAULT_REGION=$AWS_DEFAULT_REGION "$CI_REGISTRY_IMAGE${tag}" python3 -m pipelines.helpers.upload_dags_to_s3
+    - docker run -e AWS_BUCKET_PREFIX=$AWS_BUCKET_PREFIX -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY -e AWS_DEFAULT_REGION=$AWS_DEFAULT_REGION "$CI_REGISTRY_IMAGE${tag}" python3 -m pipelines.helpers.upload_dags_to_s3
 
 publish-aws:
   only: 
