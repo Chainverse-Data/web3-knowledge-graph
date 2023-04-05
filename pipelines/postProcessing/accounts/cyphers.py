@@ -104,66 +104,76 @@ class AccountsCyphers(Cypher):
         return count
 
     @count_query_logging
-    def connect_accounts_to_wallets(self):
-        labs = ['Wallet', 'Twitter']
+    def connect_accounts_to_wallets_by_distance(self, label):
         count = 0 
-        for lab in labs:
         ## consistent edge direction per entry point 
-            one_level = f"""
-            CALL apoc.periodic.commit('
-            MATCH (origin:{lab})<-[:HAS_ACCOUNT]-(account:Account)
-            WHERE NOT (origin)-[:HAS_ACCOUNT]->(account:Account)
-            WITH origin, account limit 5000
-            MERGE (origin)-[acc:HAS_ACCOUNT]->(account)
-            RETURN COUNT(*)')"""
-            count += self.query(one_level)[0].value()
+        one_level = f"""
+        CALL apoc.periodic.commit('
+        MATCH (origin:{label})<-[:HAS_ACCOUNT]-(account:Account)
+        WHERE NOT (origin)-[:HAS_ACCOUNT*5]->(account:Account)
+        WITH origin, account limit 5000
+        MERGE (origin)-[edge:HAS_ACCOUNT]->(account)
+        SET edge.distance = 1 
+        SET edge.citation = "Direct link from account to wallets"
+        RETURN COUNT(*)')"""
+        count += self.query(one_level)[0].value()
 
-            two_level = f"""
-            CALL apoc.periodic.commit('
-            MATCH (origin:{lab})-[:HAS_ACCOUNT]->(:Account)-[:HAS_ACCOUNT]-(account:Account)
-            WHERE NOT (origin)-[:HAS_ACCOUNT]->(account)
-            WITH origin, account limit 5000
-            MERGE (origin)-[account:HAS_ACCOUNT]->(account)
-            RETURN COUNT(*)')
-            """
-            count += self.query(two_level)[0].value()
+        two_level = f"""
+        CALL apoc.periodic.commit('
+        MATCH (origin:{label})-[:HAS_ACCOUNT]->(:Account)-[:HAS_ACCOUNT]-(account:Account)
+        WHERE NOT (origin)-[:HAS_ACCOUNT]->(account)
+        WITH origin, account limit 5000
+        MERGE (origin)-[edge:HAS_ACCOUNT]->(account)
+        SET edge.distance = 2 
+        SET edge.citation = "Direct link from account to wallets"
+        RETURN COUNT(*)')
+        """
+        count += self.query(two_level)[0].value()
 
 
-            three_level = f"""
-            CALL apoc.periodic.commit('
-            MATCH (origin:{lab})-[:HAS_ACCOUNT]->(:Account)-[:HAS_ACCOUNT]-(:Account)-[:HAS_ACCOUNT]-(account:Account)
-            WHERE NOT (origin)-[:HAS_ACCOUNT]->(account)
-            WITH origin, account limit 5000
-            MERGE (origin)-[account:HAS_ACCOUNT]->(account)
-            RETURN COUNT(*)')
-            """
-            count += self.query(three_level)[0].value()
+        three_level = f"""
+        CALL apoc.periodic.commit('
+        MATCH (origin:{label})-[:HAS_ACCOUNT]->(:Account)-[:HAS_ACCOUNT]-(:Account)-[:HAS_ACCOUNT]-(account:Account)
+        WHERE NOT (origin)-[:HAS_ACCOUNT]->(account)
+        WITH origin, account limit 5000
+        MERGE (origin)-[edge:HAS_ACCOUNT]->(account)
+        SET edge.distance = 3
+        SET edge.citation = "Direct link from account to wallets"
+        RETURN COUNT(*)')
+        """
+        count += self.query(three_level)[0].value()
 
-            four_level = f"""
-            CALL apoc.periodic.commit('
-            MATCH (origin:{lab})-[:HAS_ACCOUNT]->(:Account)-[:HAS_ACCOUNT]-(:Account)-[:HAS_ACCOUNT]-(:Account)-[:HAS_ACCOUNT]-(account:Account)
-            WHERE NOT (origin)-[:HAS_ACCOUNT]->(account)
-            WITH origin, account limit 5000
-            MERGE (origin)-[account:HAS_ACCOUNT]->(account)
-            RETURN COUNT(*)')"""
-            count += self.query(four_level)[0].value()
+        four_level = f"""
+        CALL apoc.periodic.commit('
+        MATCH (origin:{label})-[:HAS_ACCOUNT]->(:Account)-[:HAS_ACCOUNT]-(:Account)-[:HAS_ACCOUNT]-(:Account)-[:HAS_ACCOUNT]-(account:Account)
+        WHERE NOT (origin)-[:HAS_ACCOUNT]->(account)
+        WITH origin, account limit 5000
+        MERGE (origin)-[edge:HAS_ACCOUNT]->(account)
+        SET edge.distance = 4
+        SET edge.citation = "Direct link from account to wallets"
+        RETURN COUNT(*)')"""
+        count += self.query(four_level)[0].value()
 
-            five_level = f"""
-            CALL apoc.periodic.commit('
-            MATCH (origin:{lab})-[:HAS_ACCOUNT]->(:Account)-[:HAS_ACCOUNT]-(:Account)-[:HAS_ACCOUNT]-(:Account)-[:HAS_ACCOUNT]-(:Account)-[:HAS_ACCOUNT]-(account:Account)
-            WHERE NOT (origin)-[:HAS_ACCOUNT]->(account)
-            WITH origin, account limit 5000
-            MERGE (origin)-[account:HAS_ACCOUNT]->(account)
-            RETURN COUNT(*)')"""
-            count += self.query(five_level)[0].value()
+        five_level = f"""
+        CALL apoc.periodic.commit('
+        MATCH (origin:{label})-[:HAS_ACCOUNT]->(:Account)-[:HAS_ACCOUNT]-(:Account)-[:HAS_ACCOUNT]-(:Account)-[:HAS_ACCOUNT]-(:Account)-[:HAS_ACCOUNT]-(account:Account)
+        WHERE NOT (origin)-[:HAS_ACCOUNT]->(account)
+        WITH origin, account limit 5000
+        MERGE (origin)-[edge:HAS_ACCOUNT]->(account)
+        SET edge.distance = 5
+        SET edge.citation = "Direct link from account to wallets"
+        RETURN COUNT(*)')"""
+        count += self.query(five_level)[0].value()
 
-            six_level = f"""
-            CALL apoc.periodic.commit('
-            MATCH (origin:{lab})-[:HAS_ACCOUNT]->(:Account)-[:HAS_ACCOUNT]-(:Account)-[:HAS_ACCOUNT]-(:Account)-[:HAS_ACCOUNT]-(:Account)-[:HAS_ACCOUNT]-(:Account)-[:HAS_ACCOUNT]-(account:Account)
-            WHERE NOT (origin)-[:HAS_ACCOUNT]->(account)
-            WITH origin, account limit 5000
-            MERGE (origin)-[account:HAS_ACCOUNT]->(account)
-            RETURN COUNT(*)')"""
-            count += self.query(six_level)[0].value()
+        six_level = f"""
+        CALL apoc.periodic.commit('
+        MATCH (origin:{label})-[:HAS_ACCOUNT]->(:Account)-[:HAS_ACCOUNT]-(:Account)-[:HAS_ACCOUNT]-(:Account)-[:HAS_ACCOUNT]-(:Account)-[:HAS_ACCOUNT]-(:Account)-[:HAS_ACCOUNT]-(account:Account)
+        WHERE NOT (origin)-[:HAS_ACCOUNT]->(account)
+        WITH origin, account limit 5000
+        MERGE (origin)-[edge:HAS_ACCOUNT]->(account)
+        SET edge.distance = 6
+        SET edge.citation = "Direct link from account to wallets"
+        RETURN COUNT(*)')"""
+        count += self.query(six_level)[0].value()
 
-            return count 
+        return count 
