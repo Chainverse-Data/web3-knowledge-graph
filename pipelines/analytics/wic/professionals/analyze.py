@@ -10,44 +10,54 @@ class ProfessionalsAnalysis(WICAnalysis):
            "DaoContributors": {
                 "OpsAdmin": {
                         "type": TYPES["experiences"],
+                        "definition": "TBD",
                         "call": self.process_org_wallet_deployers
                     },
                 "GovernanceAdmin": {
                         "type": TYPES["experiences"],
+                        "definition": "TBD",
                         "call": self.process_org_snapshot_contributors
                     },
                 "MultisigSigner": {
                         "type": TYPES["experiences"],
+                        "definition": "TBD",
                         "call": self.process_org_multisig_signers
                     },
                 "TokenContractDeployer": {
                         "type": TYPES["professions"],
+                        "definition": "TBD",
                         "call": self.process_token_contract_deployer_wallets
                     }
            },
             "Company": {
                 "Founder": {
                         "type": TYPES["professions"],
+                        "definition": "TBD",
                         "call": self.process_founder_bios
                     },
                 "Investor": {
                         "type": TYPES["professions"],
+                        "definition": "TBD",
                         "call": self.process_investor_bios
                     },
                 "Marketer": {
                         "type": TYPES["professions"],
+                        "definition": "TBD",
                         "call": self.process_marketers_bios
                     },
                 "CompanyOfficer": {
                         "type": TYPES["professions"],
+                        "definition": "TBD",
                         "call": self.process_company_officer_bios
                     },
                 "CommunityLead": {
                         "type": TYPES["professions"],
+                        "definition": "TBD",
                         "call": self.process_community_people_bios
                     },
                 "DeveloperRelationProfessional": {
                         "type": TYPES["professions"],
+                        "definition": "TBD",
                         "call": self.process_devrel_bios
                     }
             }
