@@ -1,12 +1,14 @@
 
 
+import logging
 from .cyphers import AccountsCyphers
 from ..helpers import Processor
 
 class AccountsProcessor(Processor):
     def __init__(self):
         self.cyphers = AccountsCyphers()
-        self.account_types_labels = ["Wallet", "Twitter", "Github", "Gitcoin", "Email", "Farcaster"]
+        self.account_types_labels = ["Wallet", "Twitter", "Github", "Gitcoin", "Email", "Farcaster", "Substack",
+        "Medium", "Sound", "Dune", "Mirror", "Website", "Telegram", "Discord", "Linktree"]
         super().__init__(bucket_name="accounts-processing")
 
     def process_acount_types(self):
@@ -27,6 +29,12 @@ class AccountsProcessor(Processor):
 
     def process_mirror_author_ref_twitter(self):
         self.cyphers.link_mirror_authors_to_twitter(threshold=3, proportion=0.8)
+
+    def process_connect_accounts_for_convenience(self):
+        labels = ['Wallet', 'Twitter']
+        for label in labels:
+            logging.info(f"Connecting {labels} by distance")
+            self.cyphers.connect_accounts_to_wallets_by_distance(label)
 
     def run(self):
         self.process_wallets_account_labeling()
