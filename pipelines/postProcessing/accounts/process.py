@@ -15,6 +15,10 @@ class AccountsProcessor(Processor):
         for label in self.account_types_labels:
             self.cyphers.set_account_type(label)
 
+    def process_mirror_accounts(self):
+        self.cyphers.create_mirror_accounts()
+        self.cyphers.link_mirror_accounts()
+
     def process_wallets_account_labeling(self):
         self.cyphers.set_wallet_account_label()
 
