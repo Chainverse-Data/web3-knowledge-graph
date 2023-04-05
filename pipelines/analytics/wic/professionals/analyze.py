@@ -8,73 +8,51 @@ class ProfessionalsAnalysis(WICAnalysis):
     def __init__(self):
         self.conditions = {
            "DaoContributors": {
-                "CommunityWalletDeployers": {
-                        "type": TYPES["interests"],
-                        "definition": "TBD",
+                "OpsAdmin": {
+                        "type": TYPES["experiences"],
                         "call": self.process_org_wallet_deployers
                     },
-                "SnapshotContributors": {
-                        "type": TYPES["interests"],
-                        "definition": "TBD",
+                "GovernanceAdmin": {
+                        "type": TYPES["experiences"],
                         "call": self.process_org_snapshot_contributors
                     },
-                "CommunityMultisigSigners": {
-                        "type": TYPES["interests"],
-                        "definition": "TBD",
+                "MultisigSigner": {
+                        "type": TYPES["experiences"],
                         "call": self.process_org_multisig_signers
+                    },
+                "TokenContractDeployer": {
+                        "type": TYPES["professions"],
+                        "call": self.process_token_contract_deployer_wallets
                     }
            },
-            "Web3Professionals": {
-                "TokenContractDeployers": {
-                        "type": TYPES["interests"],
-                        "definition": "TBD",
-                        "call": self.process_token_contract_deployer_wallets
-                    },
-                "Founders": {
-                        "type": TYPES["interests"],
-                        "definition": "TBD",
+            "Company": {
+                "Founder": {
+                        "type": TYPES["professions"],
                         "call": self.process_founder_bios
                     },
-                "Investors": {
-                        "type": TYPES["interests"],
-                        "definition": "TBD",
+                "Investor": {
+                        "type": TYPES["professions"],
                         "call": self.process_investor_bios
                     },
-                "Marketers": {
-                        "type": TYPES["interests"],
-                        "definition": "TBD",
+                "Marketer": {
+                        "type": TYPES["professions"],
                         "call": self.process_marketers_bios
                     },
                 "CompanyOfficer": {
-                        "type": TYPES["interests"],
-                        "definition": "TBD",
+                        "type": TYPES["professions"],
                         "call": self.process_company_officer_bios
                     },
-                "CommunityLeads": {
-                        "type": TYPES["interests"],
-                        "definition": "TBD",
+                "CommunityLead": {
+                        "type": TYPES["professions"],
                         "call": self.process_community_people_bios
                     },
-                "DeveloperRelations": {
-                        "type": TYPES["interests"],
-                        "definition": "TBD",
+                "DeveloperRelationProfessional": {
+                        "type": TYPES["professions"],
                         "call": self.process_devrel_bios
-                    }
-            },
-            "Influencers": {
-                "TwitterInfluencers": {
-                        "type": TYPES["interests"],
-                        "definition": "TBD",
-                        "call": self.process_twitter_influencers
-                    },
-                "Podcasters": {
-                        "type": TYPES["interests"],
-                        "definition": "TBD",
-                        "call": self.process_podcaster_bios
                     }
             }
         }
-        self.subgraph_name = "Professionals"
+        self.subgraph_name = "Professions"
         self.cyphers = ProfessionalsCyphers(self.subgraph_name, self.conditions)
         super().__init__("wic-professionals")
  
