@@ -144,3 +144,70 @@ class CreatorsCollectorsCypher(WICCypher):
         count = self.query(query)[0].value()
 
         return count 
+
+    @count_query_logging
+    def get_web3_musicians(self, context):
+        count = 0 
+        ### gets sound.xyz artists
+        soundQuery = f"""
+        MATCH (wallet:Wallet)-[:HAS_ACCOUNT]->(sound:Sound:Account)
+        MATCH (context:_Wic:_{self.subgraph_name}:_{context})
+        WITH wallet, context
+        MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
+        RETURN COUNT(DISTINCT(wallet))
+        """
+        count += self.query(soundQuery)
+
+        ## do some silly bio query shit
+        queries = ["'recording' AND 'artist'", "'music' AND 'artist'", "'music' AND 'performance'", "'music' AND 'producer'", "'artist' AND 'music'", "'rapper", "'rap artist", "'music' AND 'performance'"]
+        for query in queries:
+            bioQuery = f"""
+            CALL db.index.fulltext.queryNodes("wicBios", "{query}")
+            YIELD node
+            UNWIND node AS musician
+            WITH musician
+            MATCH (wallet:Wallet)-[:HAS_ACCOUNT]->(musician)
+            WITH wallet
+            MATCH (wic:_Wic:_Context:_{self.subgraph_name}:_{context})
+            MERGE (wallet)-[con:_HAS_CONTEXT->(wic)
+            RETURN COUNT(DISTINCT(wallet))
+            """
+            count += self.query(bioQuery)[0].value()
+
+        return count
+
+
+    @count_query_logging
+    def get_web3_music_collectors(self, context):
+        count = 0 
+        ### gets collectors acc. neume
+        neumeQuery = f"""
+        MATCH  (wallet:Wallet)-[:HOLDS_TOKEN]->(music:Token:MusicNft)
+        MATCH (context:_Context:_Wic:_{self.subgraph_name}:_{context})
+        WITH wallet, context
+        MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
+        RETURN COUNT(DISTINCT(wallet))
+        """
+        count += self.query(neumeQuery)[0].value()
+
+        return count
+
+    def get_dune_dashboard_wizards(self, context):
+        ## folows = stars
+        query = f"""
+        MATCH (wallet:Wallet)-[:HAS_ACCOUNT]->(dune:Dune:Account)
+        WITH apoc.agg.percentiles(dune.follows)[2] as cutoff
+        MATCH (wallet:Wallet)-[:HAS_ACCOUNT]->(dune:Dune:Account)
+        WHERE dune.follows > cutoff
+        WITH wallet
+        MATCH (context:_Wic:_Context:_{self.subgraph_name}:_{context})
+        WITH wallet, context
+        MERGE (wallet)-[con:_HAS_CONTEXT]_>(context)
+        RETURN COUNT(DISTINCT(wallet))
+        """
+        count = self.query(query)[0].value()
+
+        return count 
+
+        
+            
