@@ -6,13 +6,18 @@ class DevelopersAnalysis(WICAnalysis):
     """This class builds the seed for the developer subgraph in Neo4j"""
     def __init__(self):
         self.conditions = {
-            "DevContributor": {
-                "DevAccount": 
+            "Web3Developers": {
+                "GithubAccount": 
                     {
                         "type": TYPES["interests"],
                         "definition": "This wallet has a GitHub account.",
                         "call": self.process_dev_accounts
                     },
+                "DuneAccount": {
+                    "type": TYPES['interests'],
+                    "definition": "blah",
+                    "call": self.process_dune_accounts
+                },
                 "GitcoinBountyFulfill":
                     {
                         "type": TYPES["experiences"],
@@ -25,7 +30,7 @@ class DevelopersAnalysis(WICAnalysis):
                     "type": TYPES["experiences"]
                 }
             },
-            "DevEcosystem": {
+            "TechnicalEcosystemDevelopment": {
                 "GitcoinBountyAdmin": 
                     {
                         "call": self.process_gitcoin_bounty_admin,
@@ -49,6 +54,9 @@ class DevelopersAnalysis(WICAnalysis):
     
     def process_gitcoin_bounty_admin(self, context):
         self.cyphers.gitcoin_bounty_admin(context)
+
+    def process_dune_accounts(self, context):
+        self.cyphers.process_dune_accounts(context)
 
     def run(self):
         self.process_conditions()
