@@ -75,7 +75,7 @@ class Alchemy(Requests):
         }
         if DEBUG: logging.debug(f"Calling url: {self.alchemy_api_url[chain]} with payload: {payload}")
         response_data = self.post_request(self.alchemy_api_url[chain], json=payload, headers=self.headers, return_json=True)
-        if response_data and "result" in response_data:
+        if response_data and type(response_data) == dict and "result" in response_data:
             result = response_data.get("result", {})
             return result
         else:
