@@ -17,14 +17,14 @@ class CreatorsCollectorsAnalysis(WICAnalysis):
                     "call": self.process_mirror_collectors
                },
                "BlueChipNftCollector": {
-                "type": TYPES['experiences'],
-                "definition": "TBD",
-                "call": self.process_blue_chip_nfts
+                    "type": TYPES['experiences'],
+                    "definition": "TBD",
+                    "call": self.process_blue_chip_nfts
                },
                "ThreeLetterEnsName": {
-                "type": TYPES['experiences'],
-                "definition": "TBD",
-                "call": self.process_three_ens
+                    "type": TYPES['experiences'],
+                    "definition": "TBD",
+                    "call": self.process_three_ens
                },
                "Web3MusicCollector": {
                     "type": TYPES['experiences'],
@@ -34,17 +34,17 @@ class CreatorsCollectorsAnalysis(WICAnalysis):
            },
            "Creators": {
                 "Web3Writer": {
-                    "types": TYPES['influence'],
+                    "type": TYPES['influence'],
                     "definition": "TBD",
                     "call": self.process_writing
                 },
                 "Web3Musician": {
-                    "types": TYPES['influence'],
+                    "type": TYPES['influence'],
                     "definition": "TBD",
                     "call": self.process_web3_musicians
                 },
                 "DuneDashboardWizard": {
-                    "types": TYPES['influence'],
+                    "type": TYPES['influence'],
                     "definition": "TBD",
                     "call": self.process_dune_wizards
                 }
@@ -57,10 +57,12 @@ class CreatorsCollectorsAnalysis(WICAnalysis):
                 },
                 "BlurPowerUser": {
                     "type": TYPES['experiences'],
+                    "definition": "TBD",
                     "call": self.process_blur_power_users
                 },
                 "NftCollateralizedBorrowers": {
                     "type": TYPES['experiences'],
+                    "definition": "TBD",
                     "call": self.process_nft_collat_borrowers
                 }
            }
