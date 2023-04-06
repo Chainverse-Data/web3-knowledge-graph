@@ -128,14 +128,14 @@ class CreatorsCollectorsCypher(WICCypher):
         MATCH (author:Wallet)-[r:AUTHOR]->(a:Mirror)
         MATCH (author:Wallet)-[:_HAS_CONTEXT]->(wic:_Wic:_Context)
         WHERE NOT (author)-[:_HAS_CONTEXT]->(:_Farmers)
-        WITH wallet, count(distinct(wic)) as wics
+        WITH author, count(distinct(wic)) as wics
         WHERE wics >= 1
         WITH author
-        MATCH (author:Wallet)-[r:AUTHOR]->(a:Mirror)
-        WITH wallet, count(distinct(a)) as arts
+        MATCH (author)-[r:AUTHOR]->(article:Mirror)
+        WITH author, count(distinct(article)) as arts
         WHERE arts >= 2
-        MATCH (author:Wallet)-[r:AUTHOR]->(a:Mirror)-[:HAS_NFT]-(:ERC721)-[:HOLDS_TOKEN]-(collector:Wallet)
-        WITH collector, count(distinct(a)) as arts
+        MATCH (author)-[r:AUTHOR]->(article)-[:HAS_NFT]-(:ERC721)-[:HOLDS_TOKEN]-(collector:Wallet)
+        WITH collector, count(distinct(article)) as arts
         WHERE arts >= 2
         MATCH (wic:_Wic:_Context:_{context}:_{self.subgraph_name})
         MERGE (collector)-[con:_HAS_CONTEXT]->(wic)
@@ -156,7 +156,7 @@ class CreatorsCollectorsCypher(WICCypher):
         MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
         RETURN COUNT(DISTINCT(wallet))
         """
-        count += self.query(soundQuery)
+        count = self.query(soundQuery)[0].value()
 
         ## do some silly bio query shit
         queries = ["'recording' AND 'artist'", "'music' AND 'artist'", "'music' AND 'performance'", "'music' AND 'producer'", "'artist' AND 'music'", "'rapper", "'rap artist", "'music' AND 'performance'"]
@@ -169,7 +169,7 @@ class CreatorsCollectorsCypher(WICCypher):
             MATCH (wallet:Wallet)-[:HAS_ACCOUNT]->(musician)
             WITH wallet
             MATCH (wic:_Wic:_Context:_{self.subgraph_name}:_{context})
-            MERGE (wallet)-[con:_HAS_CONTEXT->(wic)
+            MERGE (wallet)-[con:_HAS_CONTEXT]->(wic)
             RETURN COUNT(DISTINCT(wallet))
             """
             count += self.query(bioQuery)[0].value()
@@ -202,7 +202,7 @@ class CreatorsCollectorsCypher(WICCypher):
         WITH wallet
         MATCH (context:_Wic:_Context:_{self.subgraph_name}:_{context})
         WITH wallet, context
-        MERGE (wallet)-[con:_HAS_CONTEXT]_>(context)
+        MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
         RETURN COUNT(DISTINCT(wallet))
         """
         count = self.query(query)[0].value()
