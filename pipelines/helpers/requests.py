@@ -1,8 +1,10 @@
 import logging
 import time
+from typing import Any
 import requests
 import urllib3
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+from urllib3.exceptions import InsecureRequestWarning
+urllib3.disable_warnings(InsecureRequestWarning)
 import gql
 from gql.transport.aiohttp import AIOHTTPTransport, log as gql_log
 
@@ -24,7 +26,7 @@ class Requests:
                     retry_on_403: bool = False, 
                     retry_on_404: bool = True, 
                     counter: int = 0, 
-                    max_retries: int = 10) -> None | dict | str | requests.models.Response:
+                    max_retries: int = 10) -> dict | str | requests.models.Response | None:
         """This makes a GET request to a url and return the data.
         It can take params and headers as parameters following python's request library.
         The method can return the raw request content, you must then parse the content with the correct parser.
