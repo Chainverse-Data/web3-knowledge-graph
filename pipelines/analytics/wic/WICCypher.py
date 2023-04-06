@@ -1,3 +1,4 @@
+import logging
 from ...helpers.decorators import count_query_logging
 from ...helpers import Cypher, Indexes
 
@@ -55,6 +56,7 @@ class WICCypher(Cypher):
         count = 0
         for condition in self.conditions:
             for context in self.conditions[condition]:
+                logging.info(f"Creating {context}")
                 context_type = self.conditions[condition][context]["type"]
                 definition = self.conditions[condition][context]["definition"]
                 if "subcontexts" in self.conditions[condition][context]:
