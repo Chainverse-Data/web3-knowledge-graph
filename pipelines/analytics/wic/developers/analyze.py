@@ -56,7 +56,7 @@ class DevelopersAnalysis(WICAnalysis):
         self.cyphers.gitcoin_bounty_admin(context)
 
     def process_dune_accounts(self, context):
-        self.cyphers.process_dune_accounts(context)
+        self.cyphers.identify_dune_accounts(context)
 
     def run(self):
         self.process_conditions()
