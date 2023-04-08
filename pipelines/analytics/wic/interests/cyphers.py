@@ -148,6 +148,7 @@ class InterestsCyphers(WICCypher):
             MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
             RETURN COUNT(DISTINCT(wallet))
         """
+        logging.info(biosQuery)
         count += self.query(biosQuery)[0].value()
 
         articlesQuery = f"""        
@@ -160,6 +161,7 @@ class InterestsCyphers(WICCypher):
             MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
             RETURN COUNT(DISTINCT(wallet))
         """
+        logging.info(articlesQuery)
         count += self.query(articlesQuery)[0].value()
 
         articlesCollectors = f"""        
@@ -172,6 +174,7 @@ class InterestsCyphers(WICCypher):
             MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
             RETURN COUNT(DISTINCT(wallet))
         """
+        logging.info(articlesCollectors)
         count += self.query(articlesCollectors)[0].value()
 
 
@@ -185,6 +188,7 @@ class InterestsCyphers(WICCypher):
             MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
             RETURN COUNT(DISTINCT(wallet))
         """
+        logging.info(grants)
         count += self.query(grants)[0].value()
 
         twitterMentioned = f"""
@@ -195,6 +199,7 @@ class InterestsCyphers(WICCypher):
             MERGE (otherWallet)-[con:_HAS_CONTEXT]->(wic)
             RETURN COUNT(DISTINCT(otherWallet))
         """
+        logging.info(twitterMentioned)
         count += self.query(twitterMentioned)[0].value()
 
         return count 
@@ -326,8 +331,7 @@ class InterestsCyphers(WICCypher):
     def find_culture(self, context):
         count = 0
         biosQuery = f"""        
-            CALL db.index.fulltext.queryNodes("wicBios", "'cultural commentary' OR 'web3 culture'
-            OR 'boys club'")
+            CALL db.index.fulltext.queryNodes("wicBios", "'cultural commentary' OR 'web3 culture' OR 'boys club'")
             YIELD node
             UNWIND node as culture 
             MATCH (wallet:Wallet)-[:HAS_ACCOUNT]-(culture)
@@ -339,8 +343,7 @@ class InterestsCyphers(WICCypher):
         count += self.query(biosQuery)[0].value()
 
         articlesQuery = f"""        
-            CALL db.index.fulltext.queryNodes("articleTitle", "'cultural commentary' OR 'web3 culture'
-            OR 'boys club'")
+            CALL db.index.fulltext.queryNodes("articleTitle", "'cultural commentary' OR 'web3 culture' OR 'boys club'")
             YIELD node
             UNWIND node as culture 
             MATCH (wallet:Wallet)-[:AUTHOR]->(culture:Article:Mirror)
@@ -352,8 +355,7 @@ class InterestsCyphers(WICCypher):
         count += self.query(articlesQuery)[0].value()
 
         articlesCollectors = f"""        
-            CALL db.index.fulltext.queryNodes("articleTitle", "'cultural commentary' OR 'web3 culture'
-            OR 'boys club'")
+            CALL db.index.fulltext.queryNodes("articleTitle", "'cultural commentary' OR 'web3 culture' OR 'boys club'")
             YIELD node
             UNWIND node as culture 
             MATCH (culture:Article:Mirror)-[:HAS_NFT]-(:ERC721)-[:HOLDS_TOKEN|HOLDS]-(wallet:Wallet)
@@ -365,8 +367,7 @@ class InterestsCyphers(WICCypher):
         count += self.query(articlesCollectors)[0].value()
 
         grants = f"""        
-            CALL db.index.fulltext.queryNodes("wicGrants", "'cultural commentary' OR 'web3 culture'
-            OR 'boys club'")
+            CALL db.index.fulltext.queryNodes("wicGrants", "'cultural commentary' OR 'web3 culture' OR 'boys club'")
             YIELD node
             UNWIND node as culture 
             MATCH (culture:Grant)-[]-(wallet:Wallet)
@@ -426,8 +427,7 @@ class InterestsCyphers(WICCypher):
         count += self.query(biosQuery)[0].value()
 
         grants = f"""        
-            CALL db.index.fulltext.queryNodes("wicGrants", "'writing' OR 'writers' OR 'rekt' OR 'publication')
-            OR 'boys club'")
+            CALL db.index.fulltext.queryNodes("wicGrants", "'writing' OR 'writers' OR 'rekt' OR 'publication') OR 'boys club'")
             YIELD node
             UNWIND node as writing 
             MATCH (culture:Grant)-[]-(wallet:Wallet)
