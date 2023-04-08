@@ -9,136 +9,128 @@ class InterestsCyphers(WICCypher):
     @count_query_logging
     def find_music_interested(self, context):
         count = 0
-        collectorsQuery = f""""
-        MATCH (wallet:Wallet)-[holds:HOLDS_TOKEN]->(token:Token:ERC721:MusicNft)
-        WITH wallet
-        MATCH (context:_Wic:_Context:_{self.subgraph_name}:_{context})
-        MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
-        RETURN COUNT(DISTINCT(wallet))
+        collectorsQuery = f"""
+            MATCH (wallet:Wallet)-[holds:HOLDS_TOKEN]->(token:Token:ERC721:MusicNft)
+            WITH wallet
+            MATCH (context:_Wic:_Context:_{self.subgraph_name}:_{context})
+            MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
+            RETURN COUNT(DISTINCT(wallet))
         """
-        logging.info(collectorsQuery)
         count += self.query(collectorsQuery)[0].value()
 
         accountsQuery = f"""
-        MATCH (wallet:Wallet)-[:HAS_ACCOUNT]->(sound:Sound:Account)
-        WITH wallet
-        MATCH (context:_Wic:_Context:_{self.subgraph_name}:_{context})
-        MERGE (wallet)-[r:_HAS_CONTEXT]->(context)
-        RETURN COUNT(DISTINCT(wallet))
+            MATCH (wallet:Wallet)-[:HAS_ACCOUNT]->(sound:Sound:Account)
+            WITH wallet
+            MATCH (context:_Wic:_Context:_{self.subgraph_name}:_{context})
+            MERGE (wallet)-[r:_HAS_CONTEXT]->(context)
+            RETURN COUNT(DISTINCT(wallet))
         """
-        logging.info(accountsQuery)
         count += self.query(accountsQuery)[0].value()
 
         biosQuery = f"""        
-        CALL db.index.fulltext.queryNodes("wicBios", "'music' OR 'album' OR 'musician' or '🎸' OR '🎷' OR '🎹'
-        OR '🎺' OR '🎤'") 
-        YIELD node
-        UNWIND node as music 
-        MATCH (wallet:Wallet)-[:HAS_ACCOUNT]-(music)
-        WITH wallet
-        MATCH (context:_Wic:_Context:_{self.subgraph_name}:_{context})
-        MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
-        RETURN COUNT(DISTINCT(wallet))"""
-        logging.info(biosQuery)
-  #      count += self.query(biosQuery)[0].value()
+            CALL db.index.fulltext.queryNodes("wicBios", "'music' OR 'album' OR 'musician' or '🎸' OR '🎷' OR '🎹' OR '🎺' OR '🎤'") 
+            YIELD node
+            UNWIND node as music 
+            MATCH (wallet:Wallet)-[:HAS_ACCOUNT]-(music)
+            WITH wallet
+            MATCH (context:_Wic:_Context:_{self.subgraph_name}:_{context})
+            MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
+            RETURN COUNT(DISTINCT(wallet))
+        """
+        count += self.query(biosQuery)[0].value()
 
         articlesQuery = f"""        
-        CALL db.index.fulltext.queryNodes("articleTitle", "'music' OR 'musician' or '🎸' OR '🎷' OR '🎹'
-        OR '🎺' OR '🎤'") 
-        YIELD node
-        UNWIND node as music 
-        MATCH (wallet:Wallet)-[:AUTHOR]->(music:Article:Mirror)
-        WITH wallet
-        MATCH (context:_Wic:_Context:_{self.subgraph_name}:_{context})
-        MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
-        RETURN COUNT(DISTINCT(wallet))"""
-        logging.info(articlesQuery)
+            CALL db.index.fulltext.queryNodes("articleTitle", "'music' OR 'musician' or '🎸' OR '🎷' OR '🎹' OR '🎺' OR '🎤'") 
+            YIELD node
+            UNWIND node as music 
+            MATCH (wallet:Wallet)-[:AUTHOR]->(music:Article:Mirror)
+            WITH wallet
+            MATCH (context:_Wic:_Context:_{self.subgraph_name}:_{context})
+            MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
+            RETURN COUNT(DISTINCT(wallet))
+        """
         count += self.query(articlesQuery)[0].value()
 
         articlesCollectors = f"""        
-        CALL db.index.fulltext.queryNodes("articleTitle", "'music' OR 'musician' or '🎸' OR '🎷' OR '🎹'
-        OR '🎺' OR '🎤'") 
-        YIELD node
-        UNWIND node as music 
-        MATCH (music:Article:Mirror)-[:HAS_NFT]-(:ERC721)-[:HOLDS_TOKEN|HOLDS]-(wallet:Wallet)
-        WITH wallet
-        MATCH (context:_Wic:_Context:_{self.subgraph_name}:_{context})
-        MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
-        RETURN COUNT(DISTINCT(wallet))"""
-        logging.info(articlesCollectors)
+            CALL db.index.fulltext.queryNodes("articleTitle", "'music' OR 'musician' or '🎸' OR '🎷' OR '🎹' OR '🎺' OR '🎤'") 
+            YIELD node
+            UNWIND node as music 
+            MATCH (music:Article:Mirror)-[:HAS_NFT]-(:ERC721)-[:HOLDS_TOKEN|HOLDS]-(wallet:Wallet)
+            WITH wallet
+            MATCH (context:_Wic:_Context:_{self.subgraph_name}:_{context})
+            MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
+            RETURN COUNT(DISTINCT(wallet))
+        """
         count += self.query(articlesCollectors)[0].value()
         
         twitterMentioned = f"""
-        MATCH (wic:_Wic:_Context:_{context}:_{self.subgraph_name})
-        MATCH (wallet:Wallet)-[:HAS_ACCOUNT]-(twitter:Twitter)
-        MATCH (otherWallet)-[:HAS_ACCOUNT]-(:Twitter)-[:BIO_MENTIONED]-(twitter)
-        WITH otherWallet, context
-        MERGE (otherWallet)-[con:_HAS_CONTEXT]->(wic)
-        RETURN COUNT(DISTINCT(otherWallet))
+            MATCH (context:_Wic:_Context:_{context}:_{self.subgraph_name})
+            MATCH (wallet:Wallet)-[:HAS_ACCOUNT]-(twitter:Twitter)
+            MATCH (otherWallet)-[:HAS_ACCOUNT]-(:Twitter)-[:BIO_MENTIONED]-(twitter)
+            WITH otherWallet, context
+            MERGE (otherWallet)-[con:_HAS_CONTEXT]->(wic)
+            RETURN COUNT(DISTINCT(otherWallet))
         """
-        logging.info(twitterMentioned)
         count += self.query(twitterMentioned)[0].value()
         return count 
 
     def find_gaming_interested(self, context):
         count = 0
         biosQuery = f"""        
-        CALL db.index.fulltext.queryNodes("wicBios", "'gaming' OR 'video games' or 'gamer' OR
-         '👾' OR '🕹️'OR '🎮'")
-        YIELD node
-        UNWIND node as gaming 
-        MATCH (wallet:Wallet)-[:HAS_ACCOUNT]-(gaming)
-        WITH wallet
-        MATCH (context:_Wic:_Context:_{self.subgraph_name}:_{context})
-        MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
-        RETURN COUNT(DISTINCT(wallet))"""
-        logging.info(biosQuery)
+            CALL db.index.fulltext.queryNodes("wicBios", "'gaming' OR 'video games' or 'gamer' OR '👾' OR '🕹️'OR '🎮'")
+            YIELD node
+            UNWIND node as gaming 
+            MATCH (wallet:Wallet)-[:HAS_ACCOUNT]-(gaming)
+            WITH wallet
+            MATCH (context:_Wic:_Context:_{self.subgraph_name}:_{context})
+            MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
+            RETURN COUNT(DISTINCT(wallet))
+        """
         count += self.query(biosQuery)[0].value()
 
         articlesQuery = f"""        
-        CALL db.index.fulltext.queryNodes("articleTitle", "'gaming' OR 'video games' or 'gamer' OR
-         '👾' OR '🕹️'OR '🎮'")
-        YIELD node
-        UNWIND node as music 
-        MATCH (wallet:Wallet)-[:AUTHOR]->(music:Article:Mirror)
-        WITH wallet
-        MATCH (context:_Wic:_Context:_{self.subgraph_name}:_{context})
-        MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
-        RETURN COUNT(DISTINCT(wallet))"""
-        logging.info(articlesQuery)
+            CALL db.index.fulltext.queryNodes("articleTitle", "'gaming' OR 'video games' or 'gamer' OR '👾' OR '🕹️'OR '🎮'")
+            YIELD node
+            UNWIND node as music 
+            MATCH (wallet:Wallet)-[:AUTHOR]->(music:Article:Mirror)
+            WITH wallet
+            MATCH (context:_Wic:_Context:_{self.subgraph_name}:_{context})
+            MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
+            RETURN COUNT(DISTINCT(wallet))
+        """
         count += self.query(articlesQuery)[0].value()
 
         articlesCollectors = f"""        
-        CALL db.index.fulltext.queryNodes("articleTitle", "'gaming' OR 'video games' or 'gamer' OR
-         '👾' OR '🕹️'OR '🎮'")
-        YIELD node
-        UNWIND node as gaming 
-        MATCH (gaming:Article:Mirror)-[:HAS_NFT]-(:ERC721)-[:HOLDS_TOKEN|HOLDS]-(wallet:Wallet)
-        WITH wallet
-        MATCH (context:_Wic:_Context:_{self.subgraph_name}:_{context})
-        MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
-        RETURN COUNT(DISTINCT(wallet))"""
+            CALL db.index.fulltext.queryNodes("articleTitle", "'gaming' OR 'video games' or 'gamer' OR '👾' OR '🕹️'OR '🎮'")
+            YIELD node
+            UNWIND node as gaming 
+            MATCH (gaming:Article:Mirror)-[:HAS_NFT]-(:ERC721)-[:HOLDS_TOKEN|HOLDS]-(wallet:Wallet)
+            WITH wallet
+            MATCH (context:_Wic:_Context:_{self.subgraph_name}:_{context})
+            MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
+            RETURN COUNT(DISTINCT(wallet))
+        """
         count += self.query(articlesCollectors)[0].value()
 
         grants = f"""        
-        CALL db.index.fulltext.queryNodes("wicGrants", "'gaming' OR 'video games' or 'gamer' OR
-         '👾' OR '🕹️'OR '🎮'")
-        YIELD node
-        UNWIND node as gaming 
-        MATCH (gaming:Grant)-[]-(wallet:Wallet)
-        WITH wallet
-        MATCH (context:_Wic:_Context:_{self.subgraph_name}:_{context})
-        MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
-        RETURN COUNT(DISTINCT(wallet))"""
+            CALL db.index.fulltext.queryNodes("wicGrants", "'gaming' OR 'video games' or 'gamer' OR '👾' OR '🕹️'OR '🎮'")
+            YIELD node
+            UNWIND node as gaming 
+            MATCH (gaming:Grant)-[]-(wallet:Wallet)
+            WITH wallet
+            MATCH (context:_Wic:_Context:_{self.subgraph_name}:_{context})
+            MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
+            RETURN COUNT(DISTINCT(wallet))
+        """
         count += self.query(grants)[0].value()
 
         twitterMentioned = f"""
-        MATCH (wic:_Wic:_Context:_{context}:_{self.subgraph_name})
-        MATCH (wallet:Wallet)-[:HAS_ACCOUNT]-(twitter:Twitter)
-        MATCH (otherWallet)-[:HAS_ACCOUNT]-(:Twitter)-[:BIO_MENTIONED]-(twitter)
-        WITH otherWallet, context
-        MERGE (otherWallet)-[con:_HAS_CONTEXT]->(wic)
-        RETURN COUNT(DISTINCT(otherWallet))
+            MATCH (context:_Wic:_Context:_{context}:_{self.subgraph_name})
+            MATCH (wallet:Wallet)-[:HAS_ACCOUNT]-(twitter:Twitter)
+            MATCH (otherWallet)-[:HAS_ACCOUNT]-(:Twitter)-[:BIO_MENTIONED]-(twitter)
+            WITH otherWallet, context
+            MERGE (otherWallet)-[con:_HAS_CONTEXT]->(wic)
+            RETURN COUNT(DISTINCT(otherWallet))
         """
         count += self.query(twitterMentioned)[0].value()
 
@@ -147,59 +139,61 @@ class InterestsCyphers(WICCypher):
     def find_outdoors_interested(self, context):
         count = 0
         biosQuery = f"""        
-        CALL db.index.fulltext.queryNodes("wicBios", "'outdoors' OR 'nature' or '🏕' OR 'cabin')
-        YIELD node
-        UNWIND node as outdoors 
-        MATCH (wallet:Wallet)-[:HAS_ACCOUNT]-(outdoors)
-        WITH wallet
-        MATCH (context:_Wic:_Context:_{self.subgraph_name}:_{context})
-        MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
-        RETURN COUNT(DISTINCT(wallet))"""
+            CALL db.index.fulltext.queryNodes("wicBios", "'outdoors' OR 'nature' or '🏕' OR 'cabin')
+            YIELD node
+            UNWIND node as outdoors 
+            MATCH (wallet:Wallet)-[:HAS_ACCOUNT]-(outdoors)
+            WITH wallet
+            MATCH (context:_Wic:_Context:_{self.subgraph_name}:_{context})
+            MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
+            RETURN COUNT(DISTINCT(wallet))
+        """
         count += self.query(biosQuery)[0].value()
 
         articlesQuery = f"""        
-        CALL db.index.fulltext.queryNodes("wicBios", "'outdoors' OR 'nature' or '🏕' OR 'cabin')
-        YIELD node
-        UNWIND node as outdoors 
-        MATCH (wallet:Wallet)-[:AUTHOR]->(outdoors:Article:Mirror)
-        WITH wallet
-        MATCH (context:_Wic:_Context:_{self.subgraph_name}:_{context})
-        MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
-        RETURN COUNT(DISTINCT(wallet))"""
+            CALL db.index.fulltext.queryNodes("wicBios", "'outdoors' OR 'nature' or '🏕' OR 'cabin')
+            YIELD node
+            UNWIND node as outdoors 
+            MATCH (wallet:Wallet)-[:AUTHOR]->(outdoors:Article:Mirror)
+            WITH wallet
+            MATCH (context:_Wic:_Context:_{self.subgraph_name}:_{context})
+            MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
+            RETURN COUNT(DISTINCT(wallet))
+        """
         count += self.query(articlesQuery)[0].value()
 
         articlesCollectors = f"""        
-        CALL db.index.fulltext.queryNodes("articleTitle", "'outdoors' OR 'nature' or '🏕' OR 'cabin')
-        YIELD node
-        YIELD node
-        UNWIND node as gaming 
-        MATCH (gaming:Article:Mirror)-[:HAS_NFT]-(:ERC721)-[:HOLDS_TOKEN|HOLDS]-(wallet:Wallet)
-        WITH wallet
-        MATCH (context:_Wic:_Context:_{self.subgraph_name}:_{context})
-        MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
-        RETURN COUNT(DISTINCT(wallet))"""
+            CALL db.index.fulltext.queryNodes("articleTitle", "'outdoors' OR 'nature' or '🏕' OR 'cabin')
+            YIELD node
+            YIELD node
+            UNWIND node as gaming 
+            MATCH (gaming:Article:Mirror)-[:HAS_NFT]-(:ERC721)-[:HOLDS_TOKEN|HOLDS]-(wallet:Wallet)
+            WITH wallet
+            MATCH (context:_Wic:_Context:_{self.subgraph_name}:_{context})
+            MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
+            RETURN COUNT(DISTINCT(wallet))
+        """
         count += self.query(articlesCollectors)[0].value()
 
 
         grants = f"""        
-        CALL db.index.fulltext.queryNodes("wicGrants", "'outdoors' OR 'nature' or '🏕' OR 'cabin')
-        YIELD node
-        YIELD node
-        UNWIND node as outdoors 
-        MATCH (outdoors:Grant)-[]-(wallet:Wallet)
-        WITH wallet
-        MATCH (context:_Wic:_Context:_{self.subgraph_name}:_{context})
-        MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
-        RETURN COUNT(DISTINCT(wallet))"""
+            CALL db.index.fulltext.queryNodes("wicGrants", "'outdoors' OR 'nature' or '🏕' OR 'cabin')
+            YIELD node
+            UNWIND node as outdoors 
+            MATCH (outdoors:Grant)-[]-(wallet:Wallet)
+            WITH wallet
+            MATCH (context:_Wic:_Context:_{self.subgraph_name}:_{context})
+            MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
+            RETURN COUNT(DISTINCT(wallet))"""
         count += self.query(grants)[0].value()
 
         twitterMentioned = f"""
-        MATCH (wic:_Wic:_Context:_{context}:_{self.subgraph_name})
-        MATCH (wallet:Wallet)-[:HAS_ACCOUNT]-(twitter:Twitter)
-        MATCH (otherWallet)-[:HAS_ACCOUNT]-(:Twitter)-[:BIO_MENTIONED]-(twitter)
-        WITH otherWallet, context
-        MERGE (otherWallet)-[con:_HAS_CONTEXT]->(wic)
-        RETURN COUNT(DISTINCT(otherWallet))
+            MATCH (context:_Wic:_Context:_{context}:_{self.subgraph_name})
+            MATCH (wallet:Wallet)-[:HAS_ACCOUNT]-(twitter:Twitter)
+            MATCH (otherWallet)-[:HAS_ACCOUNT]-(:Twitter)-[:BIO_MENTIONED]-(twitter)
+            WITH otherWallet, context
+            MERGE (otherWallet)-[con:_HAS_CONTEXT]->(wic)
+            RETURN COUNT(DISTINCT(otherWallet))
         """
         count += self.query(twitterMentioned)[0].value()
 
@@ -254,7 +248,7 @@ class InterestsCyphers(WICCypher):
         count += self.query(grants)[0].value()
 
         twitterMentioned = f"""
-        MATCH (wic:_Wic:_Context:_{context}:_{self.subgraph_name})
+        MATCH (context:_Wic:_Context:_{context}:_{self.subgraph_name})
         MATCH (wallet:Wallet)-[:HAS_ACCOUNT]-(twitter:Twitter)
         MATCH (otherWallet)-[:HAS_ACCOUNT]-(:Twitter)-[:BIO_MENTIONED]-(twitter)
         WITH otherWallet, context
@@ -314,7 +308,7 @@ class InterestsCyphers(WICCypher):
         count += self.query(grants)[0].value()
 
         twitterMentioned = f"""
-        MATCH (wic:_Wic:_Context:_{context}:_{self.subgraph_name})
+        MATCH (context:_Wic:_Context:_{context}:_{self.subgraph_name})
         MATCH (wallet:Wallet)-[:HAS_ACCOUNT]-(twitter:Twitter)
         MATCH (otherWallet)-[:HAS_ACCOUNT]-(:Twitter)-[:BIO_MENTIONED]-(twitter)
         WITH otherWallet, context
@@ -378,7 +372,7 @@ class InterestsCyphers(WICCypher):
         count += self.query(grants)[0].value()
 
         twitterMentioned = f"""
-        MATCH (wic:_Wic:_Context:_{context}:_{self.subgraph_name})
+        MATCH (context:_Wic:_Context:_{context}:_{self.subgraph_name})
         MATCH (wallet:Wallet)-[:HAS_ACCOUNT]-(twitter:Twitter)
         MATCH (otherWallet)-[:HAS_ACCOUNT]-(:Twitter)-[:BIO_MENTIONED]-(twitter)
         WITH otherWallet, context
@@ -438,7 +432,7 @@ class InterestsCyphers(WICCypher):
         count += self.query(grants)[0].value()
 
         twitterMentioned = f"""
-        MATCH (wic:_Wic:_Context:_{context}:_{self.subgraph_name})
+        MATCH (context:_Wic:_Context:_{context}:_{self.subgraph_name})
         MATCH (wallet:Wallet)-[:HAS_ACCOUNT]-(twitter:Twitter)
         MATCH (otherWallet)-[:HAS_ACCOUNT]-(:Twitter)-[:BIO_MENTIONED]-(twitter)
         WITH otherWallet, context
@@ -498,7 +492,7 @@ class InterestsCyphers(WICCypher):
         count += self.query(grants)[0].value()
 
         twitterMentioned = f"""
-        MATCH (wic:_Wic:_Context:_{context}:_{self.subgraph_name})
+        MATCH (context:_Wic:_Context:_{context}:_{self.subgraph_name})
         MATCH (wallet:Wallet)-[:HAS_ACCOUNT]-(twitter:Twitter)
         MATCH (otherWallet)-[:HAS_ACCOUNT]-(:Twitter)-[:BIO_MENTIONED]-(twitter)
         WITH otherWallet, context
@@ -558,7 +552,7 @@ class InterestsCyphers(WICCypher):
         count += self.query(grants)[0].value()
 
         twitterMentioned = f"""
-        MATCH (wic:_Wic:_Context:_{context}:_{self.subgraph_name})
+        MATCH (context:_Wic:_Context:_{context}:_{self.subgraph_name})
         MATCH (wallet:Wallet)-[:HAS_ACCOUNT]-(twitter:Twitter)
         MATCH (otherWallet)-[:HAS_ACCOUNT]-(:Twitter)-[:BIO_MENTIONED]-(twitter)
         WITH otherWallet, context
@@ -618,7 +612,7 @@ class InterestsCyphers(WICCypher):
         count += self.query(grants)[0].value()
 
         twitterMentioned = f"""
-        MATCH (wic:_Wic:_Context:_{context}:_{self.subgraph_name})
+        MATCH (context:_Wic:_Context:_{context}:_{self.subgraph_name})
         MATCH (wallet:Wallet)-[:HAS_ACCOUNT]-(twitter:Twitter)
         MATCH (otherWallet)-[:HAS_ACCOUNT]-(:Twitter)-[:BIO_MENTIONED]-(twitter)
         WITH otherWallet, context
@@ -677,7 +671,7 @@ class InterestsCyphers(WICCypher):
         count += self.query(grants)[0].value()
 
         twitterMentioned = f"""
-        MATCH (wic:_Wic:_Context:_{context}:_{self.subgraph_name})
+        MATCH (context:_Wic:_Context:_{context}:_{self.subgraph_name})
         MATCH (wallet:Wallet)-[:HAS_ACCOUNT]-(twitter:Twitter)
         MATCH (otherWallet)-[:HAS_ACCOUNT]-(:Twitter)-[:BIO_MENTIONED]-(twitter)
         WITH otherWallet, context
@@ -736,7 +730,7 @@ class InterestsCyphers(WICCypher):
         count += self.query(grants)[0].value()
 
         twitterMentioned = f"""
-        MATCH (wic:_Wic:_Context:_{context}:_{self.subgraph_name})
+        MATCH (context:_Wic:_Context:_{context}:_{self.subgraph_name})
         MATCH (wallet:Wallet)-[:HAS_ACCOUNT]-(twitter:Twitter)
         MATCH (otherWallet)-[:HAS_ACCOUNT]-(:Twitter)-[:BIO_MENTIONED]-(twitter)
         WITH otherWallet, context
@@ -745,15 +739,3 @@ class InterestsCyphers(WICCypher):
         """
         count += self.query(twitterMentioned)[0].value()
         return count
-
-
-
-
-
-
-
-
-
-
-
-
