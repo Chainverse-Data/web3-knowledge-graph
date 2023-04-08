@@ -10,44 +10,64 @@ class CreatorsCollectorsAnalysis(WICAnalysis):
     def __init__(self):
         self.subgraph_name = 'CreatorsCollectors'
         self.conditions = {
-           "Writing": {
-               "MirrorAuthor": {
-                   "type": TYPES["influence"],
-                   "definition": "TBD",
-                   "call": self.process_writing,
-               } 
+           "Collectors": {
+               "Web3WritingCollector": {
+                    "type": TYPES['experiences'],
+                    "definition": "TBD",
+                    "call": self.process_mirror_collectors
+               },
+               "BlueChipNftCollector": {
+                    "type": TYPES['experiences'],
+                    "definition": "TBD",
+                    "call": self.process_blue_chip_nfts
+               },
+               "ThreeLetterEnsName": {
+                    "type": TYPES['experiences'],
+                    "definition": "TBD",
+                    "call": self.process_three_ens
+               },
+               "Web3MusicCollector": {
+                    "type": TYPES['experiences'],
+                    "definition": "TBD",
+                    "call": self.process_web3_music_collectors
+               }
            },
-            "BlueChip": {
-               "BlueChipNFTCollections": {
-                   "type": TYPES["experiences"],
-                   "definition": "TBD",
-                   "call": self.process_NFTs_blue_chip,
-               } 
-           },"Rarity": {
-               "ThreeLetterEns": {
-                   "type": TYPES["experiences"],
-                   "definition": "TBD",
-                   "call": self.process_three_ens,
-               } 
-            },
-            "NftMarketplacePowerUsers": {
-                "SudoswapPowerUser": {
-                   "type": TYPES["experiences"],
-                   "definition": "TBD",
-                   "call": self.process_sudo_power_users,
+           "Creators": {
+                "Web3Writer": {
+                    "type": TYPES['influence'],
+                    "definition": "TBD",
+                    "call": self.process_writing
+                },
+                "Web3Musician": {
+                    "type": TYPES['influence'],
+                    "definition": "TBD",
+                    "call": self.process_web3_musicians
+                },
+                "DuneDashboardWizard": {
+                    "type": TYPES['influence'],
+                    "definition": "TBD",
+                    "call": self.process_dune_wizards
+                }
+           },
+           "SophisticatedTraders": {
+                "SudoSwapPowerUser": {
+                    "type": TYPES['experiences'],
+                    "definition": "TBD",
+                    "call": self.process_sudo_power_users
                 },
                 "BlurPowerUser": {
-                   "type": TYPES["experiences"],
-                   "definition": "TBD",
-                   "call": self.process_blur_power_users,
+                    "type": TYPES['experiences'],
+                    "definition": "TBD",
+                    "call": self.process_blur_power_users
                 },
-                "NftCollateralizedBorrower": {
-                   "type": TYPES["interests"],
-                   "definition": "TBD",
-                   "call": self.process_nft_collat_borrowers
+                "NftCollateralizedBorrowers": {
+                    "type": TYPES['experiences'],
+                    "definition": "TBD",
+                    "call": self.process_nft_collat_borrowers
                 }
-            }
+           }
         }
+
         self.cyphers = CreatorsCollectorsCypher(self.subgraph_name, self.conditions)
         super().__init__("wic-creators-collectors")
 
@@ -62,7 +82,7 @@ class CreatorsCollectorsAnalysis(WICAnalysis):
         logging.info(f"Benchmark value for Mirror articles: {benchmark}")
         self.cyphers.cc_writers(context, benchmark)
 
-    def process_NFTs_blue_chip(self, context):
+    def process_blue_chip_nfts(self, context):
         logging.info("Identifying blue chips...")
         self.cyphers.cc_blue_chip(self.seeds_addresses, context)
 
@@ -95,6 +115,18 @@ class CreatorsCollectorsAnalysis(WICAnalysis):
     def process_mirror_collectors(self, context):
         logging.info("Idenitfying legit Mirror NFT collectors...")
         self.cyphers.get_mirror_collectors(context)
+
+    def process_web3_musicians(self, context):
+        logging.info("Finding web3 musicians...")
+        self.cyphers.get_web3_musicians(context)
+
+    def process_web3_music_collectors(self, context):
+        logging.info("getting web3 music collectors...")
+        self.cyphers.get_web3_music_collectors(context)
+
+    def process_dune_wizards(self, context):
+        logging.info("getting dune people")
+        self.cyphers.get_dune_dashboard_wizards(context)
 
     def run(self):
         self.process_conditions()

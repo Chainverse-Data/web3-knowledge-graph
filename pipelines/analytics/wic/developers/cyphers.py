@@ -67,10 +67,16 @@ class DevelopersCyphers(WICCypher):
         count = self.query(query)[0].value()
         return count 
 
-    ##def smart_contract_deployers(self):
+    @count_query_logging
+    def identify_dune_accounts(self, context):
+        query = f"""
+        MATCH (wallet:Wallet)-[r:HAS_ACCOUNT]->(dune:Dune)
+        MATCH (context:_Context:_Wic:_{self.subgraph_name}:_{context})
+        WITH wallet, context
+        MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
+        RETURN COUNT(DISTINCT(context))
+        """
+        count = self.query(query)[0].value()
 
-    ## smart contract deployers
+        return count 
 
-    ## authors of technical proposals, articles, and grants
-
-    ##
