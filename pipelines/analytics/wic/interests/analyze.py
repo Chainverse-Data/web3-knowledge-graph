@@ -5,11 +5,11 @@ import pandas as pd
 import logging
 
 class InterestsAnalysis(WICAnalysis):
-    """This class reads from the Neo4J instance for Twitter nodes to call the Twitter API and retreive extra infos"""
+    """This class reads labels wallets by interests"""
     def __init__(self):
         self.subgraph_name = "Interests"
         self.conditions = {
-            "ArtCultureEntertainment": {
+            "Art_Culture_Entertainment": {
                     "Music": {
                         "type": TYPES["interests"],
                         "definition": "TBD",
@@ -25,7 +25,7 @@ class InterestsAnalysis(WICAnalysis):
                         "definition": "TBD",
                         "call": self.process_outdoors
                     },
-                    "FilmVideo": {
+                    "Film_Video": {
                         "type": TYPES['interests'], 
                         "definition": "TBD",
                         "call": self.process_film_video
@@ -35,19 +35,19 @@ class InterestsAnalysis(WICAnalysis):
                         "definition": "TBD",
                         "call": self.process_photography
                     },
-                    "CultureCommentary": {
+                    "Culture_Commentary": {
                         "type": TYPES['interests'],
                         "definition": "TBD",
                         "call": self.process_culture
                     },
-                    "WritingPublishing": {
+                    "Writing_Publishing": {
                         "type": TYPES['interests'],
                         "definition": "TBD",
                         "call": self.process_writing_publishing
                     },
                 },
-            "ScienceTech": {
-                "DataScience": {
+            "Science_Tech": {
+                "Data_Science": {
                     "type": TYPES['interests'],
                     "definition": "TBD",
                     "call": self.process_data_science
@@ -58,13 +58,13 @@ class InterestsAnalysis(WICAnalysis):
                     "call": self.process_desci
                 }
             },
-            "SocialJustice": {
-                "DiversityEquityInclusion": {
+            "Social_Justice": {
+                "Diversity_Equity_Inclusion": {
                     "type": TYPES['interests'],
                     "definition": "TBD",
                     "call": self.process_dei
                 },
-                "RegenerativeSystems": {
+                "Regenerative_Systems": {
                     "type": TYPES['interests'],
                     "definition": "TBD",
                     "call": self.process_regen
