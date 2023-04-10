@@ -25,7 +25,7 @@ class InterestsAnalysis(WICAnalysis):
                         "definition": "TBD",
                         "call": self.process_outdoors
                     },
-                    "Film_Video": {
+                    "FilmVideo": {
                         "type": TYPES['interests'], 
                         "definition": "TBD",
                         "call": self.process_film_video
@@ -35,19 +35,19 @@ class InterestsAnalysis(WICAnalysis):
                         "definition": "TBD",
                         "call": self.process_photography
                     },
-                    "Culture_Commentary": {
+                    "CultureCommentary": {
                         "type": TYPES['interests'],
                         "definition": "TBD",
                         "call": self.process_culture
                     },
-                    "Writing_Publishing": {
+                    "WritingPublishing": {
                         "type": TYPES['interests'],
                         "definition": "TBD",
                         "call": self.process_writing_publishing
                     },
                 },
             "Science_Tech": {
-                "Data_Science": {
+                "DataScience": {
                     "type": TYPES['interests'],
                     "definition": "TBD",
                     "call": self.process_data_science
@@ -58,13 +58,13 @@ class InterestsAnalysis(WICAnalysis):
                     "call": self.process_desci
                 }
             },
-            "Social_Justice": {
-                "Diversity_Equity_Inclusion": {
+            "SocialJustice": {
+                "DiversityEquityInclusion": {
                     "type": TYPES['interests'],
                     "definition": "TBD",
                     "call": self.process_dei
                 },
-                "Regenerative_Systems": {
+                "RegenerativeSystems": {
                     "type": TYPES['interests'],
                     "definition": "TBD",
                     "call": self.process_regen
