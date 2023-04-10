@@ -92,8 +92,8 @@ wic_incentive_farming = ECSOperator(
     awslogs_stream_prefix=ecs_awslogs_stream_prefix
 )
 
-wic_creators_collectors = ECSOperator(
-    task_id="wic_creators_collectors",
+wic_creators = ECSOperator(
+    task_id="wic_creators",
     dag=dag,
     aws_conn_id="aws_ecs",
     cluster=ecs_cluster,
@@ -104,7 +104,51 @@ wic_creators_collectors = ECSOperator(
         "containerOverrides": [
             {
                 "name": "data-pipelines",
-                "command": ["python3", "-m", "pipelines.analytics.wic.creatorsCollectors.analyze"],
+                "command": ["python3", "-m", "pipelines.analytics.wic.creators.analyze"],
+                "environment": env_vars
+            },
+        ],
+    },
+    network_configuration=network_configuration,
+    awslogs_group=ecs_awslogs_group_processing,
+    awslogs_stream_prefix=ecs_awslogs_stream_prefix
+)
+
+wic_collectors = ECSOperator(
+    task_id="wic_collectors",
+    dag=dag,
+    aws_conn_id="aws_ecs",
+    cluster=ecs_cluster,
+    task_definition=ecs_task_definition_processing,
+    region_name="us-east-2",
+    launch_type="FARGATE",
+    overrides={
+        "containerOverrides": [
+            {
+                "name": "data-pipelines",
+                "command": ["python3", "-m", "pipelines.analytics.wic.collectors.analyze"],
+                "environment": env_vars
+            },
+        ],
+    },
+    network_configuration=network_configuration,
+    awslogs_group=ecs_awslogs_group_processing,
+    awslogs_stream_prefix=ecs_awslogs_stream_prefix
+)
+
+wic_traders = ECSOperator(
+    task_id="wic_traders",
+    dag=dag,
+    aws_conn_id="aws_ecs",
+    cluster=ecs_cluster,
+    task_definition=ecs_task_definition_processing,
+    region_name="us-east-2",
+    launch_type="FARGATE",
+    overrides={
+        "containerOverrides": [
+            {
+                "name": "data-pipelines",
+                "command": ["python3", "-m", "pipelines.analytics.wic.traders.analyze"],
                 "environment": env_vars
             },
         ],
@@ -247,4 +291,4 @@ wic_professionals = ECSOperator(
 )
 
 
-wic_incentive_farming >> [wic_creators_collectors, wic_developers, wic_protocol_politicians, wic_professionals, wic_public_goods]
+wic_incentive_farming >> [wic_creators, wic_collectors, wic_traders, wic_developers, wic_protocol_politicians, wic_professionals, wic_public_goods]
