@@ -42,34 +42,13 @@ class CreatorsCypher(WICCypher):
         """
         count = self.query(soundQuery)[0].value()
 
-        ## do some silly bio query shit
-        queries = ["'recording' AND 'artist'", "'music' AND 'artist'", "'music' AND 'performance'", "'music' AND 'producer'", "'artist' AND 'music'", "'rapper", "'rap artist", "'music' AND 'performance'"]
-        for query in queries:
-            bioQuery = f"""
-            CALL db.index.fulltext.queryNodes("wicBios", "{query}")
-            YIELD node
-            UNWIND node AS musician
-            WITH musician
-            MATCH (wallet:Wallet)-[:HAS_ACCOUNT]->(musician)
-            WITH wallet
-            MATCH (wic:_Wic:_Context:_{self.subgraph_name}:_{context})
-            MERGE (wallet)-[con:_HAS_CONTEXT]->(wic)
-            RETURN COUNT(DISTINCT(wallet))
-            """
-            count += self.query(bioQuery)[0].value()
-
-        return count
-
     @count_query_logging
-    def get_dune_dashboard_wizards(self, context):
+    def web3_data_analysts(self, context):
         ## folows = stars
         query = f"""
         MATCH (wallet:Wallet)-[:HAS_ACCOUNT]->(dune:Dune:Account)
-        WITH apoc.agg.percentiles(dune.follows)[2] as cutoff
-        MATCH (wallet:Wallet)-[:HAS_ACCOUNT]->(dune:Dune:Account)
-        WHERE dune.follows > cutoff
-        WITH wallet
         MATCH (context:_Wic:_Context:_{self.subgraph_name}:_{context})
+        WHERE dune.follows > 0
         WITH wallet, context
         MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
         RETURN COUNT(DISTINCT(wallet))

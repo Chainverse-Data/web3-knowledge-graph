@@ -12,17 +12,17 @@ class CreatorsCollectorsAnalysis(WICAnalysis):
         self.conditions = {
            "Creators": {
                 "Web3Writer": {
-                    "types": [TYPES['influence']],
+                    "types": [TYPES['experiences']],
                     "definition": "TBD",
                     "call": self.process_writing
                 },
                 "Web3Musician": {
-                    "types": [TYPES['influence']],
+                    "types": [TYPES['experiences']],
                     "definition": "TBD",
                     "call": self.process_web3_musicians
                 },
-                "DuneDashboardWizard": {
-                    "types": [TYPES['influence']],
+                "Web3DataAnalyst": {
+                    "types": [TYPES['experiences']],
                     "definition": "TBD",
                     "call": self.process_dune_wizards
                 }
@@ -43,7 +43,7 @@ class CreatorsCollectorsAnalysis(WICAnalysis):
 
     def process_dune_wizards(self, context):
         logging.info("getting dune people")
-        self.cyphers.get_dune_dashboard_wizards(context)
+        self.cyphers.dune_dashboard_creators(context)
 
     def run(self):
         self.process_conditions()
