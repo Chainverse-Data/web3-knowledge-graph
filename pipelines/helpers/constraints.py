@@ -32,7 +32,7 @@ class Constraints(Cypher):
         self.query(query)
 
     def aliases(self) -> None:
-        query = """CREATE CONSTRAINT UniqueAlias IF NOT EXISTS FOR (d:Alias) REQUIRE d.name IS UNIQUE"""
+        query = """CREATE CONSTRAINT UniqueAliasId IF NOT EXISTS FOR (d:Alias) REQUIRE d.name IS UNIQUE"""
         self.query(query)
 
     def ens(self) -> None:

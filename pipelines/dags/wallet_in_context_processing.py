@@ -180,28 +180,6 @@ wic_developers = ECSOperator(
     awslogs_stream_prefix=ecs_awslogs_stream_prefix
 )
 
-wic_diversity = ECSOperator(
-    task_id="wic_diversity",
-    dag=dag,
-    aws_conn_id="aws_ecs",
-    cluster=ecs_cluster,
-    task_definition=ecs_task_definition_processing,
-    region_name="us-east-2",
-    launch_type="FARGATE",
-    overrides={
-        "containerOverrides": [
-            {
-                "name": "data-pipelines",
-                "command": ["python3", "-m", "pipelines.analytics.wic.diversity.analyze"],
-                "environment": env_vars
-            },
-        ],
-    },
-    network_configuration=network_configuration,
-    awslogs_group=ecs_awslogs_group_processing,
-    awslogs_stream_prefix=ecs_awslogs_stream_prefix
-)
-
 wic_public_goods = ECSOperator(
     task_id="wic_public_goods",
     dag=dag,
@@ -237,28 +215,6 @@ wic_protocol_politicians = ECSOperator(
             {
                 "name": "data-pipelines",
                 "command": ["python3", "-m", "pipelines.analytics.wic.protocolPoliticians.analyze"],
-                "environment": env_vars
-            },
-        ],
-    },
-    network_configuration=network_configuration,
-    awslogs_group=ecs_awslogs_group_processing,
-    awslogs_stream_prefix=ecs_awslogs_stream_prefix
-)
-
-wic_early_adopters = ECSOperator(
-    task_id="wic_early_adopters",
-    dag=dag,
-    aws_conn_id="aws_ecs",
-    cluster=ecs_cluster,
-    task_definition=ecs_task_definition_processing,
-    region_name="us-east-2",
-    launch_type="FARGATE",
-    overrides={
-        "containerOverrides": [
-            {
-                "name": "data-pipelines",
-                "command": ["python3", "-m", "pipelines.analytics.wic.earlyAdopters.analyze"],
                 "environment": env_vars
             },
         ],
