@@ -56,7 +56,7 @@ class InfluencersAnalysis(WICAnalysis):
 
     def process_dune_wizard(self, context):
         logging.info("Process dune wizards...")
-        self.cyphers.identify_dune_influencers(context)
+        self.cyphers.get_dune_influencers(context)
 
     def process_twitter_influencers(self, context):
         logging.info("identifying influencers omg..")
