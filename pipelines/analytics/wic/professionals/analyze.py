@@ -61,16 +61,11 @@ class ProfessionalsAnalysis(WICAnalysis):
                         "call": self.process_devrel_bios
                     }
             },
-            "Influencer" : {
-                "TwitterInfluencer": {
-                        "types": [TYPES["influence"]],
-                        "definition": "TBD",
-                        "call": self.process_podcaster_bios
-                    },
+            "Social" : {
                 "Podcaster": {
                         "types": [TYPES["influence"]],
                         "definition": "TBD",
-                        "call": self.process_twitter_influencers
+                        "call": self.process_podcaster_bios
                     },
             }
         }
@@ -128,10 +123,6 @@ class ProfessionalsAnalysis(WICAnalysis):
         logging.info("Identifying podcasters based on bios...")
         queryString = "'podcasts' OR 'podcast'"
         self.cyphers.identify_podcasters_bios(context, queryString)
- 
-    def process_twitter_influencers(self, context):
-        logging.info("identifying influencers omg..")
-        self.cyphers.identify_twitter_influencers_bios(context)
 
     def run(self):
         self.process_conditions()

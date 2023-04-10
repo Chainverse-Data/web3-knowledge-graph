@@ -101,28 +101,6 @@ class ProfessionalsCyphers(WICCypher):
         return count
  
     @count_query_logging
-    def identify_twitter_influencers_bios(self, context):
-        query = f"""
-        MATCH (influencerTwitter:Twitter)-[:HAS_ACCOUNT]-(influencerWallet:Wallet)
-        WITH influencerTwitter, influencerWallet
-        MATCH (followerWallet:Wallet)-[:HAS_ACCOUNT]-(follower:Twitter)-[:FOLLOWS]->(influencerTwitter)
-        WITH influencerWallet, count(distinct(followerWallet)) as countFollowers
-        WHERE countFollowers >= 75
-        SET influencerWallet:InfluencerWallet"""
-        self.query(query)
- 
-        connect = f"""
-        MATCH (wallet:Wallet:InfluencerWallet)
-        MATCH (wic:_Wic:_{context}:_{self.subgraph_name})
-        WITH wallet, wic
-        MERGE (wallet)-[con:_HAS_CONTEXT]->(wic)
-        RETURN COUNT(DISTINCT(wallet))
-        """
-        count = self.query(connect)[0].value()
- 
-        return count
- 
-    @count_query_logging
     def identify_investors_bios(self, context, queryString):
  
         label = f"""
