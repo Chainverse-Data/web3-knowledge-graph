@@ -85,13 +85,13 @@ class FarmerCyphers(WICCypher):
         ## this comes from an export of a dune dashboard
         query = f"""
         MATCH (wallet:Wallet) 
-        WHERE wallet.address in {addresses}
+        WHERE wallet.address in $addresses
         WITH wallet
         MATCH (context:_Context:_Wic:_{context}:_{self.subgraph_name})
         MERGE (wallet)-[con:_CONTEXT]->(context)
         RETURN COUNT(DISTINCT(wallet))
         """
-        count = self.query(query)[0].value()
+        count = self.query(query, parameters={"addresses": addresses})[0].value()
 
         return count
 
