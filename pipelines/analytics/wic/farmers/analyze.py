@@ -7,7 +7,7 @@ import logging
 class IncentiveFarmerAnalysis(WICAnalysis):
     """This class reads from the Neo4J instance for Twitter nodes to call the Twitter API and retreive extra infos"""
     def __init__(self):
-        self.subgraph_name = "Farmers"
+        self.subgraph_name = "OpportunisticUsers"
         self.conditions = {
             "GovernanceFarming": {
                 "SuspiciousSnapshot": {
@@ -31,25 +31,14 @@ class IncentiveFarmerAnalysis(WICAnalysis):
                     }
             },
             "Spammers": {
-                "SpamContractDeployer": {
+                "SpamTokenDeployer": {
                         "types": [TYPES["experiences"]],
                         "definition": "TBD",
                         "call": self.process_spam_contract_deployment
                     }
-            },
-            "FarmersAffiliates": {
-                "FarmerCounterparty": {
-                        "types": [TYPES['experiences']],
-                        "definition": "TBD",
-                        "call": self.process_farmer_counterparties
-                },
-                "FarmerCosigner": {
-                        "types": [TYPES["experiences"]],
-                        "definition": "TBD",
-                        "call": self.process_suspicious_cosigners
-                }
+            }
         }
-    }
+    
         
         self.cyphers = FarmerCyphers(self.subgraph_name, self.conditions)
         super().__init__("wic-farming")
@@ -74,13 +63,6 @@ class IncentiveFarmerAnalysis(WICAnalysis):
     
     def process_spam_contract_deployment(self, context):
         self.cyphers.identify_spam_contract_deployers(context)
-
-    def process_farmer_counterparties(self, context):
-        self.cyphers.connect_farmer_counterparties(context)
-
-    def process_suspicious_cosigners(self, context):
-        self.cyphers.connect_cosigner_expansion(context)
-
 
     def run(self):
         self.process_conditions()
