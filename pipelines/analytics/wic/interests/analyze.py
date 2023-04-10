@@ -9,7 +9,7 @@ class InterestsAnalysis(WICAnalysis):
     def __init__(self):
         self.subgraph_name = "Interests"
         self.conditions = {
-            "Art_Culture_Entertainment": {
+            "ArtCultureEntertainment": {
                     "Music": {
                         "types": [TYPES["interests"]],
                         "definition": "TBD",
@@ -46,7 +46,7 @@ class InterestsAnalysis(WICAnalysis):
                         "call": self.process_writing_publishing
                     },
                 },
-            "Science_Tech": {
+            "ScienceTech": {
                 "DataScience": {
                     "types": [TYPES['interests']],
                     "definition": "TBD",
