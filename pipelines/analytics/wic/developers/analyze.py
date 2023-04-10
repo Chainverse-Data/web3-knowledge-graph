@@ -9,25 +9,25 @@ class DevelopersAnalysis(WICAnalysis):
             "Web3Developers": {
                 "GithubAccount": 
                     {
-                        "type": TYPES["interests"],
+                        "types": [TYPES["interests"]],
                         "definition": "This wallet has a GitHub account.",
                         "call": self.process_dev_accounts
                     },
                 "DuneAccount": {
-                    "type": TYPES['interests'],
+                    "types": [TYPES['interests']],
                     "definition": "blah",
                     "call": self.process_dune_accounts
                 },
                 "GitcoinBountyFulfill":
                     {
-                        "type": TYPES["experiences"],
+                        "types": [TYPES["experiences"]],
                         "definition": "TBD",
                         "call": self.process_bounty_fullfilers
                     },
                 "SolidityDeveloper": {
                     "call": self.process_solidity_devs,
                     "definition": "TBD",
-                    "type": TYPES["experiences"]
+                    "types": [TYPES["experiences"]]
                 }
             },
             "TechnicalEcosystemDevelopment": {
@@ -35,7 +35,7 @@ class DevelopersAnalysis(WICAnalysis):
                     {
                         "call": self.process_gitcoin_bounty_admin,
                         "definition": "TBD",
-                        "type": TYPES["experiences"]
+                        "types": [TYPES["experiences"]]
                     }
             }
         }

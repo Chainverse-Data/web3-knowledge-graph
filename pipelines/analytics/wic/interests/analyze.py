@@ -11,66 +11,66 @@ class InterestsAnalysis(WICAnalysis):
         self.conditions = {
             "Art_Culture_Entertainment": {
                     "Music": {
-                        "type": TYPES["interests"],
+                        "types": [TYPES["interests"]],
                         "definition": "TBD",
                         "call": self.process_music
                     },
                     "Gaming": {
-                        "type": TYPES['interests'],
+                        "types": [TYPES['interests']],
                         "definition": "TBD",
                         "call": self.process_gaming
                     },
                     "Outdoors": {
-                        "type": TYPES['interests'],
+                        "types": [TYPES['interests']],
                         "definition": "TBD",
                         "call": self.process_outdoors
                     },
                     "FilmVideo": {
-                        "type": TYPES['interests'], 
+                        "types": [TYPES['interests']], 
                         "definition": "TBD",
                         "call": self.process_film_video
                     },
                     "Photography": {
-                        "type": TYPES['interests'],
+                        "types": [TYPES['interests']],
                         "definition": "TBD",
                         "call": self.process_photography
                     },
                     "CultureCommentary": {
-                        "type": TYPES['interests'],
+                        "types": [TYPES['interests']],
                         "definition": "TBD",
                         "call": self.process_culture
                     },
                     "WritingPublishing": {
-                        "type": TYPES['interests'],
+                        "types": [TYPES['interests']],
                         "definition": "TBD",
                         "call": self.process_writing_publishing
                     },
                 },
             "Science_Tech": {
                 "DataScience": {
-                    "type": TYPES['interests'],
+                    "types": [TYPES['interests']],
                     "definition": "TBD",
                     "call": self.process_data_science
                 },
                 "DeSci": {
-                    "type": TYPES['interests'],
+                    "types": [TYPES['interests']],
                     "definition": "TBD",
                     "call": self.process_desci
                 }
             },
             "SocialJustice": {
                 "DiversityEquityInclusion": {
-                    "type": TYPES['interests'],
+                    "types": [TYPES['interests']],
                     "definition": "TBD",
                     "call": self.process_dei
                 },
                 "RegenerativeSystems": {
-                    "type": TYPES['interests'],
+                    "types": [TYPES['interests']],
                     "definition": "TBD",
                     "call": self.process_regen
                 },
                 "Education": {
-                    "type": TYPES['interests'],
+                    "types": [TYPES['interests']],
                     "definition": "TBD",
                     "call": self.process_education
                 }

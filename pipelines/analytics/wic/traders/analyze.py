@@ -12,17 +12,17 @@ class CreatorsCollectorsAnalysis(WICAnalysis):
         self.conditions = {
            "SophisticatedTraders": {
                 "SudoSwapPowerUser": {
-                    "type": TYPES['experiences'],
+                    "types": [TYPES['experiences']],
                     "definition": "TBD",
                     "call": self.process_sudo_power_users
                 },
                 "BlurPowerUser": {
-                    "type": TYPES['experiences'],
+                    "types": [TYPES['experiences']],
                     "definition": "TBD",
                     "call": self.process_blur_power_users
                 },
                 "NftCollateralizedBorrowers": {
-                    "type": TYPES['experiences'],
+                    "types": [TYPES['experiences']],
                     "definition": "TBD",
                     "call": self.process_nft_collat_borrowers
                 }

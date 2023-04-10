@@ -12,17 +12,17 @@ class CreatorsCollectorsAnalysis(WICAnalysis):
         self.conditions = {
            "Creators": {
                 "Web3Writer": {
-                    "type": TYPES['influence'],
+                    "types": [TYPES['influence']],
                     "definition": "TBD",
                     "call": self.process_writing
                 },
                 "Web3Musician": {
-                    "type": TYPES['influence'],
+                    "types": [TYPES['influence']],
                     "definition": "TBD",
                     "call": self.process_web3_musicians
                 },
                 "DuneDashboardWizard": {
-                    "type": TYPES['influence'],
+                    "types": [TYPES['influence']],
                     "definition": "TBD",
                     "call": self.process_dune_wizards
                 }

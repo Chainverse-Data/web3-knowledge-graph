@@ -12,22 +12,22 @@ class CreatorsCollectorsAnalysis(WICAnalysis):
         self.conditions = {
            "Collectors": {
                "Web3WritingCollector": {
-                    "type": TYPES['experiences'],
+                    "types": [TYPES['experiences']],
                     "definition": "TBD",
                     "call": self.process_mirror_collectors
                },
                "BlueChipNftCollector": {
-                    "type": TYPES['experiences'],
+                    "types": [TYPES['experiences']],
                     "definition": "TBD",
                     "call": self.process_blue_chip_nfts
                },
                "ThreeLetterEnsName": {
-                    "type": TYPES['experiences'],
+                    "types": [TYPES['experiences']],
                     "definition": "TBD",
                     "call": self.process_three_ens
                },
                "Web3MusicCollector": {
-                    "type": TYPES['experiences'],
+                    "types": [TYPES['experiences']],
                     "definition": "TBD",
                     "call": self.process_web3_music_collectors
                }
@@ -37,7 +37,7 @@ class CreatorsCollectorsAnalysis(WICAnalysis):
         self.cyphers = CreatorsCollectorsCypher(self.subgraph_name, self.conditions)
         super().__init__("wic-collectors")
 
-        ## TODOO This will need to be automated to avoid relying on this list.
+        ## TODO This will need to be automated to avoid relying on this list.
         self.seeds_addresses = list(pd.read_csv("pipelines/analytics/wic/collectors/data/seeds.csv")['address'])
 
     def process_blue_chip_nfts(self, context):

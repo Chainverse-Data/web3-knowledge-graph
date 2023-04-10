@@ -19,11 +19,22 @@ class WICCypher(Cypher):
     @count_query_logging
     def clear_subgraph(self):
         query = f"""
-            MATCH (w:_Wic:_{self.subgraph_name})
-            DETACH DELETE w
-            RETURN count(w)
+            CALL apoc.periodic.commit("
+                MATCH (:_Wic:_{self.subgraph_name})-[edge:_HAS_CONTEXT]-()
+                WITH edge LIMIT 10000
+                DELETE edge
+                RETURN count(edge)
+            ")
+        """
+        self.query(query)[0].value()
+        
+        query = f"""
+            MATCH (wic:_Wic:_{self.subgraph_name})
+            DETACH DELETE wic
+            RETURN count(wic)
         """
         count = self.query(query)[0].value()
+        
         return count
     
     @count_query_logging
@@ -57,25 +68,25 @@ class WICCypher(Cypher):
         for condition in self.conditions:
             for context in self.conditions[condition]:
                 logging.info(f"Creating {context}")
-                context_type = self.conditions[condition][context]["type"]
+                context_types = self.conditions[condition][context]["types"]
                 definition = self.conditions[condition][context]["definition"]
                 if "subcontexts" in self.conditions[condition][context]:
-                    count += self.create_context_query(condition, context, context_type, definition)
+                    count += self.create_context_query(condition, context, context_types, definition)
                     for subcontext in self.conditions[condition][context]["subcontexts"]:
-                        subcontext_type = self.conditions[condition][context]["subcontexts"][subcontext]["type"]
+                        subcontext_types = self.conditions[condition][context]["subcontexts"][subcontext]["types"]
                         subdefinition = self.conditions[condition][context]["subcontexts"][subcontext]["definition"]
-                        count += self.create_context_query(condition, subcontext, subcontext_type, subdefinition)
+                        count += self.create_context_query(condition, subcontext, subcontext_types, subdefinition)
                 else:
-                    count += self.create_context_query(condition, context, context_type, definition)
+                    count += self.create_context_query(condition, context, context_types, definition)
         return count
         
-    def create_context_query(self, condition, context, type, definition):
+    def create_context_query(self, condition, context, types, definition):
         create_context = f"""
-            MERGE (context:_Wic:_Context:_{self.subgraph_name}:_{condition}:_{context}:_{type})
+            MERGE (context:_Wic:_Context:_{self.subgraph_name}:_{condition}:_{context}:{":".join(["_" + t for t in types])})
             SET context._condition = '{condition}'
             SET context._displayName = '{context}'
             SET context._main = '{self.subgraph_name}'
-            SET context._type = '{type}'
+            SET context._types = apoc.convert.toList({types})
             SET context._definition = '{definition}'
             WITH context
             MATCH (condition:_Wic:_Condition:_{self.subgraph_name}:_{condition})
@@ -83,5 +94,5 @@ class WICCypher(Cypher):
             MERGE (context)-[r:_HAS_CONDITION]->(condition)
             RETURN count(context)
         """
-        count = self.query(create_context)[0].value()
+        count: int = self.query(create_context)[0].value()
         return count
