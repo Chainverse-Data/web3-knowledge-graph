@@ -43,7 +43,7 @@ class CreatorsCollectorsAnalysis(WICAnalysis):
 
     def process_dune_wizards(self, context):
         logging.info("getting dune people")
-        self.cyphers.dune_dashboard_creators(context)
+        self.cyphers.web3_data_analysts(context)
 
     def run(self):
         self.process_conditions()
