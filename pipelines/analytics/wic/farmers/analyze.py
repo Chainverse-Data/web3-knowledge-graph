@@ -7,7 +7,7 @@ import logging
 class IncentiveFarmerAnalysis(WICAnalysis):
     """This class reads from the Neo4J instance for Twitter nodes to call the Twitter API and retreive extra infos"""
     def __init__(self):
-        self.subgraph_name = "IncentiveFarming"
+        self.subgraph_name = "Farmers"
         self.conditions = {
             "GovernanceFarming": {
                 "SuspiciousSnapshot": {
