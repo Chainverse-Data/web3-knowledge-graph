@@ -246,5 +246,26 @@ wic_professionals = ECSOperator(
     awslogs_stream_prefix=ecs_awslogs_stream_prefix
 )
 
+wic_influencers = ECSOperator(
+    task_id="wic_influencers",
+    dag=dag,
+    aws_conn_id="aws_ecs",
+    cluster=ecs_cluster,
+    task_definition=ecs_task_definition_processing,
+    region_name="us-east-2",
+    launch_type="FARGATE",
+    overrides={
+        "containerOverrides": [
+            {
+                "name": "data-pipelines",
+                "command": ["python3", "-m", "pipelines.analytics.wic.influencers.analyze"],
+                "environment": env_vars
+            },
+        ],
+    },
+    network_configuration=network_configuration,
+    awslogs_group=ecs_awslogs_group_processing,
+    awslogs_stream_prefix=ecs_awslogs_stream_prefix
+)
 
-wic_incentive_farming >> [wic_creators, wic_collectors, wic_traders, wic_developers, wic_protocol_politicians, wic_professionals, wic_public_goods]
+wic_incentive_farming >> [wic_creators, wic_collectors, wic_traders, wic_developers, wic_protocol_politicians, wic_professionals, wic_influencers, wic_public_goods]
