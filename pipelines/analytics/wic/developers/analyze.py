@@ -24,8 +24,8 @@ class DevelopersAnalysis(WICAnalysis):
                         "definition": "TBD",
                         "call": self.process_bounty_fullfilers
                     },
-                "SmartContractDev": {
-                    "call": self.process_smart_contract_dev,
+                "SolidityDeveloper": {
+                    "call": self.process_solidity_devs,
                     "definition": "TBD",
                     "types": [TYPES["experiences"]]
                 }
@@ -43,8 +43,8 @@ class DevelopersAnalysis(WICAnalysis):
         self.cyphers = DevelopersCyphers(self.subgraph_name, self.conditions)
         super().__init__("wic-developers")
 
-    def process_smart_contract_dev(self, context):
-        self.cyphers.is_smart_contract_dev(context)
+    def process_solidity_devs(self, context):
+        self.cyphers.is_solidity_developer(context)
 
     def process_dev_accounts(self, context):
         self.cyphers.has_github(context)

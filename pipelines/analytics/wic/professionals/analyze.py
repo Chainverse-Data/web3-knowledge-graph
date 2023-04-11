@@ -7,7 +7,7 @@ class ProfessionalsAnalysis(WICAnalysis):
     """Identitifes people who "work" in Web3"""
     def __init__(self):
         self.conditions = {
-           "Web3NativeRole": {
+           "DaoContributors": {
                 "OpsAdmin": {
                         "types": [TYPES["experiences"]],
                         "definition": "TBD",
@@ -23,60 +23,59 @@ class ProfessionalsAnalysis(WICAnalysis):
                         "definition": "TBD",
                         "call": self.process_org_multisig_signers
                     },
-                "DaoFundingRecipient": {
-                        "types": [TYPES["experiences"]],
+                "TokenContractDeployer": {
+                        "types": [TYPES["professions"]],
                         "definition": "TBD",
-                        "call": self.process_dao_funding_recipient
-                    },
-                "DaoTreasuryFunder": {
-                    "types": [TYPES['experiences']],
-                    "definition": "TBD",
-                    "call": self.process_dao_treasury_funder
-                },
-                "TechnicalContributor": {
-                    "types": [TYPES['experiences']], 
-                    "definition": "TBD", 
-                    "call": self.process_technical_contributor
-                }
+                        "call": self.process_token_contract_deployer_wallets
+                    }
            },
-            "CompanyRole": {
+            "Company": {
                 "Founder": {
                         "types": [TYPES["professions"]],
                         "definition": "TBD",
                         "call": self.process_founder_bios
                     },
-                "Investing": {
+                "Investor": {
                         "types": [TYPES["professions"]],
                         "definition": "TBD",
                         "call": self.process_investor_bios
                     },
-                "Marketing": {
+                "Marketer": {
                         "types": [TYPES["professions"]],
                         "definition": "TBD",
                         "call": self.process_marketers_bios
                     },
-                "CompanyLeadership": {
+                "CompanyOfficer": {
                         "types": [TYPES["professions"]],
                         "definition": "TBD",
                         "call": self.process_company_officer_bios
                     },
-                "CommunityManagement": {
+                "CommunityLead": {
                         "types": [TYPES["professions"]],
                         "definition": "TBD",
                         "call": self.process_community_people_bios
                     },
-                "DevRel": {
+                "DeveloperRelationProfessional": {
                         "types": [TYPES["professions"]],
                         "definition": "TBD",
                         "call": self.process_devrel_bios
                     }
+            },
+            "Social" : {
+                "Podcaster": {
+                        "types": [TYPES["influence"]],
+                        "definition": "TBD",
+                        "call": self.process_podcaster_bios
+                    },
             }
         }
-        
         self.subgraph_name = "Professions"
         self.cyphers = ProfessionalsCyphers(self.subgraph_name, self.conditions)
         super().__init__("wic-professionals")
  
+    def process_token_contract_deployer_wallets(self, context):
+        logging.info("Identifying token contract deployers")
+        self.cyphers.token_contract_deployer_wallets(context)
  
     def process_org_wallet_deployers(self, context):
         logging.info("Identifying DAO treasury & ops wallet deployers...")
@@ -102,7 +101,8 @@ class ProfessionalsAnalysis(WICAnalysis):
  
     def process_investor_bios(self, context):
         logging.info("Identifying investors...")
-        self.cyphers.identify_investors_bios(context)
+        queryString = "'investor' OR 'investing' OR 'angel investor' OR 'GP' OR 'LP'"
+        self.cyphers.identify_investors_bios(context, queryString)
  
     def process_marketers_bios(self, context):
         logging.info("Identifying marketing professionals...")
@@ -118,19 +118,11 @@ class ProfessionalsAnalysis(WICAnalysis):
         logging.info("idenitfying devrel people...")
         queryString = """'devrel' OR 'developer relations' OR 'ecosystem lead'"""
         self.cyphers.identify_devrel_bios(context, queryString)
-
-    def process_dao_funding_recipient(self, context):
-        logging.info("DAO funding recipients....")
-        self.cyphers.get_dao_funding_recipients(context)
-    
-    def process_dao_treasury_funder(self, context):
-        logging.info("DAO treasury funders...")
-        self.cyphers.get_dao_treasury_funders(context)
-
-    def process_technical_contributor(self, context):
-        logging.info('get technical contributors...')
-        self.cyphers.get_technical_contributors(context)
  
+    def process_podcaster_bios(self, context):
+        logging.info("Identifying podcasters based on bios...")
+        queryString = "'podcasts' OR 'podcast'"
+        self.cyphers.identify_podcasters_bios(context, queryString)
 
     def run(self):
         self.process_conditions()
