@@ -50,16 +50,19 @@ class DevelopersCyphers(WICCypher):
         return count 
 
     @count_query_logging
-    def is_smart_contract_dev(self, context):
+    def is_solidity_developer(self, context):
         query = f"""
-            MATCH (repo:Github:Repository)
-            WHERE (repo.description contains "smart contract" or repo.description contains "truffle" or repo.description contains "token contract" or repo.description contains ".sol" or repo.description contains "solidity")
-            MATCH (repo)-[:CONTRIBUTOR|OWNER|SUBSCRIBER]-(:Github:User)-[:HAS_ACCOUNT]-(wallet:Wallet)
-            OPTIONAL MATCH (wallet)-[:CONTRIBUTOR|OWNER|SUBSCRIBER]-(:Repository)-[:HAS_REPOSITORY]-(:Token)
-            WITH wallet
+            WITH datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')) AS datetime
             MATCH (context:_Wic:_{self.subgraph_name}:_Context:_{context})
-            MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
-            RETURN count(distinct(wallet))
+            MATCH (repo:Github:Repository)
+            WHERE "Solidity" in repo.languages
+            MATCH (repo)-[:CONTRIBUTOR|OWNER|SUBSCRIBER]-(:Github:User)-[:HAS_ACCOUNT*2]-(account:Account)
+            WHERE account:Wallet
+            WITH account as wallet, context, datetime, collect(distinct(repo.full_name)) as reposNames
+            MERGE (wallet)-[r:_HAS_CONTEXT]->(context)
+            SET r.createdDt = datetime
+            SET r.context = reposNames
+            RETURN count(distinct(r))
         """
         count = self.query(query)[0].value()
         return count 
@@ -71,7 +74,7 @@ class DevelopersCyphers(WICCypher):
         MATCH (context:_Context:_Wic:_{self.subgraph_name}:_{context})
         WITH wallet, context
         MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
-        RETURN COUNT(DISTINCT(wallet))
+        RETURN COUNT(DISTINCT(context))
         """
         count = self.query(query)[0].value()
 
