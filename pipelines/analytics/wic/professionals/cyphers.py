@@ -5,16 +5,6 @@ class ProfessionalsCyphers(WICCypher):
     def __init__(self, subgraph_name, conditions, database=None):
         WICCypher.__init__(self, subgraph_name, conditions, database)
  
-    @count_query_logging
-    def token_contract_deployer_wallets(self, context):
-        query = f"""
-        MATCH (deployer:Wallet)-[r:DEPLOYED]->(token:Token)
-        MATCH (wic:_Wic:_{self.subgraph_name}:_Context:_{context})
-        MERGE (deployer)-[con:_HAS_CONTEXT]->(wic)
-        RETURN COUNT(r)
-        """
-        count = self.query(query)[0].value()
-        return count
  
     @count_query_logging
     def get_org_wallet_deployers(self, context):
@@ -101,27 +91,34 @@ class ProfessionalsCyphers(WICCypher):
         return count
  
     @count_query_logging
-    def identify_investors_bios(self, context, queryString):
- 
-        label = f"""
-        CALL db.index.fulltext.queryNodes("wicBios", "{queryString}") 
-        YIELD node
-        UNWIND node AS investor
-        MATCH (investor)-[:HAS_ACCOUNT]-(wallet:Wallet)
-        WHERE NOT wallet:InvestorWallet
-        SET wallet:InvestorWallet"""
- 
+    def identify_investors_bios(self, context):
+        count = 0 
+        label = """
+        CALL db.index.fulltext.queryNodes("wicBios", "'investment fund' OR 'venture capital firm'  OR  'investing in' OR 'VC' OR 'investment firm' OR 'seed stage' OR 'pre-seed") 
+        YIELD node 
+        UNWIND node AS nn 
+        SET nn:Investment"""
         self.query(label)
- 
-        connect = f"""
-        MATCH (wallet:Wallet:InvestorWallet)
+
+        connectDirect = f"""
+        MATCH (wallet:Wallet)-[:HAS_ACCOUNT]-(twitter:Twitter:Investment) 
+        WITH wallet
         MATCH (wic:_Wic:_Context:_{self.subgraph_name}:_{context})
-        WITH wallet, wic
         MERGE (wallet)-[con:_HAS_CONTEXT]->(wic)
-        RETURN COUNT(DISTINCT(wallet))"""
- 
-        count = self.query(connect)[0].value()
- 
+        RETURN COUNT(DISTINCT(wallet))
+        """
+        count += self.query(connectDirect)[0].value()
+
+        connectIndirect = f"""
+        MATCH (wallet:Wallet)-[:HAS_ACCOUNT]-(:Account)-[:BIO_MENTIONED]->(account:Account:Investor)
+        WHERE NOT (wallet)-[:_HAS_CONTEXT]->(:_{context}:_{self.subgraph_name})
+        WITH wallet
+        MATCH (wic:_Wic:_Context:_{self.subgraph_name}:_{context})
+        MERGE (walelt)-[con:_HAS_CONTEXT]->(wic)
+        RETURN COUNT(DISTINCT(wic))
+        """
+        count += self.query(connectIndirect)[0].value()
+  
         return count
  
     @count_query_logging
@@ -212,4 +209,57 @@ class ProfessionalsCyphers(WICCypher):
         RETURN COUNT(DISTINCT(wallet))"""
         count = self.query(connect)[0].value()
  
+        return count
+
+    @count_query_logging
+    def get_dao_funding_recipients(self, context):
+        count = 0
+        snapshot = f"""
+        MATCH (entity:Entity)-[:HAS_ACCOUNT]-(wallet:Wallet)-[trans:TRANSFERRED]->(otherWallet:Wallet)-[:_HAS_CONTEXT]-(wic:_Context)
+        WHERE trans.nb_transfer > 1
+        WITH otherWallet
+        MATCH (wic:_Wic:_Context:_{self.subgraph_name}:_{context})
+        MERGE (otherWallet)-[con:_HAS_CONTEXT]->(wic)
+        RETURN COUNT(DISTINCT(otherWallet))
+        """
+        count += self.query(snapshot)[0].value()
+
+        propHouse = f"""
+        MATCH (wallet:Wallet)-[:AUTHOR]->(proposal:Proposal:Winner)
+        WITH wallet
+        MATCH (wic:_Wic:_Context:_{self.subgraph_name}:_{context})
+        MERGE (wallet)-[con:_HAS_CONTEXT]->(wic)
+        RETURN COUNT(DISTINCT(wallet))
+        """
+        count += self.query(propHouse)[0].value()
+
+        return count 
+
+    @count_query_logging
+    def get_dao_treasury_funders(self, context):
+        count = 0 
+        query = f"""
+        MATCH (entity:Entity)-[:HAS_ACCOUNT]-(wallet:Wallet)<-[trans:TRANSFERRED]-(otherWallet:Wallet)-[:_HAS_CONTEXT]-(wic:_Context)
+        WHERE trans.nb_transfer > 1
+        WITH otherWallet
+        MATCH (wic:_Wic:_Context:_{self.subgraph_name}:_{context})
+        MERGE (otherWallet)-[con:_HAS_CONTEXT]->(wic)
+        RETURN COUNT(DISTINCT(otherWallet))
+        """
+        count += self.query(query)[0].value()
+
+        return count 
+
+    @count_query_logging
+    def get_technical_contributors(self, context):
+        count = 0 
+        query = f"""
+        MATCH (wallet:Wallet)-[:HAS_ACCOUNT]-(g:Github)-[:CONTRIBUTOR]->(repo:Repository)-[:HAS_REPOSITORY]-(token:Token)-[:HAS_STRATEGY]-(:Entity)
+        WITH wallet 
+        MATCH (wic:_Wic:_Context:_{self.subgraph_name}:_{context})
+        MERGE (wallet)-[con:_HAS_CONTEXT]->(wic)
+        RETURN COUNT(DISTINCT(wic))
+        """
+        count = self.query(query)[0].value()
+
         return count
