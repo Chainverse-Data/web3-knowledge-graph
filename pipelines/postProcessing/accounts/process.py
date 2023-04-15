@@ -40,6 +40,9 @@ class AccountsProcessor(Processor):
             logging.info(f"Connecting {labels} by distance")
             self.cyphers.connect_accounts_to_wallets_by_distance(label)
 
+    def process_token_accounts(self):
+        self.cyphers.handle_token_accounts()
+
     def run(self):
         self.process_wallets_account_labeling()
         self.process_acount_types()
@@ -47,6 +50,8 @@ class AccountsProcessor(Processor):
         self.process_github_accounts()
         self.process_same_handle()
         self.process_mirror_author_ref_twitter()
+        self.process_mirror_accounts()
+        self.process_connect_accounts_for_convenience()
 
 if __name__ == "__main__":
     P = AccountsProcessor()

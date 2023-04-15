@@ -206,4 +206,23 @@ class AccountsCyphers(Cypher):
         """
         count = self.query(query)[0].value()
 
-        return count 
+        return count
+
+    @count_query_logging
+    def handle_token_accounts(self):
+        twitter = """
+        CALL apoc.periodic.commit('MATCH (token:Token) 
+        WHERE ((token:ERC721) or (token:ERC1155)) 
+        AND token.twitterUsername IS NOT NULL 
+        AND NOT (token)-[:HAS_ACCOUNT]-(:Twitter)
+        WITH token limit 1000
+        MATCH (twitter:Twitter)
+        WHERE tolower(token.twitterUsername) = twitter.handle 
+        WITH token, twitter 
+        MERGE (token)-[acc:HAS_ACCOUNT]->(twitter)
+        RETURN COUNT(*)')        
+        """
+        self.query(twitter)
+
+        return None 
+    
