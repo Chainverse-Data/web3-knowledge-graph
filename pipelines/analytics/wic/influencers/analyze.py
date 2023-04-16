@@ -7,13 +7,13 @@ class InfluencersAnalysis(WICAnalysis):
     """Identitifes people who "work" in Web3"""
     def __init__(self):
         self.conditions = {
-            "ContentCreation" : {
+            "PopularMirrorAuthor" : {
                 "MirrorInfluencer": {
                     "types": [TYPES["influence"]],
                     "definition": "TBD",
                     "call": self.process_mirror_influencer
                 },
-                "SubstackInfluencer": {
+                "SubstackWriter": {
                     "types": [TYPES["influence"]],
                     "definition": "TBD",
                     "call": self.process_substack_influencer
@@ -23,7 +23,7 @@ class InfluencersAnalysis(WICAnalysis):
                     "definition": "TBD",
                     "call": self.process_dune_wizard
                 },
-                "InfluentialPodcaster": {
+                "Podcaster": {
                     "types": [TYPES['influence']],
                     "definition": "TBD",
                     "call": self.process_podcasters
