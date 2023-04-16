@@ -23,6 +23,7 @@ class CuratedTokenHoldingProcessor(Processor):
         tokens += self.cyphers.get_citizen_NFT_tokens(propotion=0.25)
         tokens += self.cyphers.get_overrepresented_NFT_tokens(propotion=0.01)
         tokens += self.cyphers.get_manual_selection_NFT_tokens()
+        tokens += self.cyphers.get_verified_NFT_tokens()
         tokens = list(set(tokens))
         if DEBUG:
             tokens = tokens[:10]
@@ -33,6 +34,7 @@ class CuratedTokenHoldingProcessor(Processor):
     def get_ERC20_tokens(self):
         # tokens = self.cyphers.get_citizen_ERC20_tokens(propotion=0.25)
         tokens = self.cyphers.get_manual_selection_ERC20_tokens()
+        tokens = self.cyphers.get_verified_ERC20_tokens()
         # tokens = self.cyphers.get_overrepresented_ERC20_tokens(propotion=0.05)
         tokens = list(set(tokens))
         if DEBUG:

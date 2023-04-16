@@ -1,6 +1,6 @@
 from datetime import datetime
 import time
-from neo4j import GraphDatabase, Neo4jDriver
+from neo4j import BoltDriver, GraphDatabase, Neo4jDriver
 import os
 import logging
 from neo4j.data import Record
@@ -21,7 +21,7 @@ class Cypher:
     def get_driver(self, 
                    uri: str, 
                    username: str, 
-                   password: str) -> Neo4jDriver:
+                   password: str) -> Neo4jDriver | BoltDriver | None:
         neo4j_driver = GraphDatabase.driver(uri, auth=(username, password))
         return neo4j_driver
 

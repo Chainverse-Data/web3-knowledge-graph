@@ -47,6 +47,17 @@ class CuratedTokenHoldingCyphers(Cypher):
         return tokens
 
     @get_query_logging
+    def get_verified_ERC20_tokens(self, propotion=0.25):
+        query = f"""
+            MATCH (t:Token)
+            WHERE t:ERC20 AND t.blueCheckmark = true
+            RETURN distinct(t.address) AS address
+        """
+        tokens = self.query(query)
+        tokens = [token["address"] for token in tokens]
+        return tokens
+
+    @get_query_logging
     def get_manual_selection_ERC20_tokens(self):
         query = f"""
             MATCH (t:Token)
@@ -97,6 +108,17 @@ class CuratedTokenHoldingCyphers(Cypher):
         query = f"""
             MATCH (t:Token)
             WHERE (t:ERC721 OR t:ERC1155) AND t.floorPrice > {min_price}
+            RETURN distinct(t.address) AS address
+        """
+        tokens = self.query(query)
+        tokens = [token["address"] for token in tokens]
+        return tokens
+
+    @get_query_logging
+    def get_verified_NFT_tokens(self):
+        query = f"""
+            MATCH (t:Token)
+            WHERE t.safelistRequestStatus = "verified"
             RETURN distinct(t.address) AS address
         """
         tokens = self.query(query)
