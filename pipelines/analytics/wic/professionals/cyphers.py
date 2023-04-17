@@ -7,42 +7,6 @@ class ProfessionalsCyphers(WICCypher):
  
  
     @count_query_logging
-    def get_org_wallet_deployers(self, context):
-        query = f"""
-        MATCH (wallet:Wallet)-[deploy:DEPLOYED]->(org_wallet:Wallet)-[:HAS_ACCOUNT]-(entity:Entity)
-        MATCH (context:_Wic:_{self.subgraph_name}:_Context:_{context})
-        MERGE (wallet)-[r:_HAS_CONTEXT]->(context)
-        RETURN COUNT(DISTINCT(wallet))
-        """
-        count = self.query(query)[0].value()
-        return count
- 
-    @count_query_logging
-    def get_org_multisig_signers(self, context):
-        query = f"""
-        MATCH (multisig:MultiSig)<-[account:HAS_ACCOUNT]-(entity:Entity) 
-        MATCH (wallet:Wallet)-[signer:IS_SIGNER]->(multisig)
-        MATCH (context:_Wic:_{self.subgraph_name}:_Context:_{context})
-        MERGE (wallet)-[r:_HAS_CONTEXT]->(context)
-        RETURN COUNT(wallet)
-        """
-        count = self.query(query)[0].value()
-        return count
- 
-    @count_query_logging
-    def get_snapshot_contributors(self, context):
-        query = f"""
-        MATCH (entity:Entity)-[:HAS_ACCOUNT]-(wallet:Wallet)
-        MATCH (walletother)-[:CONTRIBUTOR]->(entity)
-        MATCH (context:_Wic:_{self.subgraph_name}:_Context:_{context})
-        MERGE (walletother)-[r:_HAS_CONTEXT]->(context)
-        RETURN COUNT(walletother)
-        """
-        count = self.query(query)[0].value()
- 
-        return count 
- 
-    @count_query_logging
     def identify_founders_bios(self, context, queryString):
  
         label = f"""
@@ -190,19 +154,19 @@ class ProfessionalsCyphers(WICCypher):
         return count
  
     @count_query_logging
-    def identify_company_officers_bios(self, context, queryString):
+    def identify_sales_partnerships(self, context, queryString):
         label = f"""
         CALL db.index.fulltext.queryNodes("wicBios", "{queryString}") 
         YIELD node
         UNWIND node AS companyOfficer
         MATCH (companyOfficer)-[:HAS_ACCOUNT]-(wallet:Wallet)
-        WHERE NOT wallet:CompanyOfficerWallet
-        SET wallet:CompanyOfficerWallet"""
+        WHERE NOT wallet:BdWallet
+        SET wallet:BdWallet"""
  
         self.query(label)
  
         connect = f"""
-        MATCH (wallet:Wallet:CompanyOfficerWallet)
+        MATCH (wallet:Wallet:BdWallet)
         MATCH (wic:_Wic:_Context:_{self.subgraph_name}:_{context})
         WITH wallet, wic
         MERGE (wallet)-[con:_HAS_CONTEXT]->(wic)
