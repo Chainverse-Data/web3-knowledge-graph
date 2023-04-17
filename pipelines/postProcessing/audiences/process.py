@@ -33,8 +33,11 @@ class AccountsProcessor(Processor):
             
     def process_audiences(self):
         wics = self.get_current_wics()
+        self.cyphers.flag_existing_edges()
         for wic in wics:
+            logging.info(f"Creating audience for WIC: {wic}")
             self.process_wic(wic)
+        self.cyphers.clean_edges()
 
     def run(self):
         self.process_audiences()

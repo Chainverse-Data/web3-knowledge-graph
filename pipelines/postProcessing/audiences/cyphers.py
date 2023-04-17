@@ -71,7 +71,6 @@ class AccountsCyphers(Cypher):
         query = f"""
             MATCH (wallet:Wallet)-[:_HAS_CONTEXT]-(:_Wic:_Context)-[:_HAS_CONDITION]-(:_Wic:_Condition:_{wic})
             MATCH (audience:Audience {{audienceId: "{wic}"}})
-            WHERE NOT (wallet)-[:IS_PART_OF]-(audience)
             MERGE (wallet)-[edge:IS_PART_OF]-(audience)
             SET edge.toRemove = false
             RETURN count(wallet)
