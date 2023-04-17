@@ -1,48 +1,41 @@
 
 
 import logging
+import re
 from .cyphers import AccountsCyphers
 from ..helpers import Processor
 
 class AccountsProcessor(Processor):
     def __init__(self):
         self.cyphers = AccountsCyphers()
-        self.audiences = {
-            "Dune wizards": {
-                "audienceId": "duneWizards",
-                "wic_target": "DuneWizard",
-                "name": "Dune wizards",
-                "imageUrl": "",
-                "description": ""
-            },
-            "Blur Power Traders": {
-                "audienceId": "blurTraders",
-                "wic_target": "BlurPowerUser",
-                "name": "Blur Power Traders",
-                "imageUrl": "",
-                "description": ""
-            },
-            "Web3 Music Collectors": {
-                "audienceId": "web3MusicCollectors",
-                "wic_target": "Web3MusicCollector",
-                "name": "Web3 Music Collectors",
-                "imageUrl": "",
-                "description": ""
-            },
-            "Web3 Founders": {
-                "audienceId": "web3Founders",
-                "wic_target": "Founder",
-                "name": "Web3 Music Collectors",
-                "imageUrl": "",
-                "description": ""
-            }
-        }
+        self.split_name = re.compile("(?<=[a-z])(?=[A-Z])")
         super().__init__(bucket_name="audiences-processing")
 
+    def get_current_wics(self):
+        conditions = self.cyphers.get_wic_conditions()
+        contexts = self.cyphers.get_wic_contexts()
+        return conditions, contexts
+
+    def process_wic(self, wic):
+        wic_name = wic.get("_displayName", "")
+        params = {
+            "audienceId": wic_name,
+            "name": " ".join(self.split_name.split(wic_name)),
+            "imageUrl": wic.get("_imageUrl", ""),
+            "description": wic.get("_definition", "")
+        }
+        self.cyphers.create_audience(params)
+        if "_Context" in wic.labels:
+            self.cyphers.create_audience_by_context(wic_name)
+        else:
+            self.cyphers.create_audience_by_condition(wic_name)
+            
     def process_audiences(self):
-        for audience in self.audiences:
-            self.cyphers.create_audience(self.audiences[audience]["audienceId"], self.audiences[audience]["name"], self.audiences[audience]["imageUrl"], self.audiences[audience]["description"])
-            self.cyphers.create_audience_by_condition_or_context(self.audiences[audience]["wic_target"], self.audiences[audience]["audienceId"])
+        conditions, contexts = self.get_current_wics()
+        for condition in conditions:
+            self.process_wic(condition, False)
+        for context in contexts:
+            self.process_wic(context, True)
 
     def run(self):
         self.process_audiences()
