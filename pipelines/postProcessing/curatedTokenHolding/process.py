@@ -33,8 +33,8 @@ class CuratedTokenHoldingProcessor(Processor):
     
     def get_ERC20_tokens(self):
         # tokens = self.cyphers.get_citizen_ERC20_tokens(propotion=0.25)
+        # tokens = self.cyphers.get_verified_ERC20_tokens()
         tokens = self.cyphers.get_manual_selection_ERC20_tokens()
-        tokens = self.cyphers.get_verified_ERC20_tokens()
         # tokens = self.cyphers.get_overrepresented_ERC20_tokens(propotion=0.05)
         tokens = list(set(tokens))
         if DEBUG:

@@ -14,7 +14,8 @@ class AccountsProcessor(Processor):
     def get_current_wics(self):
         conditions = self.cyphers.get_wic_conditions()
         contexts = self.cyphers.get_wic_contexts()
-        return conditions, contexts
+        wics = conditions + contexts
+        return wics
 
     def process_wic(self, wic):
         wic_name = wic.get("_displayName", "")
@@ -31,11 +32,9 @@ class AccountsProcessor(Processor):
             self.cyphers.create_audience_by_condition(wic_name)
             
     def process_audiences(self):
-        conditions, contexts = self.get_current_wics()
-        for condition in conditions:
-            self.process_wic(condition, False)
-        for context in contexts:
-            self.process_wic(context, True)
+        wics = self.get_current_wics()
+        for wic in wics:
+            self.process_wic(wic)
 
     def run(self):
         self.process_audiences()
