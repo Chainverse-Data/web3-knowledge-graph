@@ -20,12 +20,12 @@ class DaoAnalysis(WICAnalysis):
                         "definition": "TBD",
                         "call": self.process_org_multisig_signers
                     },
-                "FundingRecipient": {
+                "DaoFundingRecipient": {
                         "types": [TYPES["experiences"]],
                         "definition": "TBD",
                         "call": self.process_dao_funding_recipient
                     },
-                "TreasuryFunder": {
+                "DaoTreasuryFunder": {
                     "types": [TYPES['experiences']],
                     "definition": "TBD",
                     "call": self.process_dao_treasury_funder
