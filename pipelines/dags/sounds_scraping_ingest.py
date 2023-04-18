@@ -7,7 +7,7 @@ from airflow.models import Variable
 
 dag = DAG(
     "sounds_scraping_and_ingest",
-    description="Scrapes the latest Unlock data, and ingest them into the neo4J instance.",
+    description="Scrapes the latest Sounds data, and ingest them into the neo4J instance.",
     default_args={
         "start_date": days_ago(2),
         "owner": "Leo Blondel",
