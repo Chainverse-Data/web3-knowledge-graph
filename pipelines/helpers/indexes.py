@@ -97,4 +97,7 @@ class Indexes(Cypher):
         query = """CREATE FULLTEXT INDEX wicProposals IF NOT EXISTS FOR (a:Proposal) ON EACH [a.text, a.title]"""
         self.query(query)
         query = """CREATE FULLTEXT INDEX wicTwitter IF NOT EXISTS FOR (a:Twitter) ON EACH [a.bio]"""
+
+    def sound(self):
+        query = "CREATE INDEX Sound IF NOT EXISTS FOR (e:Sound) ON (e.handle)"
         self.query(query)
