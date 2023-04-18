@@ -21,7 +21,7 @@ class SoundScraper(Scraper):
         super().__init__(bucket_name)
         self.proxy_host = "proxy.crawlera.com"
         self.proxy_port = "8011"
-        self.proxy_auth = os.environ.get("PROXY", "") + ":"
+        self.proxy_auth = os.environ.get("ZYTE_PROXY", "") + ":"
         self.root_url = "https://www.sound.xyz"
         self.scroll_pause_time = 1
         options = Options()
