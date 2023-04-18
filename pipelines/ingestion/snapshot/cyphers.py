@@ -233,6 +233,7 @@ class SnapshotCyphers(Cypher):
                     MATCH (s:Space {{snapshotId: twitter.snapshotId}})
                     MATCH (t:Twitter:Account {{handle: toLower(twitter.handle)}})
                     MERGE (s)-[r:HAS_ACCOUNT]->(t)
+                    SET r.citation = "Snapshot has Twitter"
                     return count(r) 
             """
             count += self.query(query)[0].value()

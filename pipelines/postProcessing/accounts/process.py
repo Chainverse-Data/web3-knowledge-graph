@@ -35,10 +35,9 @@ class AccountsProcessor(Processor):
         self.cyphers.link_mirror_authors_to_twitter(threshold=3, proportion=0.8)
 
     def process_connect_accounts_for_convenience(self):
-        labels = ['Wallet', 'Twitter']
-        for label in labels:
-            logging.info(f"Connecting {labels} by distance")
-            self.cyphers.connect_accounts_to_wallets_by_distance(label)
+        self.cyphers.connect_wallet_alias_account()
+        self.cyphers.connect_wallet_github_twitter()
+        self.cyphers.connect_wallet_dune_twitter()
 
     def process_token_accounts(self):
         self.cyphers.handle_token_accounts()
