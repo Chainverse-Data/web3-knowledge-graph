@@ -70,7 +70,7 @@ class DuneCyphers(Cypher):
         for url in urls:
             telegram_node_query = f"""
                             LOAD CSV WITH HEADERS FROM '{url}' AS telegram
-                            MERGE (t:Telegram {{handle: toLower(telegram.handle)}})
+                            MERGE (t:Telegram:Account {{handle: toLower(telegram.handle)}})
                             ON CREATE set t.uuid = apoc.create.uuid(),
                                 t.profileUrl = telegram.url,
                                 t.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
@@ -89,7 +89,7 @@ class DuneCyphers(Cypher):
         for url in urls:
             discord_node_query = f"""
                             LOAD CSV WITH HEADERS FROM '{url}' AS discord
-                            MERGE (t:Discord {{handle: toLower(discord.handle)}})
+                            MERGE (t:Discord:Account {{handle: toLower(discord.handle)}})
                             ON CREATE set t.uuid = apoc.create.uuid(),
                                 t.createdDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
                                 t.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
