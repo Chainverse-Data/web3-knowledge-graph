@@ -43,7 +43,7 @@ class AccountsCyphers(Cypher):
     @count_query_logging
     def flag_existing_edges(self):
         query = """
-            CALL apoc.periodic.commiut("
+            CALL apoc.periodic.commit("
                 MATCH (audience:Audience)-[edge:IS_PART_OF]-(wallet:Wallet)
                 WHERE edge.toRemove = false
                 WITH edge LIMIT 10000

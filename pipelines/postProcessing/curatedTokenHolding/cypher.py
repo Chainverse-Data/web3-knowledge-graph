@@ -10,6 +10,8 @@ class CuratedTokenHoldingCyphers(Cypher):
     def create_indexes(self):
         query = "CREATE INDEX tokenIdHeld IF NOT EXISTS FOR ()-[r:HOLDS_TOKEN]-() on (r.tokenId)"
         self.query(query)
+        query = "CREATE INDEX holdsNumericBalance IF NOT EXISTS FOR ()-[r:HOLDS]-() ON (r.numericBalance)"
+        self.query(query)
 
     @get_query_logging
     def get_citizen_ERC20_tokens(self, propotion=0.25):
