@@ -19,11 +19,11 @@ class CuratedTokenHoldingProcessor(Processor):
         self.etherscan = Etherscan() 
 
     def get_NFTs_tokens(self):
-        tokens = self.cyphers.get_bluechip_NFT_tokens(min_price=10)
-        tokens += self.cyphers.get_citizen_NFT_tokens(propotion=0.25)
-        tokens += self.cyphers.get_overrepresented_NFT_tokens(propotion=0.01)
-        tokens += self.cyphers.get_manual_selection_NFT_tokens()
-        tokens += self.cyphers.get_verified_NFT_tokens()
+        # tokens = self.cyphers.get_bluechip_NFT_tokens(min_price=10)
+        # tokens += self.cyphers.get_citizen_NFT_tokens(propotion=0.25)
+        # tokens += self.cyphers.get_overrepresented_NFT_tokens(propotion=0.01)
+        tokens = self.cyphers.get_manual_selection_NFT_tokens()
+        # tokens += self.cyphers.get_verified_NFT_tokens()
         tokens = list(set(tokens))
         if DEBUG:
             tokens = tokens[:10]
