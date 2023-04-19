@@ -54,11 +54,11 @@ class AccountsCyphers(Cypher):
     def link_wallet_github_accounts(self):
         query = f"""
             CALL apoc.periodic.commit("
-                MATCH (wallet:Wallet)<-[:HAS_WALLET]-(g:Github)
-                WHERE NOT (wallet)-[:HAS_ACCOUNT]->(g)
-                WITH wallet, g LIMIT 10000
-                MERGE (wallet)-[r:HAS_ACCOUNT]->(g)
-                SET r.citation = "Github has wallet"
+                MATCH (wallet:Wallet)<-[:HAS_WALLET]-(github:Github)
+                WHERE NOT (wallet)-[:HAS_ACCOUNT]->(github)
+                WITH wallet, github LIMIT 10000
+                MERGE (wallet)-[r:HAS_ACCOUNT]->(github)
+                SET r.citation = 'Github has wallet'
                 RETURN count(distinct(r))
             ")
         """
@@ -102,7 +102,6 @@ class AccountsCyphers(Cypher):
             RETURN count(r)
         """
         count = self.query(query)[0].values()
-
         return count
 
     @count_query_logging
@@ -113,8 +112,10 @@ class AccountsCyphers(Cypher):
             WHERE NOT (wallet)-[:HAS_ACCOUNT]->(twitter)
             MERGE (wallet)-[r:HAS_ACCOUNT]->(twitter)
             SET r.citation = 'Wallet - Dune - Twitter'
+            return count(r)
         """
         count += self.query(query)[0].value()
+        return count
 
     @count_query_logging
     def connect_wallet_github_twitter(self):
@@ -124,8 +125,10 @@ class AccountsCyphers(Cypher):
             WHERE NOT (wallet)-[:HAS_ACCOUNT]->(twitter)
             MERGE (wallet)-[r:HAS_ACCOUNT]->(twitter)
             SET r.citation = 'Wallet - Github - Twitter'
+            return count(r)
         """
         count += self.query(query)[0].value()
+        return count
 
     @count_query_logging
     def connect_wallet_alias_account(self):
@@ -135,8 +138,10 @@ class AccountsCyphers(Cypher):
             WHERE NOT (wallet)-[:HAS_ACCOUNT]->(account)
             MERGE (wallet)-[r:HAS_ACCOUNT]->(account)
             set r.citation = 'Wallet - ENS - Account'
+            return count(r)
         """
         count += self.query(query)[0].value()
+        return count
 
     @count_query_logging
     def create_mirror_accounts(self):

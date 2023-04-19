@@ -84,12 +84,10 @@ sounds_scrape_task = ECSOperator(
             {
                 "name": "data-pipelines",
                 "command": ["python3", "-m", "pipelines.scraping.soundAccounts.scrape"],
-                "environment": env_vars
-            },
-        ],
-        "linuxParameters": {
-            "sharedMemorySize": "2g",
-        }
+                "environment": env_vars,
+                "sharedMemorySize": "2g",
+            }
+        ]
     },
     network_configuration=network_configuration,
     awslogs_group=ecs_awslogs_group,
