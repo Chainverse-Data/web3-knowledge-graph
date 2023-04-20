@@ -124,17 +124,11 @@ class TokenMetadataCyphers(Cypher):
         for url in urls:
             query = f"""
                 LOAD CSV WITH HEADERS FROM '{url}' AS data
-                MERGE (social:{labels[0]} {{{node_property}: toLower(data.{data_property})}})
+                MERGE (social:{":".join(labels)} {{{node_property}: toLower(data.{data_property})}})
                 WITH social, data
                 MATCH (token:Token {{address: toLower(data.address)}})
                 MERGE (token)-[edge:{edge}]->(social)
                 SET edge.citation = data.{citation}
-            """
-            if len(labels) > 1:
-                query += f"""
-                    SET social:{':'.join(labels[1:])}
-                """
-            query += f"""
                 RETURN count(social)
             """
             count += self.query(query)[0].value()

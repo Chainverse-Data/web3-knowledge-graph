@@ -29,7 +29,7 @@ class TokenMetadataPostProcess(Processor):
             
             websites = [{"url": result["externalUrl"], "contractAddress": result["address"], "citation": "OpenSea Metadata"} for result in results if result["externalUrl"]]
             urls = self.save_json_as_csv(websites, f"token_ERC721_websites_{self.asOf}")
-            self.cyphers.create_or_merge_socials(urls, ["Website"], "url", "url", "HAS_ACCOUNT", "citation")
+            self.cyphers.create_or_merge_socials(urls, ["Website", "Account"], "url", "url", "HAS_ACCOUNT", "citation")
 
             discords = [{"url": result["discordUrl"], "contractAddress": result["address"], "citation": "OpenSea Metadata"} for result in results if "discordUrl" in result and result["discordUrl"]]
             urls = self.save_json_as_csv(discords, f"token_ERC721_websites_{self.asOf}")
@@ -131,7 +131,7 @@ class TokenMetadataPostProcess(Processor):
         data = data[~data[key].isna()]
         data = data.drop_duplicates()
         urls = self.save_df_as_csv(data, f"process_{key}_{self.asOf}")
-        self.cyphers.create_or_merge_socials(urls, [label], "url", property, "HAS_ACCOUNT", property)
+        self.cyphers.create_or_merge_socials(urls, [label, "Account"], "url", property, "HAS_ACCOUNT", property)
 
     def handle_hubs(self, data, key, label, property):
         data = data[~data[key].isna()]
