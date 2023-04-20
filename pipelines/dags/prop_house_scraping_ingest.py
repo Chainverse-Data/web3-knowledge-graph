@@ -103,7 +103,7 @@ prop_house_ingest_task = ECSOperator(
         "containerOverrides": [
             {
                 "name": "data-pipelines",
-                "command": ["python3", "-m", "pipelines.ingestion.prop-house.ingest"],
+                "command": ["python3", "-m", "pipelines.ingestion.propHouse.ingest"],
                 "environment": env_vars
             },
         ],
