@@ -63,7 +63,7 @@ class CuratedTokenHoldingCyphers(Cypher):
     def get_manual_selection_ERC20_tokens(self):
         query = f"""
             MATCH (t:Token)
-            WHERE t:ERC20 AND t.manualSelection
+            WHERE t:ERC20 AND t.manualSelection = true
             RETURN distinct(t.address) AS address
         """
         tokens = self.query(query)
@@ -131,7 +131,7 @@ class CuratedTokenHoldingCyphers(Cypher):
     def get_manual_selection_NFT_tokens(self):
         query = f"""
             MATCH (t:Token)
-            WHERE (t:ERC721 OR t:ERC1155) AND t.manualSelection
+            WHERE (t:ERC721 OR t:ERC1155) AND t.manualSelection = true
             RETURN distinct(t.address) AS address
         """
         tokens = self.query(query)
