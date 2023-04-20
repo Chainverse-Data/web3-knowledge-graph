@@ -12,27 +12,27 @@ class SnapshotCyphers(Cypher):
         super().__init__()
         self.queries = Queries()
 
-    def create_constraints(self):
-        constraints = Constraints()
-        constraints.spaces()
-        constraints.proposals()
-        constraints.wallets()
-        constraints.tokens()
-        constraints.aliases()
-        constraints.ens()
-        constraints.twitter()
-        constraints.transactions()
+    # def create_constraints(self):
+    #     constraints = Constraints()
+    #     constraints.spaces()
+    #     constraints.proposals()
+    #     constraints.wallets()
+    #     constraints.tokens()
+    #     constraints.aliases()
+    #     constraints.ens()
+    #     constraints.twitter()
+    #     constraints.transactions()
 
-    def create_indexes(self):
-        indexes = Indexes()
-        indexes.wallets()
-        indexes.proposals()
-        indexes.spaces()
-        indexes.tokens()
-        indexes.aliases()
-        indexes.ens()
-        indexes.twitter()
-        indexes.transactions()
+    # def create_indexes(self):
+    #     indexes = Indexes()
+    #     indexes.wallets()
+    #     indexes.proposals()
+    #     indexes.spaces()
+    #     indexes.tokens()
+    #     indexes.aliases()
+    #     indexes.ens()
+    #     indexes.twitter()
+    #     indexes.transactions()
 
     @count_query_logging
     def create_or_merge_spaces(self, urls):
