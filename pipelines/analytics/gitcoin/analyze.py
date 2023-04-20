@@ -8,8 +8,8 @@ from .cyphers import GitCoinAnalyticsCyphers
 
 class GitCoinAnalysis(Analysis):
     def __init__(self):
-        super().__init__("gitcoin-communities")
         self.cyphers = GitCoinAnalyticsCyphers()
+        super().__init__("gitcoin-communities")
         self.networks = Networks()
         self.grants_weight_threshold = 1
         self.donors_weight_threshold = 1
