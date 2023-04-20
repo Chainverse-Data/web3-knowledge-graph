@@ -312,4 +312,4 @@ audiences_post_processing_task = ECSOperator(
     awslogs_stream_prefix=ecs_awslogs_stream_prefix
 )
 
-wic_incentive_farming >> [wic_creators, wic_collectors, wic_traders, wic_developers, wic_protocol_politicians, wic_professionals, wic_influencers, wic_public_goods, wic_dao_contributors] >> audiences_post_processing_task
+wic_incentive_farming >> [wic_creators, wic_collectors, wic_traders, wic_developers, wic_protocol_politicians, wic_professionals, wic_influencers, wic_public_goods, wic_dao_contributors]
