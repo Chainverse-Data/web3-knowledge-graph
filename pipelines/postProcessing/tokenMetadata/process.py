@@ -23,16 +23,19 @@ class TokenMetadataPostProcess(Processor):
         for i in tqdm(range(0, len(tokens), self.chunk_size)):
             results = self.parallel_process(self.get_alchemy_ERC721_metadata, tokens[i: i+self.chunk_size], description="Getting all ERC721 Metadata")
             
-            twitter = [{"handle": result["twitterUsername"], "contractAddress": result["address"], "citation": "OpenSea Metadata"} for result in results if result["twitterUsername"]]
+            twitter = [{"handle": result["twitterUsername"], "address": result["address"], "citation": "OpenSea Metadata"} for result in results if result["twitterUsername"]]
             urls = self.save_json_as_csv(twitter, f"token_ERC721_twitters_{self.asOf}")
+            logging.info(f"Adding {len(twitter)} twitters")
             self.cyphers.create_or_merge_socials(urls, ["Twitter", "Account"], "handle", "handle", "HAS_ACCOUNT", "citation")
             
-            websites = [{"url": result["externalUrl"], "contractAddress": result["address"], "citation": "OpenSea Metadata"} for result in results if result["externalUrl"]]
+            websites = [{"url": result["externalUrl"], "address": result["address"], "citation": "OpenSea Metadata"} for result in results if result["externalUrl"]]
             urls = self.save_json_as_csv(websites, f"token_ERC721_websites_{self.asOf}")
+            logging.info(f"Adding {len(websites)} websites")
             self.cyphers.create_or_merge_socials(urls, ["Website", "Account"], "url", "url", "HAS_ACCOUNT", "citation")
 
-            discords = [{"url": result["discordUrl"], "contractAddress": result["address"], "citation": "OpenSea Metadata"} for result in results if "discordUrl" in result and result["discordUrl"]]
+            discords = [{"url": result["discordUrl"], "address": result["address"], "citation": "OpenSea Metadata"} for result in results if "discordUrl" in result and result["discordUrl"]]
             urls = self.save_json_as_csv(discords, f"token_ERC721_websites_{self.asOf}")
+            logging.info(f"Adding {len(discords)} discords")
             self.cyphers.create_or_merge_socials(urls, ["Discord", "Hub"], "url", "url", "HAS_HUB", "citation")
 
             deployers = [{"address": result["address"], "contractDeployer": result["contractDeployer"]} for result in results if result["contractDeployer"]]
@@ -85,9 +88,11 @@ class TokenMetadataPostProcess(Processor):
         users = data[data["is_user"] == True][["address", "handle", property]]
         subreddits = data[data["is_user"] == False][["address", "handle", property]]
         urls = self.save_df_as_csv(users, f"process_reddits_users_{self.asOf}")
+        logging.info(f"Adding {len(users)} reddits accounts")
         self.cyphers.create_or_merge_socials(urls, [label, "Account"], "handle", "handle", "HAS_ACCOUNT", property)
 
         urls = self.save_df_as_csv(subreddits, f"process_subreddits_{self.asOf}")
+        logging.info(f"Adding {len(subreddits)} subreddits")
         self.cyphers.create_or_merge_socials(urls, [label, "Hub"], "handle", "handle", "HAS_HUB", property)
 
     def handle_githubs(self, data, key, label, property):
@@ -105,6 +110,7 @@ class TokenMetadataPostProcess(Processor):
         tmp_data = data[~data["repository"].isna()]
         tmp_data["full_name"] = tmp_data["account"] + "/" + tmp_data["repository"]
         urls = self.save_df_as_csv(tmp_data, f"process_githubs_repos_{self.asOf}")
+        logging.info(f"Adding {len(tmp_data)} github repos")
         self.cyphers.create_or_merge_socials(urls, [label, "Repository"], "full_name", "full_name", "HAS_REPOSITORY", property)
 
     def handle_twitter(self, data, key, label, property):
@@ -120,27 +126,32 @@ class TokenMetadataPostProcess(Processor):
         tmp_data["handle"] = data[key].apply(get_handles)
         tmp_data["handle"] = tmp_data[~tmp_data["handle"].isna()]
         urls = self.save_df_as_csv(data, f"process_{key}_{self.asOf}")
+        logging.info(f"Adding {len(data)} {key}")
         self.cyphers.create_or_merge_socials(urls, [label, "Account"], "handle", property, "HAS_ACCOUNT", property)
 
     def handle_accounts(self, data, key, label, property):
         data = data[~data[key].isna()]
         urls = self.save_df_as_csv(data, f"process_{key}_{self.asOf}")
+        logging.info(f"Adding {len(data)} {key}")
         self.cyphers.create_or_merge_socials(urls, [label, "Account"], "handle", property, "HAS_ACCOUNT", property)
 
     def handle_external_links(self, data, key, label, property):
         data = data[~data[key].isna()]
         data = data.drop_duplicates()
         urls = self.save_df_as_csv(data, f"process_{key}_{self.asOf}")
+        logging.info(f"Adding {len(data)} {key}")
         self.cyphers.create_or_merge_socials(urls, [label, "Account"], "url", property, "HAS_ACCOUNT", property)
 
     def handle_hubs(self, data, key, label, property):
         data = data[~data[key].isna()]
         urls = self.save_df_as_csv(data, f"process_{key}_{self.asOf}")
+        logging.info(f"Adding {len(data)} {key}")
         self.cyphers.create_or_merge_socials(urls, [label, "Hub"], "url", property, "HAS_HUB", property)
 
     def handle_white_paper(self, data, key, label, property):
         data = data[~data[key].isna()]
         urls = self.save_df_as_csv(data, f"process_{key}_{self.asOf}")
+        logging.info(f"Adding {len(data)} {key}")
         self.cyphers.create_or_merge_socials(urls, [label, "Whitepaper"], "url", property, "HAS_WHITEPAPER", property)
 
     def get_tokens_ERC20_metadata(self):

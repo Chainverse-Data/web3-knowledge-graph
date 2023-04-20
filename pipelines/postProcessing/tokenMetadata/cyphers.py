@@ -79,7 +79,7 @@ class TokenMetadataCyphers(Cypher):
         for url in tqdm(urls):
             query = f"""
                 LOAD CSV WITH HEADERS FROM '{url}' AS tokens
-                MATCH (token:Token:ERC721 {{address: tokens.address}})
+                MATCH (token:Token {{address: tokens.address}})
                 SET token.metadataScraped = tokens.metadataScraped,
                     token.title = tokens.title,
                     token.description = tokens.description,
@@ -110,7 +110,7 @@ class TokenMetadataCyphers(Cypher):
         for url in tqdm(urls):
             query = f"""
                 LOAD CSV WITH HEADERS FROM '{url}' as tokens
-                MATCH (token:Token:ERC721 {{address: tokens.address}})
+                MATCH (token:Token {{address: toLower(tokens.address)}})
                 MATCH (deployer:Wallet {{address: toLower(tokens.contractDeployer)}})
                 MERGE (deployer)-[edge:DEPLOYED]->(token)
                 RETURN count(edge)
@@ -129,7 +129,7 @@ class TokenMetadataCyphers(Cypher):
                 MATCH (token:Token {{address: toLower(data.address)}})
                 MERGE (token)-[edge:{edge}]->(social)
                 SET edge.citation = data.{citation}
-                RETURN count(social)
+                RETURN count(edge)
             """
             count += self.query(query)[0].value()
         return count

@@ -85,7 +85,6 @@ sounds_scrape_task = ECSOperator(
                 "name": "data-pipelines",
                 "command": ["python3", "-m", "pipelines.scraping.soundAccounts.scrape"],
                 "environment": env_vars,
-                "sharedMemorySize": "2g",
             }
         ]
     },
