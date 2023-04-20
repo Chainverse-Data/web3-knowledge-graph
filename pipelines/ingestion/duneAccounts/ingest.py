@@ -54,32 +54,32 @@ class DuneIngestor(Ingestor):
         return nodes, rels
 
     def handle_nodes(self, nodes):
-        urls = self.save_json_as_csv(nodes["twitter"], self.bucket_name, "dune-twitter")
+        urls = self.save_json_as_csv(nodes["twitter"], "dune-twitter")
         self.cyphers.create_or_merge_dune_twitter(urls)
 
-        urls = self.save_json_as_csv(nodes["telegram"], self.bucket_name, "dune-telegram")
+        urls = self.save_json_as_csv(nodes["telegram"], "dune-telegram")
         self.cyphers.create_or_merge_dune_telegram(urls)
 
-        urls = self.save_json_as_csv(nodes["discord"], self.bucket_name, "dune-discord")
+        urls = self.save_json_as_csv(nodes["discord"], "dune-discord")
         self.cyphers.create_or_merge_dune_discord(urls)
 
-        urls = self.save_json_as_csv(nodes["address"], self.bucket_name, "dune-address")
+        urls = self.save_json_as_csv(nodes["address"], "dune-address")
         self.cyphers.create_or_merge_dune_wallets(urls)
 
-        urls = self.save_json_as_csv(nodes["users"], self.bucket_name, "dune-users")
+        urls = self.save_json_as_csv(nodes["users"], "dune-users")
         self.cyphers.create_or_merge_dune_users(urls)
 
-        urls = self.save_json_as_csv(nodes["teams"], self.bucket_name, "dune-teams")
+        urls = self.save_json_as_csv(nodes["teams"], "dune-teams")
         self.cyphers.create_or_merge_dune_teams(urls)
 
     def handle_rels(self, rels):
-        urls = self.save_json_as_csv(rels["address"], self.bucket_name, "dune-address-rels")
+        urls = self.save_json_as_csv(rels["address"], "dune-address-rels")
         self.cyphers.link_dune_wallets(urls)
 
-        urls = self.save_json_as_csv(rels["account"], self.bucket_name, "dune-account-rels")
+        urls = self.save_json_as_csv(rels["account"], "dune-account-rels")
         self.cyphers.link_dune_accounts(urls)
 
-        urls = self.save_json_as_csv(rels["teams"], self.bucket_name, "dune-teams-rels")
+        urls = self.save_json_as_csv(rels["teams"], "dune-teams-rels")
         self.cyphers.link_dune_teams(urls)
 
     def run(self):
