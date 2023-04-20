@@ -37,20 +37,20 @@ class SoundIngestor(Ingestor):
         return nodes, rels
 
     def handle_nodes(self, nodes):
-        urls = self.save_json_as_csv(nodes["twitter"], self.bucket_name, "sound-twitter")
+        urls = self.save_json_as_csv(nodes["twitter"], "sound-twitter")
         self.cyphers.create_or_merge_sound_twitter(urls)
 
-        urls = self.save_json_as_csv(nodes["address"], self.bucket_name, "sound-address")
+        urls = self.save_json_as_csv(nodes["address"], "sound-address")
         self.cyphers.create_or_merge_sound_wallets(urls)
 
-        urls = self.save_json_as_csv(nodes["users"], self.bucket_name, "sound-users")
+        urls = self.save_json_as_csv(nodes["users"], "sound-users")
         self.cyphers.create_or_merge_sound_users(urls)
 
     def handle_rels(self, rels):
-        urls = self.save_json_as_csv(rels["address"], self.bucket_name, "sound-address-rels")
+        urls = self.save_json_as_csv(rels["address"], "sound-address-rels")
         self.cyphers.link_sound_wallets(urls)
 
-        urls = self.save_json_as_csv(rels["account"], self.bucket_name, "sound-account-rels")
+        urls = self.save_json_as_csv(rels["account"], "sound-account-rels")
         self.cyphers.link_sound_twitter(urls)
 
     def run(self):
