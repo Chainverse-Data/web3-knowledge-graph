@@ -81,7 +81,7 @@ class AccountsCyphers(Cypher):
     @count_query_logging
     def clean_edges(self):
         query = """
-            CALL apoc.periodic.commiut("
+            CALL apoc.periodic.commit("
                 MATCH (audience:Audience)-[edge:IS_PART_OF]-(wallet:Wallet)
                 WHERE edge.toRemove = true
                 WITH edge LIMIT 10000
