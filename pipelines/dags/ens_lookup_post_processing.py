@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from airflow import DAG
 from airflow.utils.dates import days_ago
@@ -9,7 +9,7 @@ dag = DAG(
     "ENS_text_record_lookup",
     description="Gets the text record data for all ENS nodes.",
     default_args={
-        "start_date": days_ago(2),
+        "start_date": datetime(2023, 4, 20),
         "owner": "Leo Blondel",
         "retries": 3        
     },

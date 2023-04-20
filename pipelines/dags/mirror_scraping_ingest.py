@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from airflow import DAG
 from airflow.utils.dates import days_ago
@@ -9,7 +9,7 @@ dag = DAG(
     "mirror_scraping_and_ingest",
     description="Scrapes the latest Gitcoin data, and ingest them into the neo4J instance.",
     default_args={
-        "start_date": days_ago(2),
+        "start_date": datetime(2023, 4, 20),
         "owner": "Leo Blondel",
         "retries": 3
     },

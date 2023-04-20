@@ -1,15 +1,16 @@
-from datetime import timedelta
+from datetime import timedelta, datetime
 
 from airflow import DAG
 from airflow.utils.dates import days_ago
 from airflow.contrib.operators.ecs_operator import ECSOperator
 from airflow.models import Variable
 
+
 dag = DAG(
     "accounts_post_processing",
     description="Performs some graph cleaning and preprocessing and postprocessing.",
     default_args={
-        "start_date": days_ago(2),
+        "start_date": datetime(2023, 4, 20),
         "owner": "Leo Blondel",
         "retries": 3        
     },

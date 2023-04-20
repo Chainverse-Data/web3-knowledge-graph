@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from airflow import DAG
 from airflow.utils.dates import days_ago
@@ -9,7 +9,7 @@ dag = DAG(
     "manual_data_ingests",
     description="Trigger the manual data ingests.",
     default_args={
-        "start_date": days_ago(2),
+        "start_date": datetime(2023, 4, 20),
         "owner": "Leo Blondel",
         "retries": 1
     },
