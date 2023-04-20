@@ -1,3 +1,4 @@
+from pipelines.helpers.etherscan import Etherscan
 from ...helpers import Alchemy
 from ..helpers import Scraper
 import json
@@ -25,6 +26,7 @@ class GitCoinScraper(Scraper):
             self.last_block_number = self.metadata["last_block_number"]
 
         self.alchemy = Alchemy()
+        self.etherscan = Etherscan()
         self.gitcoin_checkout_contract_address = "0x7d655c57f71464B6f83811C55D84009Cd9f5221C"
         self.get_one_grant_url = "https://bounties.gitcoin.co/grants/v1/api/grant/{}/"
         self.get_all_grants_url = "https://bounties.gitcoin.co/api/v0.1/grants/?limit={}&offset={}"
@@ -58,7 +60,8 @@ class GitCoinScraper(Scraper):
 
     def get_all_donnations(self):
         logging.info("Collecting all events from GitCoin BulckCheckout and extracting DonationSent events")
-        contract = self.get_smart_contract(self.gitcoin_checkout_contract_address)
+        abi = self.etherscan.get_smart_contract_ABI(self.gitcoin_checkout_contract_address)
+        contract = self.get_smart_contract(self.gitcoin_checkout_contract_address, abi)
         
         self.data["donations"] = []
         with tqdm.tqdm(total=self.blocks_limit) as pbar:
