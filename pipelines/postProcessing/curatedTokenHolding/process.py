@@ -57,13 +57,13 @@ class CuratedTokenHoldingProcessor(Processor):
                             "balance": balance["balance"]
                         }
                         results.append(tmp)
-            self.cyphers.mark_current_hold_edges(tokens)
+            self.cyphers.mark_current_hold_edges(current_tokens)
             urls = self.save_json_as_csv(results, f"process_nft_tokens_{self.asOf}_{i}")
             self.cyphers.queries.create_wallets(urls)
             self.cyphers.clean_NFT_token_holding(urls)
             self.cyphers.link_or_merge_NFT_token_holding(urls)
-            self.cyphers.move_old_hold_edges_to_held(tokens)
-            self.cyphers.update_tokens(tokens)
+            self.cyphers.move_old_hold_edges_to_held(current_tokens)
+            self.cyphers.update_tokens(current_tokens)
     
     def get_holders_for_ERC20_tokens(self):
         tokens = self.get_ERC20_tokens()

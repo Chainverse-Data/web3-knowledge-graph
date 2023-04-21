@@ -64,8 +64,8 @@ class CuratedTokenHoldingCyphers(Cypher):
     def get_manual_selection_ERC20_tokens(self) -> list[str]:
         query = f"""
             MATCH (t:Token)
-            WHERE t:ERC20 AND t.manualSelection = true
-            RETURN distinct(t.address) AS address
+            WHERE t:ERC20 AND t.manualSelection IS NOT NULL
+            RETURN distinct(t.address) AS address, t.manualSelection as schedule, t.lastHoldersUpdateDt as lastHoldersUpdateDt
         """
         tokens = self.query(query)
         tokens = [cast(str, token["address"]) for token in tokens]
@@ -132,7 +132,7 @@ class CuratedTokenHoldingCyphers(Cypher):
     def get_manual_selection_NFT_tokens(self) -> list[str]:
         query = f"""
             MATCH (t:Token)
-            WHERE (t:ERC721 OR t:ERC1155) AND t.manualSelection = true
+            WHERE (t:ERC721 OR t:ERC1155) AND t.manualSelection IS NOT NULL
             RETURN distinct(t.address) AS address
         """
         tokens = self.query(query)
@@ -163,7 +163,7 @@ class CuratedTokenHoldingCyphers(Cypher):
             SET token.lastHoldersUpdateDt = datetime()
             RETURN count(token)
         """
-        count += cast(int, self.query(query)[0].value())
+        count += cast(int, self.query(query, parameters={"tokens": tokens})[0].value())
         return count
 
     @count_query_logging
@@ -179,8 +179,8 @@ class CuratedTokenHoldingCyphers(Cypher):
                     edge.lastUpdatedDt = datetime()
                 MERGE (wallet)-[edge2:HOLDS]->(token)
                 SET edge2.balance = holdings.balance,
-                    edge2.toRemove = null
-                    edge2.numericBalance = toFloatOrNull(holdings.numericBalance),
+                    edge2.toRemove = null,
+                    edge2.numericBalance = toFloatOrNull(holdings.balance),
                     edge2.lastUpdateDt = datetime(),
                     edge2.ingestedBy = "{self.UPDATED_ID}"
                 RETURN count(edge2)
@@ -206,7 +206,7 @@ class CuratedTokenHoldingCyphers(Cypher):
                 ON MATCH set edge.lastUpdateDt = datetime(),
                     edge.balance = holdings.balance,
                     edge.numericBalance = toFloatOrNull(holdings.numericBalance),
-                    edge.toRemove = null
+                    edge.toRemove = null,
                     edge.ingestedBy = "{self.UPDATED_ID}"
                 RETURN count(edge)
             """
@@ -216,16 +216,14 @@ class CuratedTokenHoldingCyphers(Cypher):
     @count_query_logging
     def mark_current_hold_edges(self, tokens: list[str]) -> int:
         query = """
-            CALL apoc.periodic.commit("
-                MATCH (token:Token)
-                WHERE token.address IN $tokens
-                MATCH (wallet:Wallet)-[edge:HOLDS]-(token)
-                WHERE edge.toRemove IS NULL
-                WITH edge LIMIT 1000
-                SET edge.toRemove = true
-                RETURN count(edge)
-            ")
+            MATCH (token:Token)
+            WHERE token.address IN $tokens
+            MATCH (wallet:Wallet)-[edge:HOLDS]-(token)
+            WHERE edge.toRemove IS NULL
+            SET edge.toRemove = true
+            RETURN count(edge)
         """
+        print(tokens)
         count = cast(int, self.query(query, parameters={"tokens": tokens})[0].value())
         return count 
     
@@ -236,7 +234,7 @@ class CuratedTokenHoldingCyphers(Cypher):
             WHERE token.address IN $tokens
             MATCH (wallet:Wallet)-[edge:HOLDS]-(token)
             WHERE edge.toRemove IS NOT NULL
-            MERGE (wallet:Wallet)-[newedge:HELD]-(token)
+            MERGE (wallet)-[newedge:HELD]-(token)
             SET newedge.balance = edge.balance
             SET newedge.numericBalance = toFloatOrNull(edge.numericBalance)
             SET newedge.ingestedBy = "{self.UPDATED_ID}"
@@ -251,7 +249,7 @@ class CuratedTokenHoldingCyphers(Cypher):
             WHERE token.address IN $tokens
             MATCH (wallet:Wallet)-[edge:HOLDS_TOKEN]-(token)
             WHERE edge.balance = 0
-            MERGE (wallet:Wallet)-[newedge:HELD_TOKEN]-(token)
+            MERGE (wallet)-[newedge:HELD_TOKEN]-(token)
             SET newedge.tokenId = edge.tokenId
             SET newedge.ingestedBy = "{self.UPDATED_ID}"
             SET newedge.lastUpdateDt = datetime()
