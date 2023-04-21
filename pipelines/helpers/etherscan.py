@@ -126,7 +126,7 @@ class Etherscan(Requests):
     def get_token_information(self, 
                               tokenAddress: str, 
                               chain: str = "ethereum", 
-                              counter: int = 0) -> dict|None:
+                              counter: int = 0) -> dict | None:
         """
             Helper method to get the token metadata of any token from Etherscan
             parameters:

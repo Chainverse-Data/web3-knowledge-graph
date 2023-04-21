@@ -48,6 +48,7 @@ class TwitterEnsCyphers(Cypher):
                     MATCH (a:Alias:Ens {{name: toLower(twitter.ens)}})
                     MATCH (t:Twitter:Account {{handle: toLower(twitter.handle)}})
                     MERGE (t)-[r:HAS_ALIAS]->(a)
+                    r.citation = "Alias from ENS Twitter pipeline"
                     return count(r)
             """
             count += self.query(query)[0].value()
