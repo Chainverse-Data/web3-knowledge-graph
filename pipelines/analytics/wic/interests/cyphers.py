@@ -14,6 +14,7 @@ class InterestsCyphers(WICCypher):
         WITH wallet
         MATCH (context:_Wic:_Context:_{self.subgraph_name}:_{context})
         MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
+        SET con.toRemove = null
         RETURN COUNT(DISTINCT(wallet))
         """
         count += self.query(collectorsQuery)[0].value()
@@ -22,7 +23,8 @@ class InterestsCyphers(WICCypher):
         MATCH (wallet:Wallet)-[:HAS_ACCOUNT]->(sound:Sound:Account)
         WITH wallet
         MATCH (context:_Wic:_Context:_{self.subgraph_name}:_{context})
-        MERGE (wallet)-[r:_HAS_CONTEXT]->(context)
+        MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
+        SET con.toRemove = null
         RETURN COUNT(DISTINCT(wallet))
         """
         count += self.query(accountsQuery)[0].value()
@@ -35,6 +37,7 @@ class InterestsCyphers(WICCypher):
         WITH wallet
         MATCH (context:_Wic:_Context:_{self.subgraph_name}:_{context})
         MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
+        SET con.toRemove = null
         RETURN COUNT(DISTINCT(wallet))"""
         count += self.query(biosQuery)[0].value()
 
@@ -46,6 +49,7 @@ class InterestsCyphers(WICCypher):
         WITH wallet
         MATCH (context:_Wic:_Context:_{self.subgraph_name}:_{context})
         MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
+        SET con.toRemove = null
         RETURN COUNT(DISTINCT(wallet))"""
         count += self.query(articlesQuery)[0].value()
 
@@ -57,6 +61,7 @@ class InterestsCyphers(WICCypher):
         WITH wallet
         MATCH (context:_Wic:_Context:_{self.subgraph_name}:_{context})
         MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
+        SET con.toRemove = null
         RETURN COUNT(DISTINCT(wallet))"""
         count += self.query(articlesCollectors)[0].value()
         
@@ -66,6 +71,7 @@ class InterestsCyphers(WICCypher):
         MATCH (otherWallet)-[:HAS_ACCOUNT]-(:Twitter)-[:BIO_MENTIONED]-(twitter)
         WITH otherWallet, wic
         MERGE (otherWallet)-[con:_HAS_CONTEXT]->(context)
+        SET con.toRemove = null
         RETURN COUNT(DISTINCT(otherWallet))
         """
         count += self.query(twitterMentioned)[0].value()
@@ -82,6 +88,7 @@ class InterestsCyphers(WICCypher):
         WITH wallet
         MATCH (context:_Wic:_Context:_{self.subgraph_name}:_{context})
         MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
+        SET con.toRemove = null
         RETURN COUNT(DISTINCT(wallet))"""
         count += self.query(biosQuery)[0].value()
 
@@ -93,6 +100,7 @@ class InterestsCyphers(WICCypher):
         WITH wallet
         MATCH (context:_Wic:_Context:_{self.subgraph_name}:_{context})
         MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
+        SET con.toRemove = null
         RETURN COUNT(DISTINCT(wallet))"""
         count += self.query(articlesQuery)[0].value()
 
@@ -104,6 +112,7 @@ class InterestsCyphers(WICCypher):
         WITH wallet
         MATCH (context:_Wic:_Context:_{self.subgraph_name}:_{context})
         MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
+        SET con.toRemove = null
         RETURN COUNT(DISTINCT(wallet))"""
         count += self.query(articlesCollectors)[0].value()
 
@@ -115,6 +124,7 @@ class InterestsCyphers(WICCypher):
         WITH wallet
         MATCH (context:_Wic:_Context:_{self.subgraph_name}:_{context})
         MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
+        SET con.toRemove = null
         RETURN COUNT(DISTINCT(wallet))"""
         count += self.query(grants)[0].value()
 
@@ -131,6 +141,7 @@ class InterestsCyphers(WICCypher):
         WITH wallet
         MATCH (context:_Wic:_Context:_{self.subgraph_name}:_{context})
         MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
+        SET con.toRemove = null
         RETURN COUNT(DISTINCT(wallet))"""
         count += self.query(biosQuery)[0].value()
 
@@ -142,6 +153,7 @@ class InterestsCyphers(WICCypher):
         WITH wallet
         MATCH (context:_Wic:_Context:_{self.subgraph_name}:_{context})
         MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
+        SET con.toRemove = null
         RETURN COUNT(DISTINCT(wallet))"""
         count += self.query(articlesQuery)[0].value()
 
@@ -153,6 +165,7 @@ class InterestsCyphers(WICCypher):
         WITH wallet
         MATCH (context:_Wic:_Context:_{self.subgraph_name}:_{context})
         MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
+        SET con.toRemove = null
         RETURN COUNT(DISTINCT(wallet))"""
         count += self.query(articlesCollectors)[0].value()
 
@@ -165,6 +178,7 @@ class InterestsCyphers(WICCypher):
         WITH wallet
         MATCH (context:_Wic:_Context:_{self.subgraph_name}:_{context})
         MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
+        SET con.toRemove = null
         RETURN COUNT(DISTINCT(wallet))"""
         count += self.query(grants)[0].value()
 
@@ -181,6 +195,7 @@ class InterestsCyphers(WICCypher):
         WITH wallet
         MATCH (context:_Wic:_Context:_{self.subgraph_name}:_{context})
         MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
+        SET con.toRemove = null
         RETURN COUNT(DISTINCT(wallet))"""
         count += self.query(biosQuery)[0].value()
 
@@ -192,6 +207,7 @@ class InterestsCyphers(WICCypher):
         WITH wallet
         MATCH (context:_Wic:_Context:_{self.subgraph_name}:_{context})
         MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
+        SET con.toRemove = null
         RETURN COUNT(DISTINCT(wallet))"""
         count += self.query(articlesQuery)[0].value()
 
@@ -203,6 +219,7 @@ class InterestsCyphers(WICCypher):
         WITH wallet
         MATCH (context:_Wic:_Context:_{self.subgraph_name}:_{context})
         MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
+        SET con.toRemove = null
         RETURN COUNT(DISTINCT(wallet))"""
         count += self.query(articlesCollectors)[0].value()
 
@@ -214,6 +231,7 @@ class InterestsCyphers(WICCypher):
         WITH wallet
         MATCH (context:_Wic:_Context:_{self.subgraph_name}:_{context})
         MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
+        SET con.toRemove = null
         RETURN COUNT(DISTINCT(wallet))"""
         count += self.query(grants)[0].value()
 
@@ -230,6 +248,7 @@ class InterestsCyphers(WICCypher):
         WITH wallet
         MATCH (context:_Wic:_Context:_{self.subgraph_name}:_{context})
         MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
+        SET con.toRemove = null
         RETURN COUNT(DISTINCT(wallet))"""
         count += self.query(biosQuery)[0].value()
 
@@ -241,6 +260,7 @@ class InterestsCyphers(WICCypher):
         WITH wallet
         MATCH (context:_Wic:_Context:_{self.subgraph_name}:_{context})
         MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
+        SET con.toRemove = null
         RETURN COUNT(DISTINCT(wallet))"""
         count += self.query(articlesQuery)[0].value()
 
@@ -252,6 +272,7 @@ class InterestsCyphers(WICCypher):
         WITH wallet
         MATCH (context:_Wic:_Context:_{self.subgraph_name}:_{context})
         MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
+        SET con.toRemove = null
         RETURN COUNT(DISTINCT(wallet))"""
         count += self.query(articlesCollectors)[0].value()
 
@@ -263,6 +284,7 @@ class InterestsCyphers(WICCypher):
         WITH wallet
         MATCH (context:_Wic:_Context:_{self.subgraph_name}:_{context})
         MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
+        SET con.toRemove = null
         RETURN COUNT(DISTINCT(wallet))"""
         count += self.query(grants)[0].value()
 
@@ -279,6 +301,7 @@ class InterestsCyphers(WICCypher):
         WITH wallet
         MATCH (context:_Wic:_Context:_{self.subgraph_name}:_{context})
         MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
+        SET con.toRemove = null
         RETURN COUNT(DISTINCT(wallet))"""
         count += self.query(biosQuery)[0].value()
 
@@ -290,6 +313,7 @@ class InterestsCyphers(WICCypher):
         WITH wallet
         MATCH (context:_Wic:_Context:_{self.subgraph_name}:_{context})
         MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
+        SET con.toRemove = null
         RETURN COUNT(DISTINCT(wallet))"""
         count += self.query(articlesQuery)[0].value()
 
@@ -301,6 +325,7 @@ class InterestsCyphers(WICCypher):
         WITH wallet
         MATCH (context:_Wic:_Context:_{self.subgraph_name}:_{context})
         MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
+        SET con.toRemove = null
         RETURN COUNT(DISTINCT(wallet))"""
         count += self.query(articlesCollectors)[0].value()
 
@@ -313,6 +338,7 @@ class InterestsCyphers(WICCypher):
         WITH wallet
         MATCH (context:_Wic:_Context:_{self.subgraph_name}:_{context})
         MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
+        SET con.toRemove = null
         RETURN COUNT(DISTINCT(wallet))"""
         count += self.query(grants)[0].value()
 
@@ -329,6 +355,7 @@ class InterestsCyphers(WICCypher):
         WITH wallet
         MATCH (context:_Context:_{self.subgraph_name}:_{context})
         MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
+        SET con.toRemove = null
         RETURN COUNT(DISTINCT(wallet))
         """
         count += self.query(mirrorAuthor)[0].value()
@@ -338,7 +365,8 @@ class InterestsCyphers(WICCypher):
         WITH wallet, count(distinct(article)) as arts
         WHERE arts > 1
         MATCH (context:_Context:_{self.subgraph_name}:_{context})
-        MERGE (wallet)-[:_HAS_CONTEXT]->(context)
+        MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
+        SET con.toRemove = null
         RETURN COUNT(DISTINCT(context))
         """
         count += self.query(mirrorCollector)[0].value()
@@ -351,6 +379,7 @@ class InterestsCyphers(WICCypher):
         WITH wallet
         MATCH (context:_Wic:_Context:_{self.subgraph_name}:_{context})
         MERGE (writer)-[con:_HAS_CONTEXT]->(context)
+        SET con.toRemove = null
         RETURN COUNT(DISTINCT(writer))"""
         count += self.query(biosQuery)[0].value()
 
@@ -362,6 +391,7 @@ class InterestsCyphers(WICCypher):
         WITH wallet
         MATCH (context:_Wic:_Context:_{self.subgraph_name}:_{context})
         MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
+        SET con.toRemove = null
         RETURN COUNT(DISTINCT(wallet))"""
         count += self.query(grants)[0].value()
 
@@ -378,6 +408,7 @@ class InterestsCyphers(WICCypher):
         WITH wallet
         MATCH (context:_Wic:_Context:_{self.subgraph_name}:_{context})
         MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
+        SET con.toRemove = null
         RETURN COUNT(DISTINCT(wallet))"""
         count += self.query(biosQuery)[0].value()
 
@@ -389,6 +420,7 @@ class InterestsCyphers(WICCypher):
         WITH wallet
         MATCH (context:_Wic:_Context:_{self.subgraph_name}:_{context})
         MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
+        SET con.toRemove = null
         RETURN COUNT(DISTINCT(wallet))"""
         count += self.query(articlesQuery)[0].value()
 
@@ -400,6 +432,7 @@ class InterestsCyphers(WICCypher):
         WITH wallet
         MATCH (context:_Wic:_Context:_{self.subgraph_name}:_{context})
         MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
+        SET con.toRemove = null
         RETURN COUNT(DISTINCT(wallet))"""
         count += self.query(articlesCollectors)[0].value()
 
@@ -411,6 +444,7 @@ class InterestsCyphers(WICCypher):
         WITH wallet
         MATCH (context:_Wic:_Context:_{self.subgraph_name}:_{context})
         MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
+        SET con.toRemove = null
         RETURN COUNT(DISTINCT(wallet))"""
         count += self.query(grants)[0].value()
 
@@ -427,6 +461,7 @@ class InterestsCyphers(WICCypher):
         WITH wallet
         MATCH (context:_Wic:_Context:_{self.subgraph_name}:_{context})
         MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
+        SET con.toRemove = null
         RETURN COUNT(DISTINCT(wallet))"""
         count += self.query(biosQuery)[0].value()
 
@@ -438,6 +473,7 @@ class InterestsCyphers(WICCypher):
         WITH wallet
         MATCH (context:_Wic:_Context:_{self.subgraph_name}:_{context})
         MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
+        SET con.toRemove = null
         RETURN COUNT(DISTINCT(wallet))"""
         count += self.query(articlesQuery)[0].value()
 
@@ -449,6 +485,7 @@ class InterestsCyphers(WICCypher):
         WITH wallet
         MATCH (context:_Wic:_Context:_{self.subgraph_name}:_{context})
         MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
+        SET con.toRemove = null
         RETURN COUNT(DISTINCT(wallet))"""
         count += self.query(articlesCollectors)[0].value()
 
@@ -460,6 +497,7 @@ class InterestsCyphers(WICCypher):
         WITH wallet
         MATCH (context:_Wic:_Context:_{self.subgraph_name}:_{context})
         MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
+        SET con.toRemove = null
         RETURN COUNT(DISTINCT(wallet))"""
         count += self.query(grants)[0].value()
 
@@ -476,6 +514,7 @@ class InterestsCyphers(WICCypher):
         WITH wallet
         MATCH (context:_Wic:_Context:_{self.subgraph_name}:_{context})
         MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
+        SET con.toRemove = null
         RETURN COUNT(DISTINCT(wallet))"""
         count += self.query(biosQuery)[0].value()
 
@@ -487,6 +526,7 @@ class InterestsCyphers(WICCypher):
         WITH wallet
         MATCH (context:_Wic:_Context:_{self.subgraph_name}:_{context})
         MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
+        SET con.toRemove = null
         RETURN COUNT(DISTINCT(wallet))"""
         count += self.query(articlesQuery)[0].value()
 
@@ -498,6 +538,7 @@ class InterestsCyphers(WICCypher):
         WITH wallet
         MATCH (context:_Wic:_Context:_{self.subgraph_name}:_{context})
         MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
+        SET con.toRemove = null
         RETURN COUNT(DISTINCT(wallet))"""
         count += self.query(articlesCollectors)[0].value()
 
@@ -509,6 +550,7 @@ class InterestsCyphers(WICCypher):
         WITH wallet
         MATCH (context:_Wic:_Context:_{self.subgraph_name}:_{context})
         MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
+        SET con.toRemove = null
         RETURN COUNT(DISTINCT(wallet))"""
         count += self.query(grants)[0].value()
 
@@ -525,6 +567,7 @@ class InterestsCyphers(WICCypher):
         WITH wallet
         MATCH (context:_Wic:_Context:_{self.subgraph_name}:_{context})
         MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
+        SET con.toRemove = null
         RETURN COUNT(DISTINCT(wallet))"""
         count += self.query(biosQuery)[0].value()
 
@@ -536,6 +579,7 @@ class InterestsCyphers(WICCypher):
         WITH wallet
         MATCH (context:_Wic:_Context:_{self.subgraph_name}:_{context})
         MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
+        SET con.toRemove = null
         RETURN COUNT(DISTINCT(wallet))"""
         count += self.query(articlesQuery)[0].value()
 
@@ -547,6 +591,7 @@ class InterestsCyphers(WICCypher):
         WITH wallet
         MATCH (context:_Wic:_Context:_{self.subgraph_name}:_{context})
         MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
+        SET con.toRemove = null
         RETURN COUNT(DISTINCT(wallet))"""
         count += self.query(articlesCollectors)[0].value()
 
@@ -558,6 +603,7 @@ class InterestsCyphers(WICCypher):
         WITH wallet
         MATCH (context:_Wic:_Context:_{self.subgraph_name}:_{context})
         MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
+        SET con.toRemove = null
         RETURN COUNT(DISTINCT(wallet))"""
         count += self.query(grants)[0].value()
 
@@ -574,6 +620,7 @@ class InterestsCyphers(WICCypher):
         WITH wallet
         MATCH (context:_Wic:_Context:_{self.subgraph_name}:_{context})
         MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
+        SET con.toRemove = null
         RETURN COUNT(DISTINCT(wallet))"""
         count += self.query(biosQuery)[0].value()
 
@@ -585,6 +632,7 @@ class InterestsCyphers(WICCypher):
         WITH wallet
         MATCH (context:_Wic:_Context:_{self.subgraph_name}:_{context})
         MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
+        SET con.toRemove = null
         RETURN COUNT(DISTINCT(wallet))"""
         count += self.query(articlesQuery)[0].value()
 
@@ -596,6 +644,7 @@ class InterestsCyphers(WICCypher):
         WITH wallet
         MATCH (context:_Wic:_Context:_{self.subgraph_name}:_{context})
         MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
+        SET con.toRemove = null
         RETURN COUNT(DISTINCT(wallet))"""
         count += self.query(articlesCollectors)[0].value()
 
@@ -607,6 +656,7 @@ class InterestsCyphers(WICCypher):
         WITH wallet
         MATCH (context:_Wic:_Context:_{self.subgraph_name}:_{context})
         MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
+        SET con.toRemove = null
         RETURN COUNT(DISTINCT(wallet))"""
         count += self.query(grants)[0].value()
 

@@ -7,7 +7,7 @@ class WICCypher(Cypher):
         super().__init__(database)
         self.conditions = conditions
         self.subgraph_name = subgraph_name
-        self.clear_subgraph()
+        self.mark_subgraph()
         self.create_main()
         self.create_conditions()
         self.create_contexts()
@@ -17,10 +17,32 @@ class WICCypher(Cypher):
         indexes.wicIndexes()
 
     @count_query_logging
+    def mark_subgraph(self):
+        query = f"""
+            CALL apoc.periodic.commit("
+                MATCH (:_Wic:_{self.subgraph_name})-[edge:_HAS_CONTEXT]-()
+                WITH edge LIMIT 10000
+                SET edge.toRemove = true
+                RETURN count(edge)
+            ")
+        """
+        count = self.query(query)[0].value()
+        
+        query = f"""
+            MATCH (wic:_Wic:_{self.subgraph_name})
+            SET wic.toRemove = true
+            RETURN count(wic)
+        """
+        count += self.query(query)[0].value()
+        
+        return count
+
+    @count_query_logging
     def clear_subgraph(self):
         query = f"""
             CALL apoc.periodic.commit("
                 MATCH (:_Wic:_{self.subgraph_name})-[edge:_HAS_CONTEXT]-()
+                WHERE edge.toRemove = true
                 WITH edge LIMIT 10000
                 DELETE edge
                 RETURN count(edge)
@@ -30,6 +52,7 @@ class WICCypher(Cypher):
         
         query = f"""
             MATCH (wic:_Wic:_{self.subgraph_name})
+            WHERE wic.toRemove = true
             DETACH DELETE wic
             RETURN count(wic)
         """
@@ -42,6 +65,7 @@ class WICCypher(Cypher):
         query = f"""
             MERGE (main:_Wic:_Main:_{self.subgraph_name})
             SET main._displayName = '{self.subgraph_name}'
+            SET main.toRemove = null
             return count(main)
         """
         count = self.query(query)[0].value()
@@ -55,6 +79,7 @@ class WICCypher(Cypher):
                 MATCH (main:_Wic:_Main:_{self.subgraph_name})
                 MERGE (condition:_Wic:_Condition:_{condition}:_{self.subgraph_name})
                 SET condition._displayName = '{condition}'
+                SET condition.toRemove = null
                 WITH main, condition 
                 MERGE (main)-[r:_HAS_CONDITION]->(condition)
                 RETURN count(condition)
@@ -88,6 +113,7 @@ class WICCypher(Cypher):
             SET context._main = '{self.subgraph_name}'
             SET context._types = apoc.convert.toList({types})
             SET context._definition = '{definition}'
+            SET context.toRemove = null
             WITH context
             MATCH (condition:_Wic:_Condition:_{self.subgraph_name}:_{condition})
             WITH context, condition

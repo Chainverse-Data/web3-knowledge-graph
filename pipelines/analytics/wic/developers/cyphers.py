@@ -12,7 +12,8 @@ class DevelopersCyphers(WICCypher):
             MATCH (wallet:Wallet)-[r:HAS_ACCOUNT]-(github:Github:Account)
             MATCH (context:_Wic:_{self.subgraph_name}:_Context:_{context})
             WITH context, wallet, timeNow
-            MERGE (wallet)-[r:_HAS_CONTEXT]->(context)
+            MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
+            SET con.toRemove = null
             SET r.createdDt = timeNow 
             RETURN count(distinct(wallet)) AS count
         """
@@ -26,9 +27,10 @@ class DevelopersCyphers(WICCypher):
             MATCH (wallet:Wallet)-[:HAS_ACCOUNT]-(user:Github:Account)-[:HAS_FULLFILLED]-(bounty:Gitcoin:Bounty)
             MATCH (context:_Wic:_{self.subgraph_name}:_Context:_{context})
             WITH wallet, context, timeNow, collect(distinct(bounty.uuid)) AS bountyUuids
-            MERGE (wallet)-[r:_HAS_CONTEXT]->(context)
-            SET r.context = bountyUuids
-            SET r.createdDt = timeNow
+            MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
+            SET con.toRemove = null
+            SET con.context = bountyUuids
+            SET con.createdDt = timeNow
             RETURN count(distinct(wallet)) AS count
             """
         count = self.query(query)[0].value()
@@ -41,9 +43,10 @@ class DevelopersCyphers(WICCypher):
             MATCH (w:Wallet)-[:HAS_ACCOUNT]-(user:Github:User)-[:IS_OWNER]-(bounty:Gitcoin:Bounty)
             MATCH (context:_Wic:_{self.subgraph_name}:_Context:_{context})
             WITH w, context, datetime, collect(distinct(bounty.uuid)) AS bountyUuids
-            MERGE (w)-[r:_HAS_CONTEXT]->(context)
-            SET r.createdDt = datetime
-            SET r.context = bountyUuids
+            MERGE (w)-[con:_HAS_CONTEXT]->(context)
+            SET con.toRemove = null
+            SET con.createdDt = datetime
+            SET con.context = bountyUuids
             RETURN count(distinct(w)) AS count
         """
         count = self.query(query)[0].value()
@@ -59,6 +62,7 @@ class DevelopersCyphers(WICCypher):
             WITH wallet
             MATCH (context:_Wic:_{self.subgraph_name}:_Context:_{context})
             MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
+            SET con.toRemove = null
             RETURN count(distinct(wallet))
         """
         count = self.query(query)[0].value()
@@ -71,6 +75,7 @@ class DevelopersCyphers(WICCypher):
         MATCH (context:_Context:_Wic:_{self.subgraph_name}:_{context})
         WITH wallet, context
         MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
+        SET con.toRemove = null
         RETURN COUNT(DISTINCT(wallet))
         """
         count = self.query(query)[0].value()

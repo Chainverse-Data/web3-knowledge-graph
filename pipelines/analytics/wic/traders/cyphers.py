@@ -15,7 +15,8 @@ class TradersCypher(WICCypher):
                 MATCH (wallet:Wallet {{address: sudo.seller}}) 
                 MATCH (wic:_Wic:_{self.subgraph_name}:_Context:_{context})
                 WITH wallet, wic
-                MERGE (wallet)-[r:_HAS_CONTEXT]->(wic)
+                MERGE (wallet)-[con:_HAS_CONTEXT]->(wic)
+                SET con.toRemove = null
                 RETURN count(wallet)
             """
             count += self.query(query)[0].value()
@@ -31,7 +32,8 @@ class TradersCypher(WICCypher):
                 MATCH (wallet:Wallet {{address: blur.address}}) 
                 MATCH (wic:_Wic:_{self.subgraph_name}:_Context:_{context})
                 WITH wallet, wic
-                MERGE (wallet)-[r:_HAS_CONTEXT]->(wic)
+                MERGE (wallet)-[con:_HAS_CONTEXT]->(wic)
+                SET con.toRemove = null
                 RETURN count(wallet)
             """
             count += self.query(query)[0].value()
@@ -47,7 +49,8 @@ class TradersCypher(WICCypher):
                 MATCH (wallet:Wallet {{address: borrower.address}})
                 MATCH (wic:_Wic:_{self.subgraph_name}:_Context:_{context})
                 WITH wallet, wic
-                MERGE (wallet)-[r:_HAS_CONTEXT]->(wic)
+                MERGE (wallet)-[con:_HAS_CONTEXT]->(wic)
+                SET con.toRemove = null
                 RETURN count(wallet) 
             """
             count += self.query(connect_wallets)[0].value()

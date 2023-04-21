@@ -31,3 +31,5 @@ class WICAnalysis(Analysis):
                         self.conditions[condition][context]["subcontexts"][subcontext]["call"](context, subcontext)
                 else:
                     self.conditions[condition][context]["call"](context)
+        logging.info("Cleaning Subgraph")
+        self.cyphers.clear_subgraph()

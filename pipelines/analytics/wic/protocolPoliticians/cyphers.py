@@ -15,7 +15,8 @@ class ProtocolPoliticiansCyphers(WICCypher):
         MATCH (wic:_Wic:_{self.subgraph_name}:_Context:_{context})
         WITH w, count(distinct(p)) AS votes, wic
         WHERE votes > 10
-        MERGE (w)-[r:_HAS_CONTEXT]->(wic)
+        MERGE (w)-[con:_HAS_CONTEXT]->(wic)
+        SET con.toRemove = null
         SET r._count = votes
         RETURN count(distinct(w))
         """
@@ -39,7 +40,8 @@ class ProtocolPoliticiansCyphers(WICCypher):
             MATCH (wic:_Wic:_{self.subgraph_name}:_Context:_{context})
             WITH w, count(distinct(p)) AS authored, engaged_benchmark, wic
             WITH w, wic, (tofloat(authored) / engaged_benchmark) AS againstBenchmark
-            MERGE (w)-[r:_HAS_CONTEXT]->(wic)
+            MERGE (w)-[con:_HAS_CONTEXT]->(wic)
+            SET con.toRemove = null
             SET r._againstBenchmark = againstBenchmark
             RETURN count(distinct(w))
         """
@@ -53,7 +55,8 @@ class ProtocolPoliticiansCyphers(WICCypher):
             WHERE id(delegator) <> id(delegate)
             MATCH (wic:_Wic:_{self.subgraph_name}:_Context:_{context})
             WITH delegate, wic, count(distinct(delegator)) AS delegators_count
-            MERGE (delegate)-[r:_HAS_CONTEXT]->(wic)
+            MERGE (delegate)-[con:_HAS_CONTEXT]->(wic)
+            SET con.toRemove = null
             SET r._count = delegators_count
             RETURN count(distinct(delegate))
         """
@@ -66,7 +69,8 @@ class ProtocolPoliticiansCyphers(WICCypher):
             MATCH (w:Wallet)-[r:CONTRIBUTOR]->(i:Entity)
             MATCH (wic:_Wic:_{self.subgraph_name}:_Context:_{context})
             WITH w,wic, count(distinct(i)) AS contributing
-            MERGE (w)-[r:_HAS_CONTEXT]->(wic)
+            MERGE (w)-[con:_HAS_CONTEXT]->(wic)
+            SET con.toRemove = null
             SET r._count = contributing
             RETURN count(distinct(w))
         """

@@ -3,7 +3,7 @@ from ....helpers import count_query_logging
 
 class EcoDevCyphers(WICCypher):
     def __init__(self, subgraph_name, conditions, database=None):
-        WICCypher.__init__(self, subgraph_name, conditions, database)
+        WICCyphecon.__init__(self, subgraph_name, conditions, database)
     
     def get_grant_donation_benchmark(self):
         benchmark_query = f"""
@@ -23,8 +23,9 @@ class EcoDevCyphers(WICCypher):
             MATCH (wallet:Wallet)-[r:DONATION]->(g:Grant)
             WITH wallet, wic, count(distinct(g)) AS donations, benchmark
             WITH wallet, wic, (tofloat(donations) / benchmark) AS comparedBenchmark
-            MERGE (wallet)-[r:_HAS_CONTEXT]->(wic)
-            SET r._againstBenchmark = comparedBenchmark
+            MERGE (wallet)-[con:_HAS_CONTEXT]->(wic)
+            SET con.toRemove = null
+            SET con._againstBenchmark = comparedBenchmark
             RETURN count(distinct(wallet))
         """
         count = self.query(connect_query)[0].value()
@@ -50,8 +51,9 @@ class EcoDevCyphers(WICCypher):
             WITH wallet, wic, (tofloat(grants_admin) / benchmark) AS againstBenchmark
             MATCH (wallet)
             MATCH (wic)
-            MERGE (wallet)-[r:_HAS_CONTEXT]->(wic)
-            SET r._againstBenchmark = againstBenchmark
+            MERGE (wallet)-[con:_HAS_CONTEXT]->(wic)
+            SET con.toRemove = null
+            SET con._againstBenchmark = againstBenchmark
             RETURN count(distinct(wallet))
         """
         count = self.query(connect_query)[0].value()
@@ -79,8 +81,9 @@ class EcoDevCyphers(WICCypher):
         connect_wallets = f"""
             MATCH (wallet:Wallet)-[r:VOTED]->(p:Proposal)-[:HAS_PROPOSAL]-(e:Entity)-[:_PARADIGM_CASE]-(wic:_Wic:_{self.subgraph_name}:_Context:_{context})
             WITH wallet, count(distinct(e)) AS ents, wic
-            MERGE (wallet)-[rr:_HAS_CONTEXT]->(wic)
-            SET rr._count = ents
+            MERGE (wallet)-[con:_HAS_CONTEXT]->(wic)
+            SET con.toRemove = null
+            SET con._count = ents
             RETURN count(distinct(wallet))
         """
         count = self.query(connect_wallets)[0].value()
@@ -105,8 +108,9 @@ class EcoDevCyphers(WICCypher):
             WITH wallet, wic, (tofloat(bounties) / benchmark) AS againstBenchmark
             MATCH (wallet)
             MATCH (wic)
-            MERGE (wallet)-[r:_HAS_CONTEXT]->(wic)
-            SET r._againstBenchmark = againstBenchmark
+            MERGE (wallet)-[con:_HAS_CONTEXT]->(wic)
+            SET con.toRemove = null
+            SET con._againstBenchmark = againstBenchmark
             RETURN count(distinct(wallet))
         """
         count = self.query(connect_query)[0].value()
@@ -134,8 +138,9 @@ class EcoDevCyphers(WICCypher):
             WITH wic, wallet, againstBenchmark
             MATCH (wallet)
             MATCH (wic)
-            MERGE (wallet)-[r:_HAS_CONTEXT]->(wic)
-            SET r._againstBenchmark = againstBenchmark
+            MERGE (wallet)-[con:_HAS_CONTEXT]->(wic)
+            SET con.toRemove = null
+            SET con._againstBenchmark = againstBenchmark
             RETURN count(distinct(wallet))
         """
         count = self.query(connect_query)[0].value()
@@ -166,7 +171,8 @@ class EcoDevCyphers(WICCypher):
             WITH wallet, wic
             MATCH (wallet)
             MATCH (wic)
-            MERGE (wallet)-[r:_HAS_CONTEXT]->(wic)
+            MERGE (wallet)-[con:_HAS_CONTEXT]->(wic)
+            SET con.toRemove = null
             RETURN count(distinct(wallet))
         """
         count = self.query(connect_affiliates_voted)[0].value
@@ -180,7 +186,8 @@ class EcoDevCyphers(WICCypher):
             WITH wallet, wic
             MATCH (wallet)
             MATCH (wic)
-            MERGE (wallet)-[r:_HAS_CONTEXT]->(wic)
+            MERGE (wallet)-[con:_HAS_CONTEXT]->(wic)
+            SET con.toRemove = null
             RETURN count(distinct(wallet))
         """
         count = self.query(connect_participants_voted)[0].value()

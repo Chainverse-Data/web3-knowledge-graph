@@ -14,8 +14,9 @@ class CreatorsCollectorsCypher(WICCypher):
             MATCH (wallet:Wallet)-[r:HOLDS]->(token:Token)
             WHERE (token.address IN {addresses} OR token.contractAddress IN {addresses})
             WITH wallet, wic, count(distinct(token)) as count_collections
-            MERGE (wallet)-[r:_HAS_CONTEXT]->(wic)
-            SET r.count = count_collections
+            MERGE (wallet)-[con:_HAS_CONTEXT]->(wic)
+            SET con.toRemove = null
+            SET con.count = count_collections
             RETURN count(distinct(wallet)) AS count
         """
         count = self.query(connect)[0].value()
@@ -30,6 +31,7 @@ class CreatorsCollectorsCypher(WICCypher):
             WHERE size(ens_name) = 3 
             WITH wallet, wic 
             MERGE (wallet)-[con:_HAS_CONTEXT]->(wic)
+            SET con.toRemove = null
             RETURN count(con)
         """
         count = self.query(query)[0].value() 
@@ -53,6 +55,7 @@ class CreatorsCollectorsCypher(WICCypher):
         WHERE arts >= 2
         MATCH (wic:_Wic:_Context:_{context}:_{self.subgraph_name})
         MERGE (collector)-[con:_HAS_CONTEXT]->(wic)
+        SET con.toRemove = null
         RETURN COUNT(DISTINCT(collector))
         """
         count = self.query(query)[0].value()
@@ -68,6 +71,7 @@ class CreatorsCollectorsCypher(WICCypher):
         MATCH (context:_Context:_Wic:_{self.subgraph_name}:_{context})
         WITH wallet, context
         MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
+        SET con.toRemove = null
         RETURN COUNT(DISTINCT(wallet))
         """
         count += self.query(neumeQuery)[0].value()

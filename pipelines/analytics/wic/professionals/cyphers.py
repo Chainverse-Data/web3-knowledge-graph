@@ -24,6 +24,7 @@ class ProfessionalsCyphers(WICCypher):
         MATCH (wic:_Wic:_Context:_{self.subgraph_name}:_{context})
         WITH wallet, wic
         MERGE (wallet)-[con:_HAS_CONTEXT]->(wic)
+        SET con.toRemove = null
         RETURN COUNT(DISTINCT(wallet))"""
  
         count = self.query(connect)[0].value()
@@ -48,6 +49,7 @@ class ProfessionalsCyphers(WICCypher):
         MATCH (wic:_Wic:_Context:_{self.subgraph_name}:_{context})
         WITH wallet, wic
         MERGE (wallet)-[con:_HAS_CONTEXT]->(wic)
+        SET con.toRemove = null
         RETURN COUNT(DISTINCT(wallet))"""
  
         count = self.query(connect)[0].value()
@@ -69,6 +71,7 @@ class ProfessionalsCyphers(WICCypher):
         WITH wallet
         MATCH (wic:_Wic:_Context:_{self.subgraph_name}:_{context})
         MERGE (wallet)-[con:_HAS_CONTEXT]->(wic)
+        SET con.toRemove = null
         RETURN COUNT(DISTINCT(wallet))
         """
         count += self.query(connectDirect)[0].value()
@@ -79,6 +82,7 @@ class ProfessionalsCyphers(WICCypher):
         WITH wallet
         MATCH (wic:_Wic:_Context:_{self.subgraph_name}:_{context})
         MERGE (walelt)-[con:_HAS_CONTEXT]->(wic)
+        SET con.toRemove = null
         RETURN COUNT(DISTINCT(wic))
         """
         count += self.query(connectIndirect)[0].value()
@@ -103,6 +107,7 @@ class ProfessionalsCyphers(WICCypher):
         MATCH (wic:_Wic:_Context:_{self.subgraph_name}:_{context})
         WITH wallet, wic
         MERGE (wallet)-[con:_HAS_CONTEXT]->(wic)
+        SET con.toRemove = null
         RETURN COUNT(DISTINCT(wallet))"""
         count = self.query(connect)[0].value()
  
@@ -125,6 +130,7 @@ class ProfessionalsCyphers(WICCypher):
         MATCH (wic:_Wic:_Context:_{self.subgraph_name}:_{context})
         WITH wallet, wic
         MERGE (wallet)-[con:_HAS_CONTEXT]->(wic)
+        SET con.toRemove = null
         RETURN COUNT(DISTINCT(wallet))"""
         count = self.query(connect)[0].value()
  
@@ -148,6 +154,7 @@ class ProfessionalsCyphers(WICCypher):
         MATCH (wic:_Wic:_Context:_{self.subgraph_name}:_{context})
         WITH wallet, wic
         MERGE (wallet)-[con:_HAS_CONTEXT]->(wic)
+        SET con.toRemove = null
         RETURN COUNT(DISTINCT(wallet))"""
         count = self.query(connect)[0].value()
  
@@ -170,6 +177,7 @@ class ProfessionalsCyphers(WICCypher):
         MATCH (wic:_Wic:_Context:_{self.subgraph_name}:_{context})
         WITH wallet, wic
         MERGE (wallet)-[con:_HAS_CONTEXT]->(wic)
+        SET con.toRemove = null
         RETURN COUNT(DISTINCT(wallet))"""
         count = self.query(connect)[0].value()
  
@@ -184,6 +192,7 @@ class ProfessionalsCyphers(WICCypher):
         WITH otherWallet
         MATCH (wic:_Wic:_Context:_{self.subgraph_name}:_{context})
         MERGE (otherWallet)-[con:_HAS_CONTEXT]->(wic)
+        SET con.toRemove = null
         RETURN COUNT(DISTINCT(otherWallet))
         """
         count += self.query(snapshot)[0].value()
@@ -193,6 +202,7 @@ class ProfessionalsCyphers(WICCypher):
         WITH wallet
         MATCH (wic:_Wic:_Context:_{self.subgraph_name}:_{context})
         MERGE (wallet)-[con:_HAS_CONTEXT]->(wic)
+        SET con.toRemove = null
         RETURN COUNT(DISTINCT(wallet))
         """
         count += self.query(propHouse)[0].value()
@@ -208,6 +218,7 @@ class ProfessionalsCyphers(WICCypher):
         WITH otherWallet
         MATCH (wic:_Wic:_Context:_{self.subgraph_name}:_{context})
         MERGE (otherWallet)-[con:_HAS_CONTEXT]->(wic)
+        SET con.toRemove = null
         RETURN COUNT(DISTINCT(otherWallet))
         """
         count += self.query(query)[0].value()
@@ -222,6 +233,7 @@ class ProfessionalsCyphers(WICCypher):
         WITH wallet 
         MATCH (wic:_Wic:_Context:_{self.subgraph_name}:_{context})
         MERGE (wallet)-[con:_HAS_CONTEXT]->(wic)
+        SET con.toRemove = null
         RETURN COUNT(DISTINCT(wic))
         """
         count = self.query(query)[0].value()
