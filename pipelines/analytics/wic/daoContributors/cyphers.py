@@ -14,7 +14,8 @@ class DaoCyphers(WICCypher):
         MATCH (multisig:MultiSig)<-[account:HAS_ACCOUNT]-(entity:Entity) 
         MATCH (wallet:Wallet)-[signer:IS_SIGNER]->(multisig)
         MATCH (context:_Wic:_{self.subgraph_name}:_Context:_{context})
-        MERGE (wallet)-[r:_HAS_CONTEXT]->(context)
+        MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
+        SET con.toRemove = null
         RETURN COUNT(wallet)
         """
         count = self.query(query)[0].value()
@@ -26,7 +27,8 @@ class DaoCyphers(WICCypher):
         MATCH (entity:Entity)-[:HAS_ACCOUNT]-(wallet:Wallet)
         MATCH (walletother)-[:CONTRIBUTOR]->(entity)
         MATCH (context:_Wic:_{self.subgraph_name}:_Context:_{context})
-        MERGE (walletother)-[r:_HAS_CONTEXT]->(context)
+        MERGE (walletother)-[con:_HAS_CONTEXT]->(context)
+        SET con.toRemove = null
         RETURN COUNT(walletother)
         """
         count = self.query(query)[0].value()
@@ -41,6 +43,7 @@ class DaoCyphers(WICCypher):
         WITH otherWallet
         MATCH (wic:_Wic:_Context:_{self.subgraph_name}:_{context})
         MERGE (otherWallet)-[con:_HAS_CONTEXT]->(wic)
+        SET con.toRemove = null
         RETURN COUNT(DISTINCT(otherWallet))
         """
         count += self.query(snapshot)[0].value()
@@ -50,6 +53,7 @@ class DaoCyphers(WICCypher):
         WITH wallet
         MATCH (wic:_Wic:_Context:_{self.subgraph_name}:_{context})
         MERGE (wallet)-[con:_HAS_CONTEXT]->(wic)
+        SET con.toRemove = null
         RETURN COUNT(DISTINCT(wallet))
         """
         count += self.query(propHouse)[0].value()
@@ -65,6 +69,7 @@ class DaoCyphers(WICCypher):
         WITH otherWallet
         MATCH (wic:_Wic:_Context:_{self.subgraph_name}:_{context})
         MERGE (otherWallet)-[con:_HAS_CONTEXT]->(wic)
+        SET con.toRemove = null
         RETURN COUNT(DISTINCT(otherWallet))
         """
         count += self.query(query)[0].value()
@@ -78,6 +83,7 @@ class DaoCyphers(WICCypher):
         WITH wallet 
         MATCH (wic:_Wic:_Context:_{self.subgraph_name}:_{context})
         MERGE (wallet)-[con:_HAS_CONTEXT]->(wic)
+        SET con.toRemove = null
         RETURN COUNT(DISTINCT(wallet))
         """
         count = self.query(query)[0].value()

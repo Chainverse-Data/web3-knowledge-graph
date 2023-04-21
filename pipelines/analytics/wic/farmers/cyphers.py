@@ -13,6 +13,7 @@ class FarmerCyphers(WICCypher):
             MATCH (wallet:Wallet)-[r:VOTED]->(p:Proposal)-[:HAS_PROPOSAL]-(entity:SuspiciousDao)
             WITH wallet, context
             MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
+            SET con.toRemove = null
             RETURN count(distinct(wallet)) AS count
         """
         logging.info(connect_wallets)
@@ -62,6 +63,7 @@ class FarmerCyphers(WICCypher):
             MATCH (context:_Wic:_{self.subgraph_name}:_Context:_{context})
             WITH wallet, context
             MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
+            SET con.toRemove = null
             RETURN count(distinct(wallet)) AS count
         """
         count = self.query(connect_extreme)[0].value()
@@ -88,7 +90,8 @@ class FarmerCyphers(WICCypher):
         WHERE wallet.address in $addresses
         WITH wallet
         MATCH (context:_Context:_Wic:_{context}:_{self.subgraph_name})
-        MERGE (wallet)-[con:_CONTEXT]->(context)
+        MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
+        SET con.toRemove = null
         RETURN COUNT(DISTINCT(wallet))
         """
         count = self.query(query, parameters={"addresses": addresses})[0].value()
@@ -102,6 +105,7 @@ class FarmerCyphers(WICCypher):
         MATCH (wic:_Wic:_{context}:_{self.subgraph_name})
         WITH wallet, wic
         MERGE (wallet)-[con:_HAS_CONTEXT]->(wic)
+        SET con.toRemove = null
         RETURN COUNT(DISTINCT(wallet))
         """
         count = self.query(query)[0].value()
@@ -122,6 +126,8 @@ class FarmerCyphers(WICCypher):
             MATCH (wallet)
             MERGE (otherwallet)-[con:_HAS_CONTEXT]->(cosigners)
             MERGE (otherwallet)-[conbud:_HAS_CONTEXT_BUDDY]->(wallet)
+            SET con.toRemove = null
+            SET conbud.toRemove = null
             SET conbud.`_context` = cosigners.`_displayName`
             SET con.createdDt = timeNow
             SET conbud.createdDt = timeNow
@@ -147,6 +153,7 @@ class FarmerCyphers(WICCypher):
         MATCH (wic:_Wic:_Context:_{self.subgraph_name}:_{context})
         WITH counterParty, wic
         MERGE (counterParty)-[con:_HAS_CONTEXT]->(wic)
+        SET con.toRemove = null
         RETURN COUNT(DISTINCT(counterParty))
         """
         count = self.query(connect)[0].value()

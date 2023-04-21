@@ -22,8 +22,9 @@ class CreatorsCypher(WICCypher):
             MATCH (wic:_Wic:_{self.subgraph_name}:_Context:_{context})
             WITH author, count(distinct(article)) AS articles_count, tofloat({benchmark}) AS benchmark, wic
             WHERE articles_count >= benchmark
-            MERGE (author)-[edge:_HAS_CONTEXT]->(wic)
-            SET edge.count = articles_count
+            MERGE (author)-[con:_HAS_CONTEXT]->(wic)
+            SET con.toRemove = null
+            SET con.count = articles_count
             RETURN count(author)
         """
         count = self.query(connect_writers)[0].value()
@@ -38,9 +39,11 @@ class CreatorsCypher(WICCypher):
         MATCH (context:_Wic:_{self.subgraph_name}:_{context})
         WITH wallet, context
         MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
+        SET con.toRemove = null
         RETURN COUNT(DISTINCT(wallet))
         """
         count = self.query(soundQuery)[0].value()
+        return count
 
     @count_query_logging
     def web3_data_analysts(self, context):
@@ -51,6 +54,7 @@ class CreatorsCypher(WICCypher):
         WHERE dune.follows > 0
         WITH wallet, context
         MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
+        SET con.toRemove = null
         RETURN COUNT(DISTINCT(wallet))
         """
         count = self.query(query)[0].value()
