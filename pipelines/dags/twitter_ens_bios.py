@@ -4,7 +4,6 @@ from airflow import DAG
 from airflow.utils.dates import days_ago
 from airflow.contrib.operators.ecs_operator import ECSOperator
 from airflow.models import Variable
-import pendulum
 
 dag = DAG(
     "twitter_ens_bios",
