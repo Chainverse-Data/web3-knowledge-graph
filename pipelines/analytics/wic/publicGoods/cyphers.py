@@ -3,7 +3,7 @@ from ....helpers import count_query_logging
 
 class EcoDevCyphers(WICCypher):
     def __init__(self, subgraph_name, conditions, database=None):
-        WICCyphecon.__init__(self, subgraph_name, conditions, database)
+        WICCypher.__init__(self, subgraph_name, conditions, database)
     
     def get_grant_donation_benchmark(self):
         benchmark_query = f"""

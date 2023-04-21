@@ -17,7 +17,7 @@ class ProtocolPoliticiansCyphers(WICCypher):
         WHERE votes > 10
         MERGE (w)-[con:_HAS_CONTEXT]->(wic)
         SET con.toRemove = null
-        SET r._count = votes
+        SET con._count = votes
         RETURN count(distinct(w))
         """
         count = self.query(query)[0].value()
@@ -42,7 +42,7 @@ class ProtocolPoliticiansCyphers(WICCypher):
             WITH w, wic, (tofloat(authored) / engaged_benchmark) AS againstBenchmark
             MERGE (w)-[con:_HAS_CONTEXT]->(wic)
             SET con.toRemove = null
-            SET r._againstBenchmark = againstBenchmark
+            SET con._againstBenchmark = againstBenchmark
             RETURN count(distinct(w))
         """
         count = self.query(engaged_query)[0].value()
@@ -57,7 +57,7 @@ class ProtocolPoliticiansCyphers(WICCypher):
             WITH delegate, wic, count(distinct(delegator)) AS delegators_count
             MERGE (delegate)-[con:_HAS_CONTEXT]->(wic)
             SET con.toRemove = null
-            SET r._count = delegators_count
+            SET con._count = delegators_count
             RETURN count(distinct(delegate))
         """
         count = self.query(delegates)[0].value()
@@ -71,7 +71,7 @@ class ProtocolPoliticiansCyphers(WICCypher):
             WITH w,wic, count(distinct(i)) AS contributing
             MERGE (w)-[con:_HAS_CONTEXT]->(wic)
             SET con.toRemove = null
-            SET r._count = contributing
+            SET con._count = contributing
             RETURN count(distinct(w))
         """
         count = self.query(query)[0].value()

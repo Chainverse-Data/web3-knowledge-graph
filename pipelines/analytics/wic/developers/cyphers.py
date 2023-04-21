@@ -14,7 +14,7 @@ class DevelopersCyphers(WICCypher):
             WITH context, wallet, timeNow
             MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
             SET con.toRemove = null
-            SET r.createdDt = timeNow 
+            SET con.createdDt = timeNow 
             RETURN count(distinct(wallet)) AS count
         """
         count = self.query(query)[0].value()

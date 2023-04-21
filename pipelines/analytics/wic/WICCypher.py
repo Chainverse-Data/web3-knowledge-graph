@@ -21,6 +21,7 @@ class WICCypher(Cypher):
         query = f"""
             CALL apoc.periodic.commit("
                 MATCH (:_Wic:_{self.subgraph_name})-[edge:_HAS_CONTEXT]-()
+                WHERE edge.toRemove IS NULL
                 WITH edge LIMIT 10000
                 SET edge.toRemove = true
                 RETURN count(edge)
