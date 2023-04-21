@@ -17,6 +17,7 @@ class SoundIngestor(Ingestor):
         rels = {"address": [], "account": []}
 
         data = self.scraper_data["artists"]
+        print("data", self.scraper_data)
         for _, row in tqdm(enumerate(data)):
             if row.get("name", None):
                 nodes["users"].append({"name": row["name"].lower(), "url": row["url"]})

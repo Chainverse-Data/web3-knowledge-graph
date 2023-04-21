@@ -94,6 +94,7 @@ class SoundScraper(Scraper):
                 entry["address"] = root.clipboard_get()
             except:
                 pass
+            print(entry)
             results.append(entry)
 
         logging.info(f"Scraped {len(results)} artists")

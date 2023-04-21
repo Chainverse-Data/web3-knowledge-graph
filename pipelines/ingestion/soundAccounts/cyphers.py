@@ -29,15 +29,15 @@ class SoundCyphers(Cypher):
         count = 0
         for url in urls:
             sound_user_query = f"""
-                        LOAD CSV WITH HEADERS FROM '{url}' as sound
-                        MERGE (d:Sound:Account {{handle: toLower(sound.name)}})
-                        SET d.url = sound.url,
-                            d.accountCreatedDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
-                            d.name = sound.name,
-                            d.uuid = apoc.create.uuid(),
-                            d.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
-                        RETURN count(d)
-                        """
+                LOAD CSV WITH HEADERS FROM '{url}' as sound
+                MERGE (d:Sound:Account {{handle: toLower(sound.name)}})
+                SET d.url = sound.url,
+                    d.accountCreatedDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms')),
+                    d.name = sound.name,
+                    d.uuid = apoc.create.uuid(),
+                    d.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
+                RETURN count(d)
+            """
             count += self.query(sound_user_query)[0].value()
         return count
 

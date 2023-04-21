@@ -1,13 +1,16 @@
-from datetime import datetime
+import json
+import logging
 import math
+import os
 import re
 import sys
+from datetime import datetime
+from tqdm import tqdm
+
 import boto3
-import os
-import logging
-import json
-from botocore.exceptions import ClientError
 import pandas as pd
+from botocore.exceptions import ClientError
+
 
 class S3Utils:
     def __init__(self, bucket_name=None, metadata_filename=None, load_bucket_data=False, no_bucket_prefix=False):
@@ -112,7 +115,7 @@ class S3Utils:
     def save_df_as_csv(self, 
                        df: pd.DataFrame, 
                        file_name: str, 
-                       ACL: str = 'public-read', 
+                       ACL = 'public-read', 
                        max_lines: int = 10000, 
                        max_size: int = 10000000)-> list[str]:
         """
@@ -131,8 +134,9 @@ class S3Utils:
         logging.info("Uploading data...")
         urls = []
         for chunk, chunk_id in zip(chunks, range(len(chunks))):
-            chunk.to_csv(f"s3://{self.bucket_name}/{file_name}--{chunk_id}.csv", index=False, escapechar='\\')
-            self.s3_resource.ObjectAcl(self.bucket_name, f"{file_name}--{chunk_id}.csv").put(ACL=ACL)
+            chunk_name = f"{file_name}--{chunk_id}.csv"
+            chunk.to_csv(f"s3://{self.bucket_name}/{chunk_name}", index=False, escapechar='\\')
+            self.s3_resource.ObjectAcl(self.bucket_name, chunk_name).put(ACL=ACL)
             location = self.s3_client.get_bucket_location(Bucket=self.bucket_name)["LocationConstraint"]
             urls.append("https://s3-%s.amazonaws.com/%s/%s" % (location, self.bucket_name, f"{file_name}--{chunk_id}.csv"))
         return urls
@@ -140,7 +144,7 @@ class S3Utils:
     def save_json_as_csv(self, 
                          data: list[dict], 
                          file_name: str, 
-                         ACL: str = "public-read", 
+                         ACL = "public-read", 
                          max_lines: int = 10000, 
                          max_size: int = 10000000) -> list[str]:
         """
@@ -157,7 +161,7 @@ class S3Utils:
     def save_full_json_as_csv(self, 
                               data: dict|list, 
                               file_name: str, 
-                              ACL: str = "public-read") -> str:
+                              ACL = "public-read") -> str:
         df = pd.DataFrame.from_dict(data)
         df.to_csv(f"s3://{self.bucket_name}/{file_name}.csv", index=False)
         self.s3_resource.ObjectAcl(self.bucket_name, f"{file_name}.csv").put(ACL=ACL)
@@ -348,3 +352,17 @@ class S3Utils:
                 yield data
                 data = {}
                 counter = 0
+
+    def clean_test_buckets(self, filter):
+        response = self.s3_client.list_buckets()
+        buckets = [el["Name"] for el in response["Buckets"]]
+        buckets = [bucket for bucket in buckets if filter in bucket]
+        for bucket_name in tqdm(buckets):
+            logging.info(f"Cleaning up: {bucket_name}")
+            bucket = self.s3_resource.Bucket(bucket_name)
+            bucket_versioning = self.s3_resource.BucketVersioning(bucket_name)
+            if bucket_versioning.status == 'Enabled':
+                bucket.object_versions.delete()
+            else:
+                bucket.objects.all().delete()
+            response = bucket.delete()
