@@ -20,7 +20,7 @@ class TwitterBiosENSProcessor(Processor):
     def __init__(self):
         self.cyphers = TwitterENSBiosCyphers()
         self.ens_matcher = re.compile("([-a-zA-Z0-9@:%._\+~#=]{1,256}\.eth)")
-        super().__init__("twitter-ens-bios")
+        super().__init__("twitter-ens-bios3")
 
     def extract_ens(self, bio):
         matches = self.ens_matcher.findall(bio)
