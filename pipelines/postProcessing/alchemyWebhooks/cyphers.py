@@ -8,13 +8,18 @@ class WebhooksCyphers(Cypher):
         super().__init__(database)
 
     @get_query_logging
-    def get_webhooks(self):
+    def get_webhooks(self) -> dict[str]:
         query = f"""
             MATCH (webhook:Alchemy:AddressesWebhook)
-            RETURN webhook as webhook, apoc.node.degree(webhook, "IS_MEMBER_OF") as degree
+            RETURN webhook.id as webhook_id, apoc.node.degree(webhook, "IS_MEMBER_OF") as degree
         """
         records = self.query(query)
-        return records
+        webhooks = {}
+        for record in records:
+            webhook = record["webhook"]
+            degree = record["degree"]
+            webhooks[webhook["id"]] = degree
+        return webhooks
 
     @count_query_logging
     def create_address_webhook(self, network, webhook_id, callbackUrl):
@@ -63,7 +68,7 @@ class WebhooksCyphers(Cypher):
         return count
 
     @count_query_logging
-    def connect_wallet_to_webhook(self, webhook_id, addresses):
+    def connect_wallets_to_webhook(self, webhook_id, addresses):
         query = f"""
             MATCH (webhook:Alchemy:AddressesWebhook {{id: $webhook_id}})
             MATCH (wallet:Wallet)
