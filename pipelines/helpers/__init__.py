@@ -7,7 +7,7 @@ from .queries import Queries
 from .multiprocessing import Multiprocessing
 from .utils import Utils
 from .etherscan import Etherscan
-from .alchemy import Alchemy
+from .Alchemy import Alchemy
 from .web3Utils import Web3Utils
 from .base import Base
 from .twitter import Twitter
