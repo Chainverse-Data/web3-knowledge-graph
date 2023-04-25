@@ -47,8 +47,7 @@ class Requests:
         if counter > 10:
             return None
         try:
-            r = requests.get(url, params=params, headers=headers,
-                            allow_redirects=allow_redirects, verify=False)
+            r = requests.get(url, params=params, headers=headers, allow_redirects=allow_redirects, verify=False)
             if not retry_on_404 and r.status_code == 404:
                 return None
             elif r.status_code == 204:

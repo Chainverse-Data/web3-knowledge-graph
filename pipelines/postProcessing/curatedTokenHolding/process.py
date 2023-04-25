@@ -1,4 +1,5 @@
 
+from datetime import datetime, timedelta, timezone
 import logging
 from .cypher import CuratedTokenHoldingCyphers
 from ..helpers import Processor
@@ -19,26 +20,34 @@ class CuratedTokenHoldingProcessor(Processor):
         self.etherscan = Etherscan() 
 
     def get_NFTs_tokens(self) -> list[str]:
-        # tokens = self.cyphers.get_bluechip_NFT_tokens(min_price=10)
-        # tokens += self.cyphers.get_citizen_NFT_tokens(propotion=0.25)
-        # tokens += self.cyphers.get_overrepresented_NFT_tokens(propotion=0.01)
-        tokens = self.cyphers.get_manual_selection_NFT_tokens()
-        # tokens += self.cyphers.get_verified_NFT_tokens()
-        tokens = list(set(tokens))
+        tokens_data = self.cyphers.get_manual_selection_NFT_tokens()
+        tokens = []
+        for token in tokens_data:
+            if token["schedule"] == "daily" and datetime.now().replace(tzinfo=timezone.utc) - timedelta(days=1) >= token["lastHoldersUpdateDt"].replace(tzinfo=timezone.utc):
+                tokens.append(token["address"])
+            if token["schedule"] == "weekly" and datetime.now().replace(tzinfo=timezone.utc) - timedelta(days=7) >= token["lastHoldersUpdateDt"].replace(tzinfo=timezone.utc):
+                tokens.append(token["address"])
+            if token["schedule"] == "monthly" and datetime.now().replace(tzinfo=timezone.utc) - timedelta(days=30) >= token["lastHoldersUpdateDt"].replace(tzinfo=timezone.utc):
+                tokens.append(token["address"])
         if DEBUG:
             tokens = tokens[:10]
             return tokens
-        logging.info(f"{len(tokens)} tokens retrieved for processing!")
+        logging.info(f"{len(tokens)} ERC721 and ERC1155 tokens retrieved for processing!")
         return tokens
     
     def get_ERC20_tokens(self) -> list[str]:
-        # tokens = self.cyphers.get_citizen_ERC20_tokens(propotion=0.25)
-        # tokens = self.cyphers.get_verified_ERC20_tokens()
-        tokens = self.cyphers.get_manual_selection_ERC20_tokens()
-        # tokens = self.cyphers.get_overrepresented_ERC20_tokens(propotion=0.05)
-        tokens = list(set(tokens))
+        tokens_data = self.cyphers.get_manual_selection_ERC20_tokens()
+        tokens = []
+        for token in tokens_data:
+            if token["schedule"] == "daily" and datetime.now() - timedelta(days=1) >= token["lastHoldersUpdateDt"]:
+                tokens.append(token["address"])
+            if token["schedule"] == "weekly" and datetime.now() - timedelta(days=7) >= token["lastHoldersUpdateDt"]:
+                tokens.append(token["address"])
+            if token["schedule"] == "monthly" and datetime.now() - timedelta(days=30) >= token["lastHoldersUpdateDt"]:
+                tokens.append(token["address"])
         if DEBUG:
             tokens = tokens[:10]
+        logging.info(f"{len(tokens)} ERC20 tokens retrieved for processing!")
         return tokens
 
     def get_holders_for_NFT_tokens(self):
