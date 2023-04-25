@@ -109,3 +109,9 @@ class Indexes(Cypher):
     def dune(self):
         query = "CREATE INDEX Dune IF NOT EXISTS FOR (e:Dune) ON (e.handle)"
         self.query(query)
+
+    def walletsBools(self):
+        query = "CREATE INDEX walletBooleans IF NOT EXISTS FOR (w:Wallet) ON (w.notifySelected)"
+        self.query(query)
+
+        

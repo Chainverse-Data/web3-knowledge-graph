@@ -119,6 +119,57 @@ class Requests:
             logging.error(f"An unrecoverable exception occurred: {e}")
             return self.post_request(url, data=data, json=json, headers=headers, decode=decode, ignore_retries=ignore_retries, retry_on_403=retry_on_403, retry_on_404=retry_on_404, counter=counter + 1, max_retries=max_retries)
 
+    def patch_request(self, 
+                     url: str, 
+                     data: dict|None = None, 
+                     json: dict|None = None, 
+                     headers: dict|None = None, 
+                     decode: bool = True, 
+                     return_json: bool = False, 
+                     ignore_retries: bool = False, 
+                     retry_on_403: bool = False, 
+                     retry_on_404: bool = True,
+                     counter: int = 0, 
+                     max_retries:int = 10) -> None | dict | str | requests.models.Response:
+        """This makes a PATCH request to a url and return the data.
+        It can take params. json payload and headers as parameters following python's request library.
+        The method returns the raw request content, you must then parse the content with the correct parser.
+            arguments:
+                - url: The url for the get request
+                - data: a dictionary containing the query parameter for the request
+                - json: a dictionary containing the json payload for the request
+                - headers: a dictionary containing the headers for the request
+                - decode: Used to decode the returned value in the case were it is not a json object (ex: a README file)
+                - return_json: Automaticallyt decodes the returned values as a JSON
+                - ignore_retries: if True, will return None on any failure, if False will retry the query
+                - retry_on_403: If True, will retry the query on a 403 Forbidden error
+                - retry_on_404: If True, will retry the query on a 404 Missing error
+                - max_retries: Change this to change the max number of allowed retries
+        """
+
+        time.sleep(counter * max_retries)
+        if counter > 10:
+            return None
+        try:
+            r = requests.patch(url, data=data, json=json, headers=headers, verify=False)
+            if not ignore_retries and r.status_code == 404 and retry_on_404:
+                logging.error(f"Status code is 404: {url}\nRetrying {counter*10}s (counter = {counter})...")
+                return self.post_request(url, data=data, json=json, headers=headers, decode=decode, ignore_retries=ignore_retries, retry_on_403=retry_on_403, retry_on_404=retry_on_404, counter=counter + 1, max_retries=max_retries)
+            if not ignore_retries and r.status_code == 403 and retry_on_403:
+                logging.error(f"Status code is 403: {url}\n{r.content}\nRetrying {counter*10}s (counter = {counter})...")
+                return self.post_request(url, data=data, json=json, headers=headers, decode=decode, ignore_retries=ignore_retries, retry_on_403=retry_on_403, retry_on_404=retry_on_404, counter=counter + 1, max_retries=max_retries)
+            if not ignore_retries and r.status_code <= 200 and r.status_code > 300:
+                logging.error(f"Status code not 200: {r.status_code} Retrying {counter*10}s (counter = {counter})...")
+                return self.post_request(url, data=data, json=json, headers=headers, decode=decode, ignore_retries=ignore_retries, retry_on_403=retry_on_403, retry_on_404=retry_on_404, counter=counter + 1, max_retries=max_retries)
+            if return_json:
+                return r.json()
+            if decode:
+                return r.content.decode("UTF-8")
+            return r
+        except Exception as e:
+            logging.error(f"An unrecoverable exception occurred: {e}")
+            return self.patch_request(url, data=data, json=json, headers=headers, decode=decode, ignore_retries=ignore_retries, retry_on_403=retry_on_403, retry_on_404=retry_on_404, counter=counter + 1, max_retries=max_retries)
+
     def call_the_graph_api(self, 
                            graph_url: str, 
                            query: str, 

@@ -68,7 +68,7 @@ class TokenMetadataCyphers(Cypher):
                     t.discord = tokens.discord,
                     t.whitepaper = tokens.whitepaper,
                     t.tokenPriceUSD = toFloatOrNull(tokens.tokenPriceUSD),
-                    t.lastUpdatedDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
+                    t.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
                 return count(t)"""
             count += self.query(query)[0].value()
         return count
@@ -99,7 +99,7 @@ class TokenMetadataCyphers(Cypher):
                     token.openSeaDescription = tokens.openSeaDescription,
                     token.externalUrl = tokens.externalUrl,
                     token.twitterUsername = tokens.twitterUsername,
-                    token.lastUpdatedDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
+                    token.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
                 return count(token)"""
             count += self.query(query)[0].value()
         return count

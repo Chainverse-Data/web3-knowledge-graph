@@ -349,3 +349,119 @@ class Alchemy(Requests):
             return result
         else:
             return self.getLogs(contractAddress, fromBlock=fromBlock, toBlock=toBlock, topics=topics, blockHash=blockHash, chain=chain, counter=counter+1)
+
+    def create_webhook(self, network, webhook_type, webhook_url, addresses=[], nft_filters=None, graphql__query=None, app_id=None, nft_metadata_filters=None, counter=0):
+        """
+            Create webhook endpoint for Alchemy. 
+            Required: 
+                - network: The network to monitor. Must be in ETH_MAINNET | MATIC_MAINNET | ARB_MAINNET | OPT_MAINNET
+                - webhook_type: The type of webhook. Must be in GRAPHQL | MINED_TRANSACTION | DROPPED_TRANSACTION | ADDRESS_ACTIVITY | NFT_ACTIVITY | NFT_METADATA_UPDATE
+                - webhook_url: The url for the callback.
+            Optional:
+                - graphql_query: Only if webhook_type == GRAPHQL. The grqphql query to monitor with.
+                - app_id: Required for mined and dropped webhooks, optional for address activity or custom webhooks.
+                - addresses: List of addresses you want to track. Required for address activity webhooks only.
+                - nft_filters: List of nft filter objects to track transfer activity for.
+                - nft_metadata_filters: List of nft metadata filter objects to track metadata updates for.
+            Refere to: https://docs.alchemy.com/reference/create-webhook for more info
+        """
+
+        time.sleep(counter)
+        if counter > self.max_retries:
+            return None
+        
+        url = "https://dashboard.alchemy.com/api/create-webhook"
+
+        payload = {
+            "network": network,
+            "webhook_type": webhook_type,
+            "webhook_url": webhook_url
+        }
+        if addresses: payload["addresses"] = addresses
+        if nft_filters: payload["nft_filters"] = nft_filters
+        if graphql__query: payload["graphql__query"] = graphql__query
+        if app_id: payload["app_id"] = app_id
+        if nft_metadata_filters: payload["nft_metadata_filters"] = nft_metadata_filters
+
+        headers = {
+            "accept": "application/json",
+            "content-type": "application/json",
+            "X-Alchemy-Token": os.environ['ALCHEMY_AUTH_TOKEN'],
+        }
+
+        response = self.post_request(url, json=payload, headers=headers, return_json=True)
+        if response and type(response) == dict:
+            return response["data"]
+        else:
+            self.create_webhook(network, webhook_type, webhook_url, addresses=addresses, nft_filters=nft_filters, graphql__query=graphql__query, app_id=app_id, nft_metadata_filters=nft_metadata_filters, counter=counter+1)
+
+    def update_webhook_address(self, webhook_id, addresses_to_add=[], addresses_to_remove=[], counter=0):
+        """
+            Update address for webhook address endpoint. 
+            Required: 
+                - webhook_id: ID of the address activity webhook
+                - addresses_to_add: List of addresses to add, use [] if none.
+                - addresses_to_remove: List of addresses to remove, use [] if none.
+            Refere to: https://docs.alchemy.com/reference/update-webhook-addresses for more info
+        """
+
+        time.sleep(counter)
+        if counter > self.max_retries:
+            return None
+        
+        url = "https://dashboard.alchemy.com/api/update-webhook-addresses"
+
+        payload = {
+            "webhook_id": webhook_id,
+            "addresses_to_add": addresses_to_add,
+            "addresses_to_remove": addresses_to_remove
+        }
+
+        headers = {
+            "accept": "application/json",
+            "content-type": "application/json",
+            "X-Alchemy-Token": os.environ['ALCHEMY_AUTH_TOKEN'],
+        }
+
+        response = self.patch_request(url, json=payload, headers=headers, return_json=True)
+        if response and type(response) == dict:
+            return response
+        else:
+            self.update_webhook_address(webhook_id, addresses_to_add=addresses_to_add, addresses_to_remove=addresses_to_remove, counter=counter+1)
+
+
+    def update_webhook_tokens(self, webhook_id, addresses_to_add=[], addresses_to_remove=[], counter=0):
+        """
+            Update address for webhook address endpoint. 
+            Required: 
+                - webhook_id: ID of the address activity webhook
+                - addresses_to_add: List of addresses to add, use [] if none.
+                - addresses_to_remove: List of addresses to remove, use [] if none.
+            Refere to: https://docs.alchemy.com/reference/update-webhook-addresses for more info
+        """
+
+        # TODO
+
+        # time.sleep(counter)
+        # if counter > self.max_retries:
+        #     return None
+        
+        # url = "https://dashboard.alchemy.com/api/create-webhook"
+
+        # payload = {
+        #     "webhook_id": webhook_id,
+        #     "addresses_to_add": addresses_to_add,
+        #     "addresses_to_remove": addresses_to_remove
+        # }
+
+        # headers = {
+        #     "accept": "application/json",
+        #     "content-type": "application/json",
+        #     "X-Alchemy-Token": os.environ['ALCHEMY_AUTH_TOKEN'],
+        # }
+
+        # response = self.patch_request(url, json=payload, headers=headers, return_json=True)
+        # if response and type(response) == dict:
+        #     return response
+        # else:
+        #     self.update_webhook_address(webhook_id, addresses_to_add=addresses_to_add, addresses_to_remove=addresses_to_remove, counter=counter+1)
