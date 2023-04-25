@@ -176,7 +176,7 @@ class CuratedTokenHoldingCyphers(Cypher):
                 MATCH (token:Token {{address: toLower(holdings.contractAddress)}})
                 MERGE (wallet)-[edge:HOLDS_TOKEN {{tokenId: holdings.tokenId}}]->(token)
                 SET edge.balance = toIntegerOrNull(holdings.balance),
-                    edge.lastUpdatedDt = datetime()
+                    edge.lastUpdateDt = datetime()
                 MERGE (wallet)-[edge2:HOLDS]->(token)
                 SET edge2.balance = holdings.balance,
                     edge2.toRemove = null,

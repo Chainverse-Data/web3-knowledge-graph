@@ -391,7 +391,7 @@ class Alchemy(Requests):
 
         response = self.post_request(url, json=payload, headers=headers, return_json=True)
         if response and type(response) == dict:
-            return response
+            return response["data"]
         else:
             self.create_webhook(network, webhook_type, webhook_url, addresses=addresses, nft_filters=nft_filters, graphql__query=graphql__query, app_id=app_id, nft_metadata_filters=nft_metadata_filters, counter=counter+1)
 
@@ -409,7 +409,7 @@ class Alchemy(Requests):
         if counter > self.max_retries:
             return None
         
-        url = "https://dashboard.alchemy.com/api/create-webhook"
+        url = "https://dashboard.alchemy.com/api/update-webhook-addresses"
 
         payload = {
             "webhook_id": webhook_id,
@@ -428,3 +428,40 @@ class Alchemy(Requests):
             return response
         else:
             self.update_webhook_address(webhook_id, addresses_to_add=addresses_to_add, addresses_to_remove=addresses_to_remove, counter=counter+1)
+
+
+    def update_webhook_tokens(self, webhook_id, addresses_to_add=[], addresses_to_remove=[], counter=0):
+        """
+            Update address for webhook address endpoint. 
+            Required: 
+                - webhook_id: ID of the address activity webhook
+                - addresses_to_add: List of addresses to add, use [] if none.
+                - addresses_to_remove: List of addresses to remove, use [] if none.
+            Refere to: https://docs.alchemy.com/reference/update-webhook-addresses for more info
+        """
+
+        # TODO
+
+        # time.sleep(counter)
+        # if counter > self.max_retries:
+        #     return None
+        
+        # url = "https://dashboard.alchemy.com/api/create-webhook"
+
+        # payload = {
+        #     "webhook_id": webhook_id,
+        #     "addresses_to_add": addresses_to_add,
+        #     "addresses_to_remove": addresses_to_remove
+        # }
+
+        # headers = {
+        #     "accept": "application/json",
+        #     "content-type": "application/json",
+        #     "X-Alchemy-Token": os.environ['ALCHEMY_AUTH_TOKEN'],
+        # }
+
+        # response = self.patch_request(url, json=payload, headers=headers, return_json=True)
+        # if response and type(response) == dict:
+        #     return response
+        # else:
+        #     self.update_webhook_address(webhook_id, addresses_to_add=addresses_to_add, addresses_to_remove=addresses_to_remove, counter=counter+1)

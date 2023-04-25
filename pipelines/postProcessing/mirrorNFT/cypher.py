@@ -36,7 +36,7 @@ class MirrorNFTCyphers(Cypher):
                 MATCH (token:Token {{address: toLower(holdings.contractAddress)}})
                 MERGE (wallet)-[edge:HOLDS_TOKEN {{tokenId: holdings.tokenId}}]->(token)
                 SET edge.balance = toIntegerOrNull(holdings.balance),
-                    edge.lastUpdatedDt = datetime()
+                    edge.lastUpdateDt = datetime()
                 RETURN count(edge)
             """
             count += self.query(query)[0].value()

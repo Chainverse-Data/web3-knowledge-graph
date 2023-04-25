@@ -51,7 +51,7 @@ Manger created the lock. Holder holds key issued by Lock.
 ### Properties 
 - `address`
 - `createdDt`
-- `lastUpdatedDt`
+- `lastUpdateDt`
 - `ingestedBy`
 - `uuid`
 

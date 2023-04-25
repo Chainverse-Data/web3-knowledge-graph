@@ -69,7 +69,7 @@ class TwitterCyphers(Cypher):
 
             query = f"""
                         MATCH (t:Twitter:Account) 
-                        WHERE t.lastUpdatedDt >= datetime({{year: {cutoff.year}, month: {cutoff.month}, day: {cutoff.day}}}) AND t.name is NULL AND NOT t:Trash
+                        WHERE t.lastUpdateDt >= datetime({{year: {cutoff.year}, month: {cutoff.month}, day: {cutoff.day}}}) AND t.name is NULL AND NOT t:Trash
                         return t.handle
                         SKIP {offset} LIMIT {interval}
                     """
@@ -113,7 +113,7 @@ class TwitterCyphers(Cypher):
                             t.profileImageUrl = twitter.profileImageUrl,
                             t.location = twitter.location,
                             t.language = twitter.language,
-                            t.lastUpdatedDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
+                            t.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
                         return count(t)
                     """
 

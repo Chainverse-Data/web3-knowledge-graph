@@ -8,13 +8,13 @@ import pendulum
 
 dag = DAG(
     "alchemy_webhooks_post_processing",
-    description="Gets the twitter data from the API for recent nodes.",
+    description="Updates the alchemy notify webhooks with the current values for wallets in the DB.",
     default_args={
         "start_date": datetime(2023, 4, 20),
         "owner": "Leo Blondel",
         "retries": 3        
     },
-    schedule_interval="@daily",
+    schedule_interval="@hourly",
     max_active_runs=1,
     dagrun_timeout=timedelta(minutes=10080)
 )
