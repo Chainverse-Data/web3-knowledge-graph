@@ -65,36 +65,36 @@ class CuratedTokenHoldingProcessor(Processor):
             self.cyphers.move_old_hold_edges_to_held(current_tokens)
             self.cyphers.update_tokens(current_tokens)
     
+    def get_holders_for_ERC20_token(self, token):
+        data = self.etherscan.get_token_holders(token)
+        metadata = self.etherscan.get_token_information(token)
+        if metadata and data:
+            results = []
+            divisor = metadata["divisor"]
+            for holder in data:
+                numericBalance = None
+                if divisor:
+                    try:
+                        numericBalance = int(holder["TokenHolderQuantity"]) / 10**int(divisor)
+                    except:
+                        pass
+                tmp = {
+                    "contractAddress": token,
+                    "address": holder["TokenHolderAddress"],
+                    "balance": holder["TokenHolderQuantity"],
+                    "numericBalance": numericBalance
+                }
+                results.append(tmp)
+            self.cyphers.mark_current_hold_edges([token])
+            urls = self.save_json_as_csv(results, f"process_erc20_tokens_{self.asOf}_{token}")
+            self.cyphers.queries.create_wallets(urls)
+            self.cyphers.link_or_merge_ERC20_token_holding(urls)
+            self.cyphers.move_old_hold_edges_to_held([token])
+            self.cyphers.update_tokens([token])
+
     def get_holders_for_ERC20_tokens(self):
         tokens = self.get_ERC20_tokens()
-        for i in range(0, len(tokens)):
-            token = tokens[i]
-            logging.info(f"Processing token: {token}")
-            data = self.etherscan.get_token_holders(token)
-            metadata = self.etherscan.get_token_information(token)
-            if metadata and data:
-                results = []
-                divisor = metadata["divisor"]
-                for holder in data:
-                    numericBalance = None
-                    if divisor:
-                        try:
-                            numericBalance = int(holder["TokenHolderQuantity"]) / 10**int(divisor)
-                        except:
-                            pass
-                    tmp = {
-                        "contractAddress": token,
-                        "address": holder["TokenHolderAddress"],
-                        "balance": holder["TokenHolderQuantity"],
-                        "numericBalance": numericBalance
-                    }
-                    results.append(tmp)
-                self.cyphers.mark_current_hold_edges([token])
-                urls = self.save_json_as_csv(results, f"process_erc20_tokens_{self.asOf}_{i}")
-                self.cyphers.queries.create_wallets(urls)
-                self.cyphers.link_or_merge_ERC20_token_holding(urls)
-                self.cyphers.move_old_hold_edges_to_held([token])
-                self.cyphers.update_tokens([token])
+        self.parallel_process(self.get_holders_for_ERC20_token, tokens, "Getting holders for ERC20 tokens")
 
     def run(self):
         self.get_holders_for_NFT_tokens()
