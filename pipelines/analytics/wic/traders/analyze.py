@@ -10,7 +10,7 @@ class CreatorsCollectorsAnalysis(WICAnalysis):
     def __init__(self):
         self.subgraph_name = 'Traders'
         self.conditions = {
-           "SophisticatedTraders": {
+           "PowerTraderMarketplaces": {
                 "SudoSwapPowerUser": {
                     "types": [TYPES['experiences']],
                     "definition": "TBD",
@@ -20,13 +20,63 @@ class CreatorsCollectorsAnalysis(WICAnalysis):
                     "types": [TYPES['experiences']],
                     "definition": "TBD",
                     "call": self.process_blur_power_users
-                },
-                "NftCollateralizedBorrowers": {
-                    "types": [TYPES['experiences']],
-                    "definition": "TBD",
-                    "call": self.process_nft_collat_borrowers
                 }
-           }
+           },
+              "NftCollateralizedBorrower": {
+                "x2y2Borrower": {
+                "types": [TYPES['experiences']],
+                "definition": "Borrower on x2y2",
+                "call": self.process_x2y2_borrowers
+                },
+                "ParaspaceBorrower": {
+                    "types": [TYPES['experiences']],
+                    "definition": "Borrower on Paraspace",
+                    "call": self.process_paraspace_borrowers
+                },
+                "ArcadeBorrower": {
+                    "types": [TYPES['experiences']],
+                    "definition": "Borrower on Arcade.xyz",
+                    "call": self.process_arcade_borrowers
+                },
+                "NftfiBorrower": {
+                    "types": [TYPES['experiences']],
+                    "definition": "Borrower on NFTfi",
+                    "call": self.process_nftfi_borrowers
+                },
+                "BendBorrower": {
+                    "types": [TYPES['experiences']],
+                    "definition": "Borrower on Bend",
+                    "call": self.process_bend_borrowers
+                }
+              },
+              "NftCollateralizedLender": {
+                "x2y2Lender": {
+                "types": [TYPES['experiences']],
+                "definition": "Lender on x2y2",
+                "call": self.process_x2y2_lenders
+                },
+                "ParaspaceLender": {
+                    "types": [TYPES['experiences']],
+                    "definition": "Lender on Paraspace",
+                    "call": self.process_paraspace_lenders
+                },
+                "ArcadeLender": {
+                    "types": [TYPES['experiences']],
+                    "definition": "Lender on Arcade.xyz",
+                    "call": self.process_arcade_lenders
+                },
+                "NftfiLender": {
+                    "types": [TYPES['experiences']],
+                    "definition": "Lender on NFTfi",
+                    "call": self.process_nftfi_lenders
+                },
+                "BendLender": {
+                    "types": [TYPES['experiences']],
+                    "definition": "Lender on Bend",
+                    "call": self.process_bend_lenders
+                }
+              },
+
         }
 
         self.cyphers = TradersCypher(self.subgraph_name, self.conditions)
@@ -52,12 +102,46 @@ class CreatorsCollectorsAnalysis(WICAnalysis):
         self.cyphers.queries.create_wallets(urls)
         self.cyphers.connect_blur_power_users(context, urls)
 
-    def process_nft_collat_borrowers(self, context):
-        logging.info("Saving NFT-backed borrowers...")
-        nft_backed_borrowers = self.nft_backed_borrowers.dropna(subset=['address'])
-        urls = self.save_df_as_csv(nft_backed_borrowers, file_name=f"nft_backed_borrowers{self.asOf}")
-        self.cyphers.queries.create_wallets(urls)
-        self.cyphers.connect_nft_borrowers(context, urls)
+    def process_x2y2_borrowers(self, context):
+        logging.info("Getting X272 borrowers...")
+        self.cyphers.queries.connect_x2y2_borrowers(context)
+
+    def process_paraspace_borrowers(self, context):
+        logging.info("Getting paraspace borrowers...")
+        self.cyphers.queries.connect_paraspace_borrowers(context)
+
+    def process_arcade_borrowers(self, context):
+        logging.info("Getting Arcade borrowers...")
+        self.cyphers.queries.connect_arcade_borrowers(context)
+
+    def process_bend_borrowers(self, context):
+        logging.info("Getting Bend borrowers...")
+        self.cyphers.queries.connect_bend_borrowers(context)
+
+    def process_nftfi_borrowers(self, context):
+        logging.info("Getting NFTfi borrowers...")
+        self.cyphers.queries.connect_nftfi_borrowers(context)
+
+    def process_x2y2_lenders(self, context):
+        logging.info("Getting X272 lenders...")
+        self.cyphers.queries.connect_x2y2_lenders(context)
+
+    def process_paraspace_lenders(self, context):
+        logging.info("Getting paraspace lenders...")
+        self.cyphers.queries.connect_paraspace_lenders(context)
+
+    def process_arcade_lenders(self, context):
+        logging.info("Getting Arcade lenders...")
+        self.cyphers.queries.connect_arcade_lenders(context)
+
+    def process_bend_lenders(self, context):
+        logging.info("Getting Bend lenders...")
+        self.cyphers.queries.connect_bend_lenders(context)
+
+    def process_nftfi_lenders(self, context):
+        logging.info("Getting NFTfi lenders...")
+        self.cyphers.queries.connect_nftfi_lenders(context)
+
 
     def run(self):
         self.process_conditions()
