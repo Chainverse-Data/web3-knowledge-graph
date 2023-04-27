@@ -38,7 +38,7 @@ class CreatorsCollectorsAnalysis(WICAnalysis):
         super().__init__("wic-collectors")
 
         ## TODO This will need to be automated to avoid relying on this list.
-        self.seeds_addresses = list(pd.read_csv("pipelines/analytics/wic/collectors/data/seeds.csv")['address'])
+        self.seeds_addresses = list(pd.read_csv("pipelines/analytics/wic/collectors/data/bluechip_20230427.csv")['address'])
 
     def process_blue_chip_nfts(self, context):
         logging.info("Identifying blue chips...")

@@ -9,11 +9,17 @@ class CreatorsCollectorsCypher(WICCypher):
 
     @count_query_logging
     def cc_blue_chip(self, addresses, context):
+        ## this makes sure our seed list is monitored across envs
+        monitor = f"""
+        MATCH (token:Token) where token.address in {addresses} set token.manualSelection = 'daily'
+        """
+        self.query(monitor)
         connect = f"""
             MATCH (wic:_Wic:_{self.subgraph_name}:_Context:_{context})
             MATCH (wallet:Wallet)-[r:HOLDS]->(token:Token)
             WHERE (token.address IN {addresses} OR token.contractAddress IN {addresses})
             WITH wallet, wic, count(distinct(token)) as count_collections
+            WHERE count_collections > 1
             MERGE (wallet)-[con:_HAS_CONTEXT]->(wic)
             SET con.toRemove = null
             SET con.count = count_collections
