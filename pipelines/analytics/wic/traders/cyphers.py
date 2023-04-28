@@ -1,7 +1,7 @@
 from .. import WICCypher
 from ....helpers import Queries, count_query_logging
 
-class TradersCypher(WICCypher):
+class TradersCyphers(WICCypher):
     def __init__(self, subgraph_name, conditions, database=None):
         WICCypher.__init__(self, subgraph_name, conditions, database)
         self.queries = Queries()

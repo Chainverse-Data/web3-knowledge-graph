@@ -1,10 +1,10 @@
 import logging
 from .. import WICAnalysis
-from .cyphers import TradersCypher
+from .cyphers import TradersCyphers
 import pandas as pd
 from ..WICAnalysis import TYPES
 
-class CreatorsCollectorsAnalysis(WICAnalysis):
+class TradersAnalysis(WICAnalysis):
     """This class reads from a local"""
 
     def __init__(self):
@@ -79,7 +79,7 @@ class CreatorsCollectorsAnalysis(WICAnalysis):
 
         }
 
-        self.cyphers = TradersCypher(self.subgraph_name, self.conditions)
+        self.cyphers = TradersCyphers(self.subgraph_name, self.conditions)
         super().__init__("wic-traders")
 
         ## TODOO This will need to be automated to avoid relying on this list.
@@ -104,50 +104,50 @@ class CreatorsCollectorsAnalysis(WICAnalysis):
 
     def process_x2y2_borrowers(self, context):
         logging.info("Getting X272 borrowers...")
-        self.cyphers.queries.connect_x2y2_borrowers(context)
+        self.cyphers.connect_x2y2_borrowers(context)
 
     def process_paraspace_borrowers(self, context):
         logging.info("Getting paraspace borrowers...")
-        self.cyphers.queries.connect_paraspace_borrowers(context)
+        self.cyphers.connect_paraspace_borrowers(context)
 
     def process_arcade_borrowers(self, context):
         logging.info("Getting Arcade borrowers...")
-        self.cyphers.queries.connect_arcade_borrowers(context)
+        self.cyphers.connect_arcade_borrowers(context)
 
     def process_bend_borrowers(self, context):
         logging.info("Getting Bend borrowers...")
-        self.cyphers.queries.connect_bend_borrowers(context)
+        self.cyphers.connect_bend_borrowers(context)
 
     def process_nftfi_borrowers(self, context):
         logging.info("Getting NFTfi borrowers...")
-        self.cyphers.queries.connect_nftfi_borrowers(context)
+        self.cyphers.connect_nftfi_borrowers(context)
 
     def process_x2y2_lenders(self, context):
         logging.info("Getting X272 lenders...")
-        self.cyphers.queries.connect_x2y2_lenders(context)
+        self.cyphers.connect_x2y2_lenders(context)
 
     def process_paraspace_lenders(self, context):
         logging.info("Getting paraspace lenders...")
-        self.cyphers.queries.connect_paraspace_lenders(context)
+        self.cyphers.connect_paraspace_lenders(context)
 
     def process_arcade_lenders(self, context):
         logging.info("Getting Arcade lenders...")
-        self.cyphers.queries.connect_arcade_lenders(context)
+        self.cyphers.connect_arcade_lenders(context)
 
     def process_bend_lenders(self, context):
         logging.info("Getting Bend lenders...")
-        self.cyphers.queries.connect_bend_lenders(context)
+        self.cyphers.connect_bend_lenders(context)
 
     def process_nftfi_lenders(self, context):
         logging.info("Getting NFTfi lenders...")
-        self.cyphers.queries.connect_nftfi_lenders(context)
+        self.cyphers.connect_nftfi_lenders(context)
 
 
     def run(self):
         self.process_conditions()
 
 if __name__ == "__main__":
-    analysis = CreatorsCollectorsAnalysis()
+    analysis = TradersAnalysis()
     analysis.run()
     
 
