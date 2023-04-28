@@ -34,7 +34,7 @@ class ENSLookupProcessor(Processor):
             self.cyphers.create_or_merge_records(urls, "Email", "email")
             self.cyphers.link_or_merge_records(urls, "Email", "email")
 
-            twitters = [{"name": record["name"], "handle": record["twitter"]} for record in results if record["twitter"]]
+            twitters = [{"name": record["name"], "handle": record["twitter"].replace("@", "")} for record in results if record["twitter"]]
             urls = self.save_json_as_csv(twitters, f"processing_ens_records_twitters_{self.asOf}_{i}")
             self.cyphers.create_or_merge_records(urls, "Twitter", "handle")
             self.cyphers.link_or_merge_records(urls, "Twitter", "handle")
