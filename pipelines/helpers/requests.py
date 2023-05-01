@@ -44,7 +44,7 @@ class Requests:
                 - max_retries: Change this to change the max number of allowed retries
         """
         time.sleep(counter * max_retries)
-        if counter > 10:
+        if counter > max_retries:
             return None
         try:
             r = requests.get(url, params=params, headers=headers, allow_redirects=allow_redirects, verify=False)
@@ -54,11 +54,11 @@ class Requests:
                 return None
             elif not ignore_retries and retry_on_403 and (r.status_code == 403 or "403 Forbidden" in r.content.decode("UTF-8")):
                 logging.error(f"403 forbidden detected: {r.content.decode('UTF-8')}")
-                return self.get_request(url, params=params, headers=headers, allow_redirects=allow_redirects, counter=counter + 1)
+                return self.get_request(url, params=params, headers=headers, allow_redirects=allow_redirects, counter=counter + 1, max_retries=max_retries)
             elif not ignore_retries and r.status_code != 200:
                 logging.error(f"Error: {r.content}")
                 logging.error(f"Status code not 200: {r.status_code} Retrying in {counter*10}s (counter = {counter})...")
-                return self.get_request(url, params=params, headers=headers, allow_redirects=allow_redirects, counter=counter + 1)
+                return self.get_request(url, params=params, headers=headers, allow_redirects=allow_redirects, counter=counter + 1, max_retries=max_retries)
             if not json and decode:
                 return r.content.decode("UTF-8")
             if json:
@@ -66,7 +66,7 @@ class Requests:
             return r
         except Exception as e:
             logging.error(f"An unrecoverable exception occurred: {e}")
-            return self.get_request(url, params=params, headers=headers, allow_redirects=allow_redirects, counter=counter + 1)
+            return self.get_request(url, params=params, headers=headers, allow_redirects=allow_redirects, counter=counter + 1, max_retries=max_retries)
 
     def post_request(self, 
                      url: str, 
@@ -97,7 +97,7 @@ class Requests:
         """
 
         time.sleep(counter * max_retries)
-        if counter > 10:
+        if counter > max_retries:
             return None
         try:
             r = requests.post(url, data=data, json=json, headers=headers, verify=False)
@@ -148,7 +148,7 @@ class Requests:
         """
 
         time.sleep(counter * max_retries)
-        if counter > 10:
+        if counter > max_retries:
             return None
         try:
             r = requests.patch(url, data=data, json=json, headers=headers, verify=False)
