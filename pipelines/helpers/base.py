@@ -14,7 +14,8 @@ class Base(Requests, S3Utils, Multiprocessing, Utils, Web3Utils):
         self.isAirflow = os.environ.get("IS_AIRFLOW", False)
 
         Requests.__init__(self)
-        S3Utils.__init__(self, bucket_name, metadata_filename, load_data)
+        if bucket_name:
+            S3Utils.__init__(self, bucket_name, metadata_filename, load_data)
         Multiprocessing.__init__(self)
         Utils.__init__(self)
         Web3Utils.__init__(self, chain=chain)
