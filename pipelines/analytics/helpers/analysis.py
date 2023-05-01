@@ -1,28 +1,16 @@
 from datetime import datetime
 import os
 
-from ...helpers import S3Utils
-from ...helpers import Requests
-from ...helpers import Multiprocessing
+from ...helpers import Base
 
-
-class Analysis(S3Utils, Requests, Multiprocessing):
-    def __init__(self, bucket_name):
-        Requests.__init__(self)
-        S3Utils.__init__(self)
-        Multiprocessing.__init__(self)
-
-        if not bucket_name:
-            raise ValueError("bucket_name is not defined!")
+class Analysis(Base):
+    def __init__(self, bucket_name=None, load_data=False, chain="ethereum"):
+        Base.__init__(self, bucket_name=bucket_name, metadata_filename="analysis_metadata.json", load_data=load_data, chain=chain)
+        
         try:
             self.cyphers
         except:
             raise ValueError("Cyphers have not been instanciated to self.cyphers")
-
-        self.runtime = datetime.now()
-        self.asOf = f"{self.runtime.year}-{self.runtime.month}-{self.runtime.day}"
-        self.bucket_name = os.environ["AWS_BUCKET_PREFIX"] + bucket_name
-        self.bucket = self.create_or_get_bucket()
 
     def run(self):
         "Main function to be called. Every analytics must implement its own run function!"
