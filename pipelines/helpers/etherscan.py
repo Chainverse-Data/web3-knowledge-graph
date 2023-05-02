@@ -138,9 +138,9 @@ class Etherscan(Requests):
             return None
         
         params = {
-            "module":"token",
-            "action":"tokeninfo",
-            "contractaddress":tokenAddress,
+            "module": "token",
+            "action": "tokeninfo",
+            "contractaddress": tokenAddress,
             "apikey": self.etherscan_api_keys[chain]
         }
 
