@@ -209,6 +209,27 @@ class S3Utils:
                 return False
         else:
             return True
+        
+    def configure_bucket(self):
+        self.s3_client.put_public_access_block(
+            Bucket=self.bucket_name,
+            PublicAccessBlockConfiguration={
+                'BlockPublicAcls': False,
+                'IgnorePublicAcls': False,
+                'BlockPublicPolicy': False,
+                'RestrictPublicBuckets': False
+            }
+        )
+        self.s3_client.put_bucket_ownership_controls(
+            Bucket=self.bucket_name,
+            OwnershipControls={
+                'Rules': [
+                    {
+                        'ObjectOwnership': 'ObjectWriter'
+                    },
+                ]
+            }
+        )
 
     def create_or_get_bucket(self):
         response = self.s3_client.list_buckets()
@@ -223,6 +244,7 @@ class S3Utils:
                 raise e
         else:
             logging.info(f"Using existing bucket: {self.bucket_name}")
+        self.configure_bucket()
         return boto3.resource("s3").Bucket(self.bucket_name)
 
     def read_metadata(self) -> dict:

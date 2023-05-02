@@ -19,7 +19,7 @@ class TokenMetadataCyphers(Cypher):
             RETURN token 
         """
         if DEBUG:
-            token_node_query += " LIMIT 100"
+            token_node_query += " LIMIT 10"
         tokens = self.query(token_node_query)
         tokens = [dict(token.get('token')) for token in tokens]
         return tokens
@@ -32,7 +32,7 @@ class TokenMetadataCyphers(Cypher):
             RETURN token
         """
         if DEBUG:
-            token_node_query += " LIMIT 100"
+            token_node_query += " LIMIT 10"
         tokens = self.query(token_node_query)
         tokens = [dict(token.get('token')) for token in tokens]
         return tokens
