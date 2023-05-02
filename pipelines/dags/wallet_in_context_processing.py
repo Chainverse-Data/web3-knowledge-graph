@@ -313,7 +313,7 @@ audiences_post_processing_task = ECSOperator(
 )
 
 wicScores_post_processing_task = ECSOperator(
-    task_id="wicScores_post_processing_task",
+    task_id="wicScores_post_processing",
     dag=dag,
     aws_conn_id="aws_ecs",
     cluster=ecs_cluster,
