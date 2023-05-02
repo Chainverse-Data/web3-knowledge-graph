@@ -17,6 +17,12 @@ class TokenMetadataPostProcess(Processor):
         self.etherscan = Etherscan()
         self.chunk_size = 10000
 
+    def upsert(self, node, result, key):
+        if result.get(key, None):
+            return result.get(key)
+        else:
+            return node.get(key, None)
+
     def get_tokens_ERC721_metadata(self):
         logging.info("Starting ERC721 Metadata extraction")
         tokens = self.cyphers.get_empty_ERC721_tokens()
@@ -191,7 +197,7 @@ class TokenMetadataPostProcess(Processor):
         tokens = self.cyphers.get_empty_ERC20_tokens()
         for i in tqdm(range(0, len(tokens), self.chunk_size)):
             results = self.parallel_process(self.get_ERC20_metadata, tokens[i: i+self.chunk_size], description="Getting all ERC20 metadata")
-            results = [result for result in results if result["metadataScraped"]]
+            results = [result for result in results if result.get("metadataScraped", None)]
             metadata_urls = self.save_json_as_csv(results, f"token_ERC20_metadata_{self.asOf}")
             self.cyphers.add_ERC20_token_node_metadata(metadata_urls)
             self.ingest_socials(results)
@@ -201,14 +207,9 @@ class TokenMetadataPostProcess(Processor):
         node = self.get_etherscan_ERC20_metadata(node)
         return node
     
-    def upsert(self, node, result, key):
-        if result.get(key, None):
-            return result.get(key)
-        else:
-            return node[key]
-
     def get_alchemy_ERC20_metadata(self, node):
         response_data = self.alchemy.getTokenMetadata(node["address"])
+        print(response_data)
         if type(response_data) != dict:
             result = {}
         else:
@@ -222,6 +223,7 @@ class TokenMetadataPostProcess(Processor):
     
     def get_etherscan_ERC20_metadata(self, node):
         response_data = self.etherscan.get_token_information(node["address"])
+        print(response_data)
         if type(response_data) != dict:
             result = {}
         else:
