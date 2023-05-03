@@ -44,13 +44,7 @@ class FarcasterScraper(Scraper):
         logging.info("Getting the followers")
 
         def get_individual(entry):
-            try:
-                client = Warpcast(os.environ["WARPCAST_API_KEY"])
-            except:
-                try:
-                    client = Warpcast(os.environ["WARPCAST_API_KEY"])
-                except:
-                    return []
+            client = Warpcast(os.environ["WARPCAST_API_KEY"])
             followers = []
             response = client.get_followers(fid=entry["fid"], limit=100)
             while True:
