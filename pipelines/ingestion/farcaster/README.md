@@ -7,14 +7,17 @@ This ingestor will take care of data obtained by the Farcaster scraper.
 Nodes:
 - Farcaster:Account
   - id
+  - fName
   - name
   - address
   - url
-  - fId
+  - bio
+  - profileUrl
 - Wallet
 
 Edges:
 - (Wallet)-[HAS_ACCOUNT]->(Farcaster:Account)
+- (Farcaster:Account)-[FOLLOWS]->(Farcaster:Account)
 
 # Bucket
 
