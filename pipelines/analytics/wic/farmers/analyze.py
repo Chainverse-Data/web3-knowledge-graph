@@ -13,7 +13,7 @@ class IncentiveFarmerAnalysis(WICAnalysis):
                 "SuspiciousSnapshot": {
                         "types": [TYPES["experiences"]],
                         "definition": "TBD", 
-                        "weight": 0,
+                        "weight": -.5,
                         "call": self.process_suspicious_snapshot_daos
                     }
             }, 
@@ -21,7 +21,7 @@ class IncentiveFarmerAnalysis(WICAnalysis):
                 "Mirror": {
                         "types": [TYPES["experiences"]],
                         "definition": "TBD", 
-                        "weight": 0,
+                        "weight": -1.5,
                         "call": self.process_suspicious_mirror
                     }
             },
@@ -29,7 +29,7 @@ class IncentiveFarmerAnalysis(WICAnalysis):
                 "NftWashTrading": {
                         "types": [TYPES["experiences"]],
                         "definition": "TBD", 
-                        "weight": 0,
+                        "weight": -1.25,
                         "call": self.process_nft_wash_trading
                     }
             },
@@ -37,7 +37,7 @@ class IncentiveFarmerAnalysis(WICAnalysis):
                 "SpamTokenDeployer": {
                         "types": [TYPES["experiences"]],
                         "definition": "TBD", 
-                        "weight": 0,
+                        "weight": -2,
                         "call": self.process_spam_contract_deployment
                     }
             }

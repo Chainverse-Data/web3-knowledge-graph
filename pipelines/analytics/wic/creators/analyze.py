@@ -14,19 +14,19 @@ class CreatorsCollectorsAnalysis(WICAnalysis):
                 "Web3Writer": {
                     "types": [TYPES['experiences']],
                     "definition": "TBD", 
-                    "weight": 0,
+                    "weight": .6,
                     "call": self.process_writing
                 },
                 "Web3Musician": {
                     "types": [TYPES['experiences']],
                     "definition": "TBD", 
-                    "weight": 0,
+                    "weight": .8,
                     "call": self.process_web3_musicians
                 },
                 "Web3DataAnalyst": {
                     "types": [TYPES['experiences']],
                     "definition": "TBD", 
-                    "weight": 0,
+                    "weight": .8,
                     "call": self.process_dune_wizards
                 }
            }

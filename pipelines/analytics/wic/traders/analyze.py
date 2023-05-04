@@ -14,13 +14,13 @@ class TradersAnalysis(WICAnalysis):
                 "SudoSwapPowerUser": {
                     "types": [TYPES['experiences']],
                     "definition": "TBD", 
-                    "weight": 0,
+                    "weight": .75,
                     "call": self.process_sudo_power_users
                 },
                 "BlurPowerUser": {
                     "types": [TYPES['experiences']],
                     "definition": "TBD", 
-                    "weight": 0,
+                    "weight": .75,
                     "call": self.process_blur_power_users
                 }
            },
@@ -28,31 +28,31 @@ class TradersAnalysis(WICAnalysis):
                 "x2y2Borrower": {
                 "types": [TYPES['experiences']],
                 "definition": "Borrower on x2y2",
-                "weight": 0,
+                "weight": .7,
                 "call": self.process_x2y2_borrowers
                 },
                 "ParaspaceBorrower": {
                     "types": [TYPES['experiences']],
                     "definition": "Borrower on Paraspace",
-                    "weight": 0,
+                    "weight": .7,
                     "call": self.process_paraspace_borrowers
                 },
                 "ArcadeBorrower": {
                     "types": [TYPES['experiences']],
                     "definition": "Borrower on Arcade.xyz",
-                    "weight": 0,
+                    "weight": .7,
                     "call": self.process_arcade_borrowers
                 },
                 "NftfiBorrower": {
                     "types": [TYPES['experiences']],
                     "definition": "Borrower on NFTfi",
-                    "weight": 0,
+                    "weight": .7,
                     "call": self.process_nftfi_borrowers
                 },
                 "BendBorrower": {
                     "types": [TYPES['experiences']],
                     "definition": "Borrower on Bend",
-                    "weight": 0,
+                    "weight": .7,
                     "call": self.process_bend_borrowers
                 }
               },
@@ -60,31 +60,31 @@ class TradersAnalysis(WICAnalysis):
                 "x2y2Lender": {
                 "types": [TYPES['experiences']],
                 "definition": "Lender on x2y2",
-                "weight": 0,
+                "weight": .65,
                 "call": self.process_x2y2_lenders
                 },
                 "ParaspaceLender": {
                     "types": [TYPES['experiences']],
                     "definition": "Lender on Paraspace",
-                    "weight": 0,
+                    "weight": .65,
                     "call": self.process_paraspace_lenders
                 },
                 "ArcadeLender": {
                     "types": [TYPES['experiences']],
                     "definition": "Lender on Arcade.xyz",
-                    "weight": 0,
+                    "weight": .65,
                     "call": self.process_arcade_lenders
                 },
                 "NftfiLender": {
                     "types": [TYPES['experiences']],
                     "definition": "Lender on NFTfi",
-                    "weight": 0,
+                    "weight": .65,
                     "call": self.process_nftfi_lenders
                 },
                 "BendLender": {
                     "types": [TYPES['experiences']],
                     "definition": "Lender on Bend",
-                    "weight": 0,
+                    "weight": .65,
                     "call": self.process_bend_lenders
                 }
               },

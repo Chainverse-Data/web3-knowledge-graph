@@ -10,7 +10,7 @@ class ProtocolPoliticiansAnalysis(WICAnalysis):
                 "EngagedVoter": {
                     "types": [TYPES["experiences"]],
                     "definition": "TBD", 
-                    "weight": 0,
+                    "weight": .5,
                     "call": self.process_engaged_voters
                     }    
             },
@@ -18,7 +18,7 @@ class ProtocolPoliticiansAnalysis(WICAnalysis):
                 "ProposalAuthor": {
                     "types": [TYPES["experiences"]],
                     "definition": "TBD", 
-                    "weight": 0,
+                    "weight": .6,
                     "call": self.process_proposal_authors
                     }
             }, 
@@ -26,7 +26,7 @@ class ProtocolPoliticiansAnalysis(WICAnalysis):
                 "Delegate": {
                     "types": [TYPES["experiences"]],
                     "definition": "TBD", 
-                    "weight": 0,
+                    "weight": .7,
                     "call": self.process_delegates
                     }
             },
