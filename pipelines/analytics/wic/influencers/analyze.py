@@ -10,29 +10,34 @@ class InfluencersAnalysis(WICAnalysis):
             "PopularMirrorAuthor" : {
                 "MirrorInfluencer": {
                     "types": [TYPES["influence"]],
-                    "definition": "TBD",
+                    "definition": "TBD", 
+                    "weight": 0,
                     "call": self.process_mirror_influencer
                 },
                 "SubstackWriter": {
                     "types": [TYPES["influence"]],
-                    "definition": "TBD",
+                    "definition": "TBD", 
+                    "weight": 0,
                     "call": self.process_substack_influencer
                 },
                 "DuneWizard": {
                     "types": [TYPES["influence"]],
-                    "definition": "TBD",
+                    "definition": "TBD", 
+                    "weight": 0,
                     "call": self.process_dune_wizard
                 },
                 "Podcaster": {
                     "types": [TYPES['influence']],
-                    "definition": "TBD",
+                    "definition": "TBD", 
+                    "weight": 0,
                     "call": self.process_podcasters
                 }
             },
             "SocialMedia": {
                 "TwitterInfluencer": {
                         "types": [TYPES["influence"]],
-                        "definition": "TBD",
+                        "definition": "TBD", 
+                        "weight": 0,
                         "call": self.process_twitter_influencers
                     }
             }

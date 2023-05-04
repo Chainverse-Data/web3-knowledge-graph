@@ -12,66 +12,78 @@ class InterestsAnalysis(WICAnalysis):
             "ArtCultureEntertainment": {
                     "Music": {
                         "types": [TYPES["interests"]],
-                        "definition": "TBD",
+                        "definition": "TBD", 
+                        "weight": 0,
                         "call": self.process_music
                     },
                     "Gaming": {
                         "types": [TYPES['interests']],
-                        "definition": "TBD",
+                        "definition": "TBD", 
+                        "weight": 0,
                         "call": self.process_gaming
                     },
                     "Outdoors": {
                         "types": [TYPES['interests']],
-                        "definition": "TBD",
+                        "definition": "TBD", 
+                        "weight": 0,
                         "call": self.process_outdoors
                     },
                     "FilmVideo": {
                         "types": [TYPES['interests']], 
-                        "definition": "TBD",
+                        "definition": "TBD", 
+                        "weight": 0,
                         "call": self.process_film_video
                     },
                     "Photography": {
                         "types": [TYPES['interests']],
-                        "definition": "TBD",
+                        "definition": "TBD", 
+                        "weight": 0,
                         "call": self.process_photography
                     },
                     "CultureCommentary": {
                         "types": [TYPES['interests']],
-                        "definition": "TBD",
+                        "definition": "TBD", 
+                        "weight": 0,
                         "call": self.process_culture
                     },
                     "WritingPublishing": {
                         "types": [TYPES['interests']],
-                        "definition": "TBD",
+                        "definition": "TBD", 
+                        "weight": 0,
                         "call": self.process_writing_publishing
                     },
                 },
             "ScienceTech": {
                 "DataScience": {
                     "types": [TYPES['interests']],
-                    "definition": "TBD",
+                    "definition": "TBD", 
+                        "weight": 0,
                     "call": self.process_data_science
                 },
                 "DeSci": {
                     "types": [TYPES['interests']],
-                    "definition": "TBD",
+                    "definition": "TBD", 
+                        "weight": 0,
                     "call": self.process_desci
                 }
             },
             "SocialJustice": {
                 "DiversityEquityInclusion": {
                     "types": [TYPES['interests']],
-                    "definition": "TBD",
+                    "definition": "TBD", 
+                        "weight": 0,
                     "call": self.process_dei
                 },
                 "RegenerativeSystems": {
                     "types": [TYPES['interests']],
-                    "definition": "TBD",
+                    "definition": "TBD", 
+                        "weight": 0,
                     "call": self.process_regen
                 },
                 "Education": {
                     "types": [TYPES['interests']],
-                    "definition": "TBD",
+                    "definition": "TBD", 
+                        "weight": 0,
                     "call": self.process_education
                 }
             }

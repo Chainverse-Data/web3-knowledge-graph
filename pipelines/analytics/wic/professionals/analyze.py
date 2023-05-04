@@ -10,32 +10,38 @@ class ProfessionalsAnalysis(WICAnalysis):
             "Positions": {
                 "Founder": {
                         "types": [TYPES["professions"]],
-                        "definition": "TBD",
+                        "definition": "TBD", 
+                        "weight": 0,
                         "call": self.process_founder_bios
                     },
                 "Investor": {
                         "types": [TYPES["professions"]],
-                        "definition": "TBD",
+                        "definition": "TBD", 
+                        "weight": 0,
                         "call": self.process_investor_bios
                     },
                 "Marketer": {
                         "types": [TYPES["professions"]],
-                        "definition": "TBD",
+                        "definition": "TBD", 
+                        "weight": 0,
                         "call": self.process_marketers_bios
                     },
                 "SalesPartnerships": {
                         "types": [TYPES["professions"]],
-                        "definition": "TBD",
+                        "definition": "TBD", 
+                        "weight": 0,
                         "call": self.process_sales_partnerships
                     },
                 "CommunityManager": {
                         "types": [TYPES["professions"]],
-                        "definition": "TBD",
+                        "definition": "TBD", 
+                        "weight": 0,
                         "call": self.process_community_people_bios
                     },
                 "DeveloperRelationsLead": {
                         "types": [TYPES["professions"]],
-                        "definition": "TBD",
+                        "definition": "TBD", 
+                        "weight": 0,
                         "call": self.process_devrel_bios
                     }
             }

@@ -96,17 +96,19 @@ class WICCypher(Cypher):
                 logging.info(f"Creating {context}")
                 context_types = self.conditions[condition][context]["types"]
                 definition = self.conditions[condition][context]["definition"]
+                weight = self.conditions[condition][context]["weight"]
                 if "subcontexts" in self.conditions[condition][context]:
-                    count += self.create_context_query(condition, context, context_types, definition)
+                    count += self.create_context_query(condition, context, context_types, definition, weight)
                     for subcontext in self.conditions[condition][context]["subcontexts"]:
                         subcontext_types = self.conditions[condition][context]["subcontexts"][subcontext]["types"]
                         subdefinition = self.conditions[condition][context]["subcontexts"][subcontext]["definition"]
+                        weight = self.conditions[condition][context]["subcontexts"][subcontext]["weight"]
                         count += self.create_context_query(condition, subcontext, subcontext_types, subdefinition)
                 else:
-                    count += self.create_context_query(condition, context, context_types, definition)
+                    count += self.create_context_query(condition, context, context_types, definition, weight)
         return count
         
-    def create_context_query(self, condition, context, types, definition):
+    def create_context_query(self, condition, context, types, definition, weight):
         create_context = f"""
             MERGE (context:_Wic:_Context:_{self.subgraph_name}:_{condition}:_{context}:{":".join(["_" + t for t in types])})
             SET context._condition = '{condition}'
@@ -114,6 +116,7 @@ class WICCypher(Cypher):
             SET context._main = '{self.subgraph_name}'
             SET context._types = apoc.convert.toList({types})
             SET context._definition = '{definition}'
+            SET context._weight = toFloat({weight})
             SET context.toRemove = null
             WITH context
             MATCH (condition:_Wic:_Condition:_{self.subgraph_name}:_{condition})

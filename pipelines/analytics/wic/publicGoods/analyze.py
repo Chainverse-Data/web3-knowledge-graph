@@ -10,41 +10,48 @@ class EcoDevAnalysis(WICAnalysis):
             "Grants": {
                 "GitcoinGrantAdmin": {
                         "types": [TYPES["experiences"]],
-                        "definition": "TBD",
+                        "definition": "TBD", 
+                        "weight": 0,
                         "call": self.process_gitcoin_grant_admins
                     }, 
                 "GitcoinGrantDonor": {
                         "types": [TYPES["experiences"]],
-                        "definition": "TBD",
+                        "definition": "TBD", 
+                        "weight": 0,
                         "call": self.process_gitcoin_grant_donor
                     },
                 "GrantsDao": {
                         "types": [TYPES["interests"]],
-                        "definition": "TBD",
+                        "definition": "TBD", 
+                        "weight": 0,
                         "call": self.process_grants_dao
                     }
             },
             "Bounties": {
                 "GitcoinBountyAdmin": {
                         "types": [TYPES["experiences"]],
-                        "definition": "TBD",
+                        "definition": "TBD", 
+                        "weight": 0,
                         "call": self.process_gitcoin_bounty_creators
                     }
             },
             "Incubators": {
                 "Incubator": {
                     "types": [TYPES["experiences"]],
-                    "definition": "TBD",
+                    "definition": "TBD", 
+                        "weight": 0,
                     "call": self.process_incubator,
                     "subcontexts": {
                         "IncubatorMember": {
                         "types": [TYPES["experiences"]],
-                        "definition": "TBD",
+                        "definition": "TBD", 
+                        "weight": 0,
                         "call": self.process_incubator_member
                     }, 
                         "IncubatorParticipant": {
                         "types": [TYPES["experiences"]],
-                        "definition": "TBD",
+                        "definition": "TBD", 
+                        "weight": 0,
                         "call": self.process_incubator_participant
                     }
                     }

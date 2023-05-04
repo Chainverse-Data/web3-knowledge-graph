@@ -12,28 +12,32 @@ class IncentiveFarmerAnalysis(WICAnalysis):
             "GovernanceFarming": {
                 "SuspiciousSnapshot": {
                         "types": [TYPES["experiences"]],
-                        "definition": "TBD",
+                        "definition": "TBD", 
+                        "weight": 0,
                         "call": self.process_suspicious_snapshot_daos
                     }
             }, 
             "MarketplaceFarming": {
                 "Mirror": {
                         "types": [TYPES["experiences"]],
-                        "definition": "TBD",
+                        "definition": "TBD", 
+                        "weight": 0,
                         "call": self.process_suspicious_mirror
                     }
             },
             "WashTrading": {
                 "NftWashTrading": {
                         "types": [TYPES["experiences"]],
-                        "definition": "TBD",
+                        "definition": "TBD", 
+                        "weight": 0,
                         "call": self.process_nft_wash_trading
                     }
             },
             "Spammers": {
                 "SpamTokenDeployer": {
                         "types": [TYPES["experiences"]],
-                        "definition": "TBD",
+                        "definition": "TBD", 
+                        "weight": 0,
                         "call": self.process_spam_contract_deployment
                     }
             }

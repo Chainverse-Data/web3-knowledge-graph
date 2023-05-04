@@ -13,22 +13,26 @@ class CreatorsCollectorsAnalysis(WICAnalysis):
            "Collectors": {
                "Web3WritingCollector": {
                     "types": [TYPES['experiences']],
-                    "definition": "TBD",
+                    "definition": "TBD", 
+                    "weight": 0,
                     "call": self.process_mirror_collectors
                },
                "BlueChipNftCollector": {
                     "types": [TYPES['experiences']],
-                    "definition": "TBD",
+                    "definition": "TBD", 
+                    "weight": 0,
                     "call": self.process_blue_chip_nfts
                },
                "ThreeLetterEnsName": {
                     "types": [TYPES['experiences']],
-                    "definition": "TBD",
+                    "definition": "TBD", 
+                    "weight": 0,
                     "call": self.process_three_ens
                },
                "Web3MusicCollector": {
                     "types": [TYPES['experiences']],
-                    "definition": "TBD",
+                    "definition": "TBD", 
+                    "weight": 0,
                     "call": self.process_web3_music_collectors
                }
            }
