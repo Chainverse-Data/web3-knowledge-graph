@@ -39,7 +39,8 @@ class DaoCyphers(WICCypher):
         count = 0
         snapshot = f"""
         MATCH (entity:Entity)-[:HAS_ACCOUNT]-(wallet:Wallet)-[trans:TRANSFERRED]->(otherWallet:Wallet)-[:_HAS_CONTEXT]-(wic:_Context)
-        WHERE trans.nb_transfer >= 2
+        MATCH (otherWallet)-[:HAS_ACCOUNT]-()
+        WHERE trans.nb_transfer >= 5
         WITH otherWallet
         MATCH (wic:_Wic:_Context:_{self.subgraph_name}:_{context})
         MERGE (otherWallet)-[con:_HAS_CONTEXT]->(wic)
@@ -65,7 +66,8 @@ class DaoCyphers(WICCypher):
         count = 0 
         query = f"""
         MATCH (entity:Entity)-[:HAS_ACCOUNT]-(wallet:Wallet)<-[trans:TRANSFERRED]-(otherWallet:Wallet)-[:_HAS_CONTEXT]-(wic:_Context)
-        WHERE trans.nb_transfer >= 2
+        MATCH (otherWallet)-[:HAS_ACCOUNT]-()
+        WHERE trans.nb_transfer >= 5
         WITH otherWallet
         MATCH (wic:_Wic:_Context:_{self.subgraph_name}:_{context})
         MERGE (otherWallet)-[con:_HAS_CONTEXT]->(wic)
