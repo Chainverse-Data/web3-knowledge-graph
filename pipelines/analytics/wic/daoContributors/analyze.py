@@ -13,31 +13,31 @@ class DaoAnalysis(WICAnalysis):
                 "SnapshotAdmin": {
                         "types": [TYPES["experiences"]],
                         "definition": "TBD", 
-                    "weight": 0,
+                    "weight": .85,
                         "call": self.process_org_snapshot_contributors
                     },
                 "MultisigSigner": {
                         "types": [TYPES["experiences"]],
                         "definition": "TBD", 
-                    "weight": 0,
+                    "weight": .85,
                         "call": self.process_org_multisig_signers
                     },
                 "DaoFundingRecipient": {
                         "types": [TYPES["experiences"]],
                         "definition": "TBD", 
-                    "weight": 0,
+                    "weight": .9,
                         "call": self.process_dao_funding_recipient
                     },
                 "DaoTreasuryFunder": {
                     "types": [TYPES['experiences']],
                     "definition": "TBD", 
-                    "weight": 0,
+                    "weight": .75,
                     "call": self.process_dao_treasury_funder
                 },
                 "TechnicalContributor": {
                     "types": [TYPES['experiences']], 
                     "definition": "TBD", 
-                    "weight": 0, 
+                    "weight": .925, 
                     "call": self.process_technical_contributor
                 }
            }

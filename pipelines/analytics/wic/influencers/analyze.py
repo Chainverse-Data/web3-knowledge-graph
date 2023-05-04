@@ -11,25 +11,25 @@ class InfluencersAnalysis(WICAnalysis):
                 "MirrorInfluencer": {
                     "types": [TYPES["influence"]],
                     "definition": "TBD", 
-                    "weight": 0,
+                    "weight": .9,
                     "call": self.process_mirror_influencer
                 },
                 "SubstackWriter": {
                     "types": [TYPES["influence"]],
                     "definition": "TBD", 
-                    "weight": 0,
+                    "weight": .3,
                     "call": self.process_substack_influencer
                 },
                 "DuneWizard": {
                     "types": [TYPES["influence"]],
                     "definition": "TBD", 
-                    "weight": 0,
+                    "weight": .85,
                     "call": self.process_dune_wizard
                 },
                 "Podcaster": {
                     "types": [TYPES['influence']],
                     "definition": "TBD", 
-                    "weight": 0,
+                    "weight": .3,
                     "call": self.process_podcasters
                 }
             },
@@ -37,7 +37,7 @@ class InfluencersAnalysis(WICAnalysis):
                 "TwitterInfluencer": {
                         "types": [TYPES["influence"]],
                         "definition": "TBD", 
-                        "weight": 0,
+                        "weight": .95,
                         "call": self.process_twitter_influencers
                     }
             }
