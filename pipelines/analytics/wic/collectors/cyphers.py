@@ -27,6 +27,7 @@ class CreatorsCollectorsCypher(WICCypher):
         """
         count = self.query(connect)[0].value()
         return count 
+        
 
     @count_query_logging
     def three_letter_ens(self, context):
@@ -74,6 +75,8 @@ class CreatorsCollectorsCypher(WICCypher):
         ### gets collectors acc. neume
         neumeQuery = f"""
         MATCH  (wallet:Wallet)-[:HOLDS_TOKEN]->(music:Token:MusicNft)
+        WITH wallet, count(distinct(music)) as collected
+        WHERE collected > 2
         MATCH (context:_Context:_Wic:_{self.subgraph_name}:_{context})
         WITH wallet, context
         MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
