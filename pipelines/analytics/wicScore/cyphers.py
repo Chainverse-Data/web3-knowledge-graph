@@ -18,10 +18,9 @@ class WICScoreAnalyticsCyphers(Cypher):
     def get_WIC_scores(self):
         query = f"""
             MATCH (w:Wallet)-[:_HAS_CONTEXT]-(wic:_Wic)
-            RETURN distinct(w.address) as address, collect(wic.weight) as degs LIMIT 10
+            RETURN distinct(w.address) as address, apoc.coll.sum(collect(wic._weight)) as score
         """
         result = self.query(query)
-        print(result)
         return result
 
     @count_query_logging

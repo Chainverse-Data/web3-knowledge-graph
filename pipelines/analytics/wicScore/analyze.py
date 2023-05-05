@@ -14,13 +14,15 @@ class WICScoreAnalysis(Analysis):
         super().__init__()
 
     def compute_score(self, data):
-        weighted_degrees = [r["deg"] for r in data]
+        weighted_degrees = [r["score"] for r in data]
         scores = []
+        min = np.min(weighted_degrees)
+        max = np.max(weighted_degrees)
         for deg in weighted_degrees:
             if deg < 0:
-                scores.append(deg/np.min(weighted_degrees))
+                scores.append(deg/min)
             elif deg > 0:
-                scores.append(deg/np.max(weighted_degrees))
+                scores.append(deg/max)
             else:
                 scores.append(deg)
         scores = [score * 100 for score in scores] 
