@@ -81,9 +81,7 @@ class Etherscan(Requests):
             return self.get_last_block_number(chain=chain, counter=counter + 1)
         return block_number
 
-    def get_token_holders(
-        self, tokenAddress: str, page: int = 1, offset: int = 1000, chain: str = "ethereum", counter: int = 0
-    ) -> list[dict] | None:
+    def get_token_holders(self, tokenAddress: str, page: int = 1, offset: int = 1000, chain: str = "ethereum", counter: int = 0) -> list[dict] | None:
         """
         Helper method to get the token holders of any token from Etherscan
         parameters:
