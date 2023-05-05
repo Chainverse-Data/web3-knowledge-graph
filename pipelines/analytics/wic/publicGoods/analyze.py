@@ -39,7 +39,7 @@ class EcoDevAnalysis(WICAnalysis):
                 "Incubator": {
                     "types": [TYPES["experiences"]],
                     "definition": "TBD", 
-                        "weight": 1.25,
+                    "weight": 1.25,
                     "call": self.process_incubator,
                     "subcontexts": {
                         "IncubatorMember": {

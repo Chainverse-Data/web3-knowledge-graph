@@ -103,7 +103,7 @@ class WICCypher(Cypher):
                         subcontext_types = self.conditions[condition][context]["subcontexts"][subcontext]["types"]
                         subdefinition = self.conditions[condition][context]["subcontexts"][subcontext]["definition"]
                         weight = self.conditions[condition][context]["subcontexts"][subcontext]["weight"]
-                        count += self.create_context_query(condition, subcontext, subcontext_types, subdefinition)
+                        count += self.create_context_query(condition, subcontext, subcontext_types, subdefinition, weight)
                 else:
                     count += self.create_context_query(condition, context, context_types, definition, weight)
         return count
