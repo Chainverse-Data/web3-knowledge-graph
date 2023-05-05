@@ -15,15 +15,15 @@ class TokenHoldersCyphers(Cypher):
         query = "CREATE INDEX holdsNumericBalance IF NOT EXISTS FOR ()-[r:HOLDS]-() ON (r.numericBalance)"
         self.query(query)
 
-    @get_query_logging
-    def get_token_type(self, address):
+    @count_query_logging
+    def set_pipeline_status(self, address):
         query = f"""
             MATCH (t:Token {{address: toLower($address)}}) 
-            RETURN labels(t) as labels
+            SET t.holderPipelineStatus = "started"
+            RETURN count(t)
         """
-        records = self.query(query)
-        labels = records[0]["labels"]
-        return labels
+        count = self.query(query, parameters={"address": address})[0].value()
+        return count
 
     @count_query_logging
     def clean_NFT_token_holding(self, urls) -> int:
@@ -47,6 +47,7 @@ class TokenHoldersCyphers(Cypher):
             MATCH (token:Token)
             WHERE token.address in $tokens
             SET token.lastHoldersUpdateDt = datetime()
+            SET token.holderPipelineStatus = "finished"
             RETURN count(token)
         """
         count += cast(int, self.query(query, parameters={"tokens": tokens})[0].value())

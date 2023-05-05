@@ -19,12 +19,6 @@ class TokenHoldersProcessor(Processor):
         self.alchemy = Alchemy() 
         self.etherscan = Etherscan() 
 
-    def get_token_holders(self) -> list[str]:
-        if self.tokenType == "ERC20":
-            self.get_holders_for_ERC20_token()
-        else:
-            self.get_holders_for_NFT_tokens()
-    
     def get_holders_for_NFT_tokens(self):
         data = [self.alchemy.getOwnersForCollection(self.address)]
         results = []
@@ -77,7 +71,11 @@ class TokenHoldersProcessor(Processor):
             self.cyphers.update_tokens([self.address])
 
     def run(self):
-        self.get_token_holders()
+        self.cyphers.set_pipeline_status(self.address)
+        if self.tokenType == "ERC20":
+            self.get_holders_for_ERC20_token()
+        else:
+            self.get_holders_for_NFT_tokens()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='TokenHolders arguments.')
