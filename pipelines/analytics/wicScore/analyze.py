@@ -12,16 +12,19 @@ class WICScoreAnalysis(Analysis):
     def __init__(self):
         self.cyphers = WICScoreAnalyticsCyphers()
         super().__init__()
-        self.negative_labels = ["_SuspiciousSnapshot", "_Mirror", "_NftWashTrading", "_SpamTokenDeployer"]
 
     def compute_score(self, data):
-        degrees = [r["deg"] for r in data]
-        logdegs = np.log(degrees)
-        z = stats.zscore(logdegs)
-        score = z - np.min(z)
-        score = score / np.max(score)
-        score *= 100
-        return score
+        weighted_degrees = [r["deg"] for r in data]
+        scores = []
+        for deg in weighted_degrees:
+            if deg < 0:
+                scores.append(deg/np.min(weighted_degrees))
+            elif deg > 0:
+                scores.append(deg/np.max(weighted_degrees))
+            else:
+                scores.append(deg)
+        scores = [score * 100 for score in scores] 
+        return scores
 
     def calculate_score(self, data):
         logging.info(f"Calculating score for {len(data)} wallets")
@@ -33,20 +36,14 @@ class WICScoreAnalysis(Analysis):
 
     def run(self):
         logging.info(f"Calculating positive scores")
-        positiveData = self.cyphers.get_positive_WIC_degrees(self.negative_labels)
-        positiveResults = self.calculate_score(positiveData)
-        logging.info(f"Calculating negative scores")
-        negativeData = self.cyphers.get_negative_WIC_degrees(self.negative_labels)
-        negativeResults = self.calculate_score(negativeData)
+        data = self.cyphers.get_WIC_scores()
+        scores = self.calculate_score(data)
         logging.info(f"Saving the results ...")
-        wallets = list(positiveResults.keys()) + list(negativeResults.keys())
-        wallets = list(set(wallets))
         results = []
-        for wallet in wallets:
+        for wallet in scores.keys():
             results.append({
                 "address": wallet,
-                "positiveReputationScore": positiveResults.get(wallet, None),
-                "negativeReputationScore": negativeResults.get(wallet, None),
+                "reputationScore": scores.get(wallet, None),
             })
         self.cyphers.save_reputation_score(results)
    

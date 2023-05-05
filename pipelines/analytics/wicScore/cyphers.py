@@ -15,23 +15,13 @@ class WICScoreAnalyticsCyphers(Cypher):
         pass
 
     @get_query_logging
-    def get_positive_WIC_degrees(self, negative_labels):
+    def get_WIC_scores(self):
         query = f"""
             MATCH (w:Wallet)-[:_HAS_CONTEXT]-(wic:_Wic)
-            WHERE NOT wic:{"|".join(negative_labels)}
-            RETURN distinct(w.address) as address, apoc.node.degree(w, "_HAS_CONTEXT") as deg
+            RETURN distinct(w.address) as address, collect(wic.weight) as degs LIMIT 10
         """
         result = self.query(query)
-        return result
-
-    @get_query_logging
-    def get_negative_WIC_degrees(self, negative_labels):
-        query = f"""
-            MATCH (w:Wallet)-[:_HAS_CONTEXT]-(wic:_Wic)
-            WHERE wic:{"|".join(negative_labels)}
-            RETURN distinct(w.address) as address, apoc.node.degree(w, "_HAS_CONTEXT") as deg
-        """
-        result = self.query(query)
+        print(result)
         return result
 
     @count_query_logging
@@ -40,8 +30,7 @@ class WICScoreAnalyticsCyphers(Cypher):
         query = """
             UNWIND $data as data
             MATCH (wallet:Wallet {address: data.address})
-            SET wallet.positiveReputationScore = data.positiveReputationScore
-            SET wallet.negativeReputationScore = data.negativeReputationScore
+            SET wallet.reputationScore = data.reputationScore
             SET wallet.lastScoreComputeDt = datetime()
             RETURN count(wallet)
         """
