@@ -145,3 +145,63 @@ class TokenHoldersCyphers(Cypher):
         """
         count += cast(int, self.query(query, parameters={"tokens": tokens})[0].value())
         return count
+
+    @count_query_logging
+    def add_NFT_token_node_metadata(self, metadata):
+        query = f"""
+            UNWIND $data as data
+            MATCH (token:Token {{address: data.address}})
+            SET token.title = data.title,
+                token.description = data.description,
+                token.tokenUri_gateway = data.tokenUri_gateway,
+                token.tokenUri_raw = data.tokenUri_raw,
+                token.image = data.image,
+                token.timeLastUpdated = data.timeLastUpdated,
+                token.symbol = data.symbol,
+                token.totalSupply = data.totalSupply,
+                token.contractDeployer = data.contractDeployer,
+                token.deployedBlockNumber = toIntegerOrNull(data.deployedBlockNumber),
+                token.floorPrice = toFloatOrNull(data.floorPrice),
+                token.name = data.collectionName,
+                token.safelistRequestStatus  = data.safelistRequestStatus,
+                token.imageUrl = data.imageUrl,
+                token.openSeaName = data.openSeaName,
+                token.openSeaDescription = data.openSeaDescription,
+                token.externalUrl = data.externalUrl,
+                token.twitterUsername = data.twitterUsername,
+                token.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
+            return count(token)"""
+        count = self.query(query, parameters={"data": [metadata]})[0].value()
+        return count
+
+    @count_query_logging
+    def add_ERC20_token_node_metadata(self, metadata):
+        query = f"""
+            UNWIND $data as data
+            MATCH (t:Token {{address: toLower(data.contractAddress)}})
+            SET t.name = data.tokenName,
+                t.symbol = data.symbol,
+                t.decimals = toInteger(data.divisor),
+                t.tokenType = data.tokenType,
+                t.totalSupply = data.totalSupply,
+                t.blueCheckmark = toBooleanOrNull(data.blueCheckmark),
+                t.description = data.description,
+                t.website = data.website,
+                t.email = data.email,
+                t.blog = data.blog,
+                t.reddit = data.reddit,
+                t.slack = data.slack,
+                t.facebook = data.facebook,
+                t.twitter = data.twitter,
+                t.bitcointalk = data.bitcointalk,
+                t.github = data.github,
+                t.telegram = data.telegram,
+                t.wechat = data.wechat,
+                t.linkedin = data.linkedin,
+                t.discord = data.discord,
+                t.whitepaper = data.whitepaper,
+                t.tokenPriceUSD = toFloatOrNull(data.tokenPriceUSD),
+                t.lastUpdateDt = datetime(apoc.date.toISO8601(apoc.date.currentTimestamp(), 'ms'))
+            return count(t)"""
+        count = self.query(query, parameters={"data": [metadata]})[0].value()
+        return count
