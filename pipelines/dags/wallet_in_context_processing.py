@@ -290,28 +290,6 @@ wic_dao_contributors = ECSOperator(
     awslogs_stream_prefix=ecs_awslogs_stream_prefix
 )
 
-audiences_post_processing_task = ECSOperator(
-    task_id="audiences_post_processing",
-    dag=dag,
-    aws_conn_id="aws_ecs",
-    cluster=ecs_cluster,
-    task_definition=ecs_task_definition_processing,
-    region_name="us-east-2",
-    launch_type="FARGATE",
-    overrides={
-        "containerOverrides": [
-            {
-                "name": "data-pipelines",
-                "command": ["python3", "-m", "pipelines.postProcessing.audiences.process"],
-                "environment": env_vars
-            },
-        ],
-    },
-    network_configuration=network_configuration,
-    awslogs_group=ecs_awslogs_group_processing,
-    awslogs_stream_prefix=ecs_awslogs_stream_prefix
-)
-
 wicScores_post_processing_task = ECSOperator(
     task_id="wicScores_post_processing",
     dag=dag,
