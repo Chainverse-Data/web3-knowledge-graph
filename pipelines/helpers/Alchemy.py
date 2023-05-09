@@ -2,6 +2,7 @@ import logging
 import time
 import os
 from . import Requests
+from tqdm import tqdm
 
 DEBUG = os.environ.get("DEBUG", False)
 
@@ -395,7 +396,7 @@ class Alchemy(Requests):
         else:
             self.create_webhook(network, webhook_type, webhook_url, addresses=addresses, nft_filters=nft_filters, graphql__query=graphql__query, app_id=app_id, nft_metadata_filters=nft_metadata_filters, counter=counter+1)
 
-    def update_webhook_address(self, webhook_id, addresses_to_add=[], addresses_to_remove=[], counter=0):
+    def update_webhook_address(self, webhook_id, addresses=[], removal=False, counter=0):
         """
             Update address for webhook address endpoint. 
             Required: 
@@ -409,25 +410,29 @@ class Alchemy(Requests):
         if counter > self.max_retries:
             return None
         
-        url = "https://dashboard.alchemy.com/api/update-webhook-addresses"
+        for i in tqdm(range(0, len(addresses), 500)):
+            url = "https://dashboard.alchemy.com/api/update-webhook-addresses"
+            payload = {
+                "webhook_id": webhook_id
+            }
 
-        payload = {
-            "webhook_id": webhook_id,
-            "addresses_to_add": addresses_to_add,
-            "addresses_to_remove": addresses_to_remove
-        }
+            if removal:
+                payload["addresses_to_remove"] = addresses
+            else:
+                payload["addresses_to_add"] = addresses
 
-        headers = {
-            "accept": "application/json",
-            "content-type": "application/json",
-            "X-Alchemy-Token": os.environ['ALCHEMY_AUTH_TOKEN'],
-        }
+            headers = {
+                "accept": "application/json",
+                "content-type": "application/json",
+                "X-Alchemy-Token": os.environ['ALCHEMY_AUTH_TOKEN'],
+            }
 
-        response = self.patch_request(url, json=payload, headers=headers, return_json=True)
-        if response and type(response) == dict:
-            return response
-        else:
-            self.update_webhook_address(webhook_id, addresses_to_add=addresses_to_add, addresses_to_remove=addresses_to_remove, counter=counter+1)
+            response = self.patch_request(url, json=payload, headers=headers, return_json=True)
+            if response and type(response) == dict:
+                pass
+            else:
+                self.update_webhook_address(webhook_id, addresses=addresses, removal=removal, counter=counter+1)
+        return response
 
 
     def update_webhook_tokens(self, webhook_id, addresses_to_add=[], addresses_to_remove=[], counter=0):

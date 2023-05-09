@@ -29,7 +29,7 @@ class WebhooksProcessor(Processor):
                 for_removal[webhook_id] = []
             for_removal[webhook_id].append(wallet)
         for webhook_id in for_removal:
-            self.alchemy.update_webhook_address(webhook_id=webhook_id, addresses_to_remove=for_removal[webhook_id])
+            self.alchemy.update_webhook_address(webhook_id=webhook_id, addresses=for_removal[webhook_id], removal=True)
             self.cyphers.remove_item_from_webhook(webhook_id, for_removal[webhook_id], "Wallet", "AddressesWebhook")
     
     def process_addresses_additions(self):
@@ -43,19 +43,18 @@ class WebhooksProcessor(Processor):
             for webhook_id in webhooks[network]:
                 additions[network][webhook_id] = []
         for wallet in tqdm(wallets, desc="Sorting addresses to existing webhooks ..."):
-            for network in webhooks:
-                for webhook_id in webhooks[network]:
-                    if webhooks[network][webhook_id] < self.max_wallet_address_webhook:
-                        additions[network][webhook_id].append(wallet)
-                        webhooks[network][webhook_id] += 1
-                        break
-            current_index += 1
+            if not self.is_zero_address(wallet):
+                for network in webhooks:
+                    for webhook_id in webhooks[network]:
+                        if webhooks[network][webhook_id] < self.max_wallet_address_webhook:
+                            additions[network][webhook_id].append(wallet)
+                            webhooks[network][webhook_id] += 1
+                            break
+                current_index += 1
             
-        print("Addision", additions)
-
         for network in tqdm(additions, desc="Updating webhooks..."):
             for webhook_id in additions[network]:
-                self.alchemy.update_webhook_address(webhook_id, addresses_to_add=additions[network][webhook_id])
+                self.alchemy.update_webhook_address(webhook_id, addresses=additions[network][webhook_id])
                 self.cyphers.connect_items_to_webhook(webhook_id, additions[network][webhook_id], "Wallet", "AddressesWebhook")
 
         done = {}
@@ -64,8 +63,6 @@ class WebhooksProcessor(Processor):
             for webhook_id in additions[network]:
                 for wallet in additions[network][webhook_id]:
                     done[network].add(wallet)
-
-        print("DONE", done)
 
         for network in tqdm(self.networks, desc="Creating new webhooks ..."):
             tmp_wallets = []

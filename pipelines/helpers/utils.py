@@ -5,6 +5,15 @@ class Utils:
     def __init__(self) -> None:
         pass
 
+    def is_zero_address(self, address):
+        try:
+            value = int(address, 16)
+            if value == 0:
+                return True
+            return False
+        except:
+            return False
+
     def str2bool(self, v):
         if v.lower() in ("yes", "true", "t", "y", "1"):
             return True
