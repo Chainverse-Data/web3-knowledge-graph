@@ -44,6 +44,7 @@ env_vars = [
     {"name": "ALCHEMY_API_KEY_ARBITRUM", "value": Variable.get("ALCHEMY_API_KEY_ARBITRUM")},
     {"name": "ALCHEMY_API_KEY_SOLANA", "value": Variable.get("ALCHEMY_API_KEY_SOLANA")},
     {"name": "ALCHEMY_API_KEY_POLYGON", "value": Variable.get("ALCHEMY_API_KEY_POLYGON")},
+    {"name": "ALCHEMY_AUTH_TOKEN", "value": Variable.get("ALCHEMY_AUTH_TOKEN")},
     {"name": "ALLOW_OVERRIDE", "value": Variable.get("ALLOW_OVERRIDE")},
     {"name": "AWS_BUCKET_PREFIX", "value": Variable.get("AWS_BUCKET_PREFIX")},
     {"name": "AWS_DEFAULT_REGION", "value": Variable.get("AWS_DEFAULT_REGION")},
