@@ -18,7 +18,6 @@ class EcoDevCyphers(WICCypher):
     @count_query_logging
     def connect_gitcoin_grant_donors(self, context):
         connect_query = f"""
-            WITH {benchmark} AS benchmark
             MATCH (wallet:Wallet)-[r:DONATION]->(g:Grant)
             WITH wallet, count(distinct(g)) AS donations
             WHERE donations > 2
