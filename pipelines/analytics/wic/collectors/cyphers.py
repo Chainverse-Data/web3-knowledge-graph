@@ -74,9 +74,9 @@ class CreatorsCollectorsCypher(WICCypher):
         count = 0 
         ### gets collectors acc. neume
         neumeQuery = f"""
-        MATCH  (wallet:Wallet)-[:HOLDS_TOKEN]->(music:Token:MusicNft)
-        WITH wallet, count(distinct(music)) as collected
-        WHERE collected > 2
+        MATCH  (wallet:Wallet)-[hol:HOLDS_TOKEN]->(music:Token:MusicNft)
+        WITH wallet, count(distinct(hol)) as collected
+        WHERE collected >= 1
         MATCH (context:_Context:_Wic:_{self.subgraph_name}:_{context})
         WITH wallet, context
         MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
