@@ -16,16 +16,14 @@ class EcoDevCyphers(WICCypher):
         return benchmark
 
     @count_query_logging
-    def connect_gitcoin_grant_donors(self, context, benchmark):
+    def connect_gitcoin_grant_donors(self, context):
         connect_query = f"""
             WITH {benchmark} AS benchmark
-            MATCH (wic:_Wic:_{self.subgraph_name}:_Context:_{context})
             MATCH (wallet:Wallet)-[r:DONATION]->(g:Grant)
-            WITH wallet, wic, count(distinct(g)) AS donations, benchmark
-            WITH wallet, wic, (tofloat(donations) / benchmark) AS comparedBenchmark
+            WITH wallet, count(distinct(g)) AS donations
+            WHERE donations > 2
+            MATCH (wic:_Wic:_{self.subgraph_name}:_Context:_{context})
             MERGE (wallet)-[con:_HAS_CONTEXT]->(wic)
-            SET con.toRemove = null
-            SET con._againstBenchmark = comparedBenchmark
             RETURN count(distinct(wallet))
         """
         count = self.query(connect_query)[0].value()

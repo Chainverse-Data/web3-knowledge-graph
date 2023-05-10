@@ -39,7 +39,7 @@ class EcoDevAnalysis(WICAnalysis):
                 "Incubator": {
                     "types": [TYPES["experiences"]],
                     "definition": "TBD", 
-                        "weight": 1.25,
+                    "weight": 1.25,
                     "call": self.process_incubator,
                     "subcontexts": {
                         "IncubatorMember": {
@@ -70,8 +70,7 @@ class EcoDevAnalysis(WICAnalysis):
         self.cyphers.connect_gitcoin_grant_admins(context, benchmark)
 
     def process_gitcoin_grant_donor(self, context):
-        benchmark = self.cyphers.get_grant_donation_benchmark()
-        self.cyphers.connect_gitcoin_grant_donors(context, benchmark)
+        self.cyphers.connect_gitcoin_grant_donors(context)
 
     def process_grants_dao(self, context):
         self.cyphers.connect_grants_daos(context, self.gdaos)
