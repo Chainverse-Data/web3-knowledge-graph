@@ -59,7 +59,7 @@ class CreatorsCollectorsCypher(WICCypher):
         WHERE arts >= 2
         MATCH (author)-[r:AUTHOR]->(article)-[:HAS_NFT]-(:ERC721)-[:HOLDS_TOKEN]-(collector:Wallet)
         WITH collector, count(distinct(article)) as arts
-        WHERE arts >= 2
+        WHERE arts >= 3
         MATCH (wic:_Wic:_Context:_{context}:_{self.subgraph_name})
         MERGE (collector)-[con:_HAS_CONTEXT]->(wic)
         SET con.toRemove = null
@@ -76,7 +76,7 @@ class CreatorsCollectorsCypher(WICCypher):
         neumeQuery = f"""
         MATCH  (wallet:Wallet)-[hol:HOLDS_TOKEN]->(music:Token:MusicNft)
         WITH wallet, count(distinct(hol)) as collected
-        WHERE collected >= 1
+        WHERE collected > 1
         MATCH (context:_Context:_Wic:_{self.subgraph_name}:_{context})
         WITH wallet, context
         MERGE (wallet)-[con:_HAS_CONTEXT]->(context)
