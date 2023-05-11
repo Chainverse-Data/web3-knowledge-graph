@@ -15,6 +15,7 @@ dag = DAG(
     },
     schedule_interval= "@daily",
     max_active_runs=1,
+    catchup=False,
     dagrun_timeout=timedelta(minutes=10080)
 )
 

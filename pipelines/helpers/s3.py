@@ -238,13 +238,13 @@ class S3Utils:
                 logging.warning("Bucket not found! Creating {}".format(self.bucket_name))
                 location = {"LocationConstraint": os.environ["AWS_DEFAULT_REGION"]}
                 self.s3_client.create_bucket(Bucket=self.bucket_name, CreateBucketConfiguration=location)
+                self.configure_bucket()
                 logging.info(f"Creating bucket: {self.bucket_name}")
             except ClientError as e:
                 logging.error(f"An error occured during the creation of the bucket: {self.bucket_name}")
                 raise e
         else:
             logging.info(f"Using existing bucket: {self.bucket_name}")
-        self.configure_bucket()
         return boto3.resource("s3").Bucket(self.bucket_name)
 
     def read_metadata(self) -> dict:
