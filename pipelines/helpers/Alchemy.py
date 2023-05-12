@@ -409,7 +409,7 @@ class Alchemy(Requests):
         time.sleep(counter)
         if counter > self.max_retries:
             return None
-        
+        response = {}
         for i in tqdm(range(0, len(addresses), 500)):
             url = "https://dashboard.alchemy.com/api/update-webhook-addresses"
             payload = {
