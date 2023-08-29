@@ -1,6 +1,6 @@
 # Chainverse Data Ingestion Framework
 
-This repo has scripts for scraping various data sources and ingesting this data into the CHainverse Knowledge Graph.
+This repo has scripts for scraping various data sources and ingesting this data into the Chainverse Knowledge Graph.
 
 The code is organized into four main python modules: **ingestion**, **scraping**, **analytics**, **post-processing**. There are scrict design guidelines to allow for easy maintenance and expandability.
 
