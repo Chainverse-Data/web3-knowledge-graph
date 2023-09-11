@@ -1,6 +1,6 @@
 # General 
 ## Lots of stuff here. Reach out with questions.
-
+LOGLEVEL="INFO|WARNING"
 DEBUG=TRUE|FALSE
 NUMEXPR_MAX_THREADS=$MAX_THREADS_MULTIPROCESSING
 
