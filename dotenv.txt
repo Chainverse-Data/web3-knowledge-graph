@@ -1,0 +1,44 @@
+# General 
+## Lots of stuff here. Reach out with questions.
+
+DEBUG=TRUE|FALSE
+NUMEXPR_MAX_THREADS=$MAX_THREADS_MULTIPROCESSING
+
+# Alchemy (transaction data)
+ALCHEMY_AUTH_TOKEN=
+ALCHEMY_API_KEY=
+ALCHEMY_API_KEY_OPTIMISM=
+ALCHEMY_API_KEY_ARBITRUM=
+ALCHEMY_API_KEY_POLYGON=
+## We encourage PRs to add support for local nodes / other data providers
+
+# Airflow...Set to TRUE if you are running your pipelines in Airflow 
+IS_AIRFLOW=FALSE
+
+ETHERSCAN_API_KEY=
+ETHERSCAN_API_KEY_OPTIMISM=
+ETHERSCAN_API_KEY_POLYGON=
+ETHERSCAN_API_KEY_ARBITRUM=
+ETHERSCAN_API_KEY_BINANCE=
+
+# NEO4J
+NEO_DB=
+NEO_URI=
+NEO_USERNAME=
+NEO_PASSWORD=
+
+# Pipeline configs
+ALLOW_OVERRIDE="1"|"2"
+INGEST_FROM_DATE=
+INGEST_TO_DATE=
+REINITIALIZE="1"|"2"
+
+# S3
+AWS_BUCKET_PREFIX=
+
+# Twitter
+## Not sure if this still works w/API change
+TWITTER_BEARER_TOKEN=
+
+
+
