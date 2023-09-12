@@ -135,18 +135,7 @@ if __name__ == "__main__":
     scraper.run()
 ```
 
-## Implemented services
-- [GitCoin](/scraping/gitcoin/README.md): `scraping/gitcoin`
-### To be cleaned
-- Miror.xyz: `scraping/miror`
-- Snapshot: `scraping/snapshot`
-
-## Services to be added:
-- DAOHaus
-- Twitter
-- Wallets
-
-# The ingestion module
+# The Ingestion module
 The ingestion module can be either imported or ran as a package using the `python -m` command. Every internal package implements a `ingest.py` and a `cyphers.py`. the `ingest.py` file will run the ingestion for the particular service by reading the `data_...json` files saved to S3. The `cyphers.py` file contains all the Neo4J queries as functions. Ingestors must read from the same S3 bucket created by the scrapers. 
 
 In a normal setting, for efficiency, the data is processed into a pandas dataframe, that is then saved to S3 as a CSV. The class takes care of splitting the file if necessary to stay within the 10Mb limit of Neo4J. The CSV files are then used in the `cyphers.py` through queries containing the `LOAD CSV FROM {url} AS data` line. For convenience, the ingestor save CSV function always returns an array of urls, even if the dataset does not need to be split. 
